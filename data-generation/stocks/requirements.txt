@@ -1,9 +1,10 @@
 pandas
 numpy
 jupyterlab
-csp
-fastapi
+# csp
+# fastapi
 ipywidgets
 perspective-python
-superstore
+# superstore
 uvicorn
+requests
