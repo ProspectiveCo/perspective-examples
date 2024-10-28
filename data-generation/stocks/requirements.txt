@@ -1,5 +1,6 @@
 pandas
 numpy
+pyarrow
 jupyterlab
 # csp
 # fastapi
