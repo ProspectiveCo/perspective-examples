@@ -326,3 +326,8 @@ Cargo.lock
 # ===========================================================
 # CUSTOM
 # ===========================================================
+
+# data files
+historical_stock_prices.csv
+sample_social_media.csv
+tech_trades.csv
