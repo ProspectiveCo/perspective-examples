@@ -331,3 +331,5 @@ Cargo.lock
 historical_stock_prices.csv
 sample_social_media.csv
 tech_trades.csv
+use-cases/influxdb/influxdb-docker/volumes/config
+use-cases/influxdb/influxdb-docker/volumes/influxdb
