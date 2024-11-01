@@ -18,8 +18,8 @@ BUCKET_NAME="trades"
 SAMPLE_BUCKET_NAME="trades_sample"
 RETENTION="0"
 # initial data file
-LARGE_DATA_FILE="/data/trades.tar.gz"
-SAMPLE_DATA_FILE="/data/trades_sample.csv"
+LARGE_DATA_FILE="/data/trades-md.tar.gz"
+SAMPLE_DATA_FILE="/data/trades-sm.csv"
 
 
 # Check if the InfluxDB container is already running
