@@ -96,7 +96,7 @@ Once logged in, you can start exploring the data using InfluxDB's query interfac
 
 ## Visualization in Prospective
 
-To obtain a trial Prospective license, email [hello@prospective.co](mailto\:hello@prospective.co) with the subject: "influxdb trial login".
+To obtain a trial Prospective license, email [`hello@prospective.co`](mailto\:hello@prospective.co) with the subject: *"influxdb trial login"*.
 
 <video width="600" controls>
   <source src="imgs/influxdb_connector_compressed.mp4" type="video/mp4">
