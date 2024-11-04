@@ -1,7 +1,5 @@
 # Prospective <> InfluxDB integration
 
-## Analyze InfluxDB time-series data in a Tableau-like Interface
-
 Welcome to the Prospective InfluxDB Integration Sample Project!
 
 <br/>
@@ -10,18 +8,7 @@ This is an example project to showcases how to use Prospective's data visualizat
 
 ![influxdb demo](imgs/influxdb-demo.gif)
 
-## Table of Contents
-
-- [Prospective \<\> InfluxDB integration](#prospective--influxdb-integration)
-  - [Analyze InfluxDB time-series data in a Tableau-like Interface](#analyze-influxdb-time-series-data-in-a-tableau-like-interface)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Getting Started](#getting-started)
-    - [Requirements](#requirements)
-    - [Setting up InfluxDB](#setting-up-influxdb)
-  - [Example Dataset](#example-dataset)
-  - [Exploring the Dataset using Flux Dashboard](#exploring-the-dataset-using-flux-dashboard)
-  - [Visualization in Prospective](#visualization-in-prospective)
+<br/>
 
 ## Features
 
