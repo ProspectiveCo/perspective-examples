@@ -2,10 +2,7 @@ pandas
 numpy
 pyarrow
 jupyterlab
-# csp
-# fastapi
 ipywidgets
 perspective-python
-# superstore
 uvicorn
 requests

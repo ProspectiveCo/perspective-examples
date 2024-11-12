@@ -43,4 +43,4 @@ def setup_logging(
 
 
 # setup logging
-logger = setup_logging()
+logger: logging.Logger = setup_logging()
