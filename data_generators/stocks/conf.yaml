@@ -1,0 +1,89 @@
+# Configuration file for generating stock data
+
+# Data generation settings
+data_generation:
+  data_filepath: "data/historical_tech_stock_prices.csv"
+  output_filepath: "data/tech_trades.csv"
+  min_trades_per_day: 50
+  max_trades_per_day: 200
+  share_prct_range: [0.00001, 0.0001]
+  tech_symbols:
+    - "AAPL"   # Apple Inc.
+    - "MSFT"   # Microsoft Corporation
+    - "GOOGL"  # Alphabet Inc. (Class A)
+    - "AMZN"   # Amazon.com Inc.
+    - "FB"     # Meta Platforms, Inc. (formerly Facebook)
+    - "NFLX"   # Netflix, Inc.
+    - "NVDA"   # NVIDIA Corporation
+    - "TSLA"   # Tesla, Inc.
+    - "INTC"   # Intel Corporation
+    - "CSCO"   # Cisco Systems, Inc.
+    - "ADBE"   # Adobe Inc.
+    - "ORCL"   # Oracle Corporation
+    - "IBM"    # International Business Machines Corporation
+    - "CRM"    # Salesforce, Inc.
+    - "PYPL"   # PayPal Holdings, Inc.
+    - "AMD"    # Advanced Micro Devices, Inc.
+    - "TXN"    # Texas Instruments Incorporated
+    - "QCOM"   # Qualcomm Incorporated
+    - "AVGO"   # Broadcom Inc.
+    - "SHOP"   # Shopify Inc.
+    - "SNAP"   # Snap Inc.
+    - "TWTR"   # Twitter, Inc.
+    - "SQ"     # Block, Inc. (formerly Square)
+    - "DOCU"   # DocuSign, Inc.
+    - "UBER"   # Uber Technologies, Inc.
+    - "LYFT"   # Lyft, Inc.
+    - "ZM"     # Zoom Video Communications, Inc.
+    - "SPOT"   # Spotify Technology S.A.
+  chip_symbols:
+    - "INTC"   # Intel Corporation
+    - "NVDA"   # NVIDIA Corporation
+    - "AMD"    # Advanced Micro Devices, Inc.
+    - "TXN"    # Texas Instruments Incorporated
+    - "QCOM"   # Qualcomm Incorporated
+    - "AVGO"   # Broadcom Inc.
+  social_media_symbols:
+    - "FB"     # Meta Platforms, Inc. (formerly Facebook)
+    - "TWTR"   # Twitter, Inc.
+    - "SNAP"   # Snap Inc.
+    - "PINS"   # Pinterest, Inc.
+  e_commerce_symbols:
+    - "AMZN"   # Amazon.com Inc.
+    - "SHOP"   # Shopify Inc.
+    - "EBAY"   # eBay Inc.
+    - "ETSY"   # Etsy, Inc.
+    - "WMT"    # Walmart Inc.
+    - "TGT"    # Target Corporation
+  ride_share_symbols:
+    - "UBER"   # Uber Technologies, Inc.
+    - "LYFT"   # Lyft, Inc.
+  brokers:
+    - "Slick Sam"
+    - "Trading Tina"
+    - "Money Mike"
+    - "Clever Cathy"
+    - "Profit Pete"
+    - "Risky Rachel"
+    - "Big Bucks Bob"
+    - "Smart Susan"
+    - "Lucky Luke"
+
+# API info for Alpha Vantage live stock data
+alpha_vantage:
+  api_key: "your_alpha_vantage_api_key"  # Set your Alpha Vantage API key here
+  base_url: "https://www.alphavantage.co/query"
+  ticker_interval: "TIME_SERIES_DAILY"  # Options: TIME_SERIES_INTRADAY, TIME_SERIES_DAILY, TIME_SERIES_WEEKLY, TIME_SERIES_MONTHLY
+
+# Logging settings
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+  handlers:
+    - "console"
+    - "file"
+  file:
+    path: "logs/stock_data_generation.log"
+    max_size: 10MB
+    backup_count: 3
