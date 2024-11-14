@@ -1,7 +1,18 @@
 # Configuration file for generating stock data
 
+# ========================================================
+# API info for Alpha Vantage live stock data
+alpha_vantage:
+  # Set your Alpha Vantage API key here. 
+  # If you don't have one, get it from https://www.alphavantage.co/support/#api-key
+  # If no key is set, the generators uses the `demo` key, which is limited to 5 requests per minute.
+  api_key: # set your API key here
+  base_url: "https://www.alphavantage.co/query"
+  ticker_interval: "TIME_SERIES_DAILY"  # Options: TIME_SERIES_INTRADAY, TIME_SERIES_DAILY, TIME_SERIES_WEEKLY, TIME_SERIES_MONTHLY
+
+# ========================================================
 # Data generation settings
-data_generation:
+stocks_generator:
   data_filepath: "data/historical_tech_stock_prices.csv"
   output_filepath: "data/tech_trades.csv"
   min_trades_per_day: 50
@@ -69,12 +80,7 @@ data_generation:
     - "Smart Susan"
     - "Lucky Luke"
 
-# API info for Alpha Vantage live stock data
-alpha_vantage:
-  api_key: "your_alpha_vantage_api_key"  # Set your Alpha Vantage API key here
-  base_url: "https://www.alphavantage.co/query"
-  ticker_interval: "TIME_SERIES_DAILY"  # Options: TIME_SERIES_INTRADAY, TIME_SERIES_DAILY, TIME_SERIES_WEEKLY, TIME_SERIES_MONTHLY
-
+# ========================================================
 # Logging settings
 logging:
   level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
