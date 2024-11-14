@@ -6,3 +6,4 @@ ipywidgets
 perspective-python
 uvicorn
 requests
+dateparser

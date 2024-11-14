@@ -1,14 +1,11 @@
 import os
-import logging
-from data_generators.utils import load_config_yaml, setup_logging_from_config
-
+from data_generators.utils import load_config_yaml
+from data_generators.utils import logger
 
 # Define imports when using the * syntax
 __all__ = [
     'stocks_generator_config',
-    'logger',
     ]
-
 
 # Define the default configuration for the stocks generator
 __DEFAULT_STOCKS_GENERATOR_CONFIG__ = {
@@ -20,19 +17,9 @@ __DEFAULT_STOCKS_GENERATOR_CONFIG__ = {
 }
 
 # Load the configuration when the module is imported
-config_path = os.path.join(os.path.dirname(__file__), 'conf.yaml')
+config_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
 stocks_generator_config = load_config_yaml(config_path, __DEFAULT_STOCKS_GENERATOR_CONFIG__)
-
-
-# setup logging if configured
-logger: logging.Logger = None
-if 'logging' in stocks_generator_config:
-    logger = setup_logging_from_config(stocks_generator_config['logging'])
-else:
-    # if logging is not configured, use the default logger
-    from data_generators.utils import logger as default_logger
-    logger = default_logger
-
+logger.info('Loaded stocks generator configuration from %s', config_path)
 
 # post configuration load processing
 if not stocks_generator_config['alpha_vantage']['api_key']:
