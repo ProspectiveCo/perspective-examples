@@ -154,6 +154,17 @@ def setup_logging_from_config(logger_config: dict, logger_name: str = 'main') ->
 
     return logger
 
+# Check if the config has logging defined and if there's a file handler
+if 'logging' in config and 'handlers' in config['logging'] and 'file' in config['logging']['handlers']:
+    file_config = config['logging'].get('file', {})
+    file_path = file_config.get('path', 'app.log')
+    file_dir = os.path.dirname(file_path)
+    # Check if the parent directory exists, if not, create it
+    if file_dir and not os.path.exists(file_dir):
+        try:
+            os.makedirs(file_dir, exist_ok=True)
+        except Exception as e:
+            pass
 
 # global app logger
 logger: logging.Logger = setup_logging_from_config(config.get('logging', {}))

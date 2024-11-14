@@ -9,6 +9,6 @@ logging:
     - "console"
     - "file"
   file:
-    path: "logs/data_generators.log"
+    path: "app.log"
     max_size: 10MB
-    backup_count: 3
+    backup_count: 1
