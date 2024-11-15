@@ -1,4 +1,3 @@
-import time
 import requests
 import io
 from enum import Enum
