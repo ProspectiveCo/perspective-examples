@@ -19,7 +19,7 @@ class StockStreamDataGenerator(StreamDataGenerator):
         self.date_range = pd.date_range(start=self.data['date'].min(), end=self.data['date'].max())
         self.current_date_index = 0
 
-    def generate_data(self) -> pd.DataFrame:
+    def get_data(self) -> pd.DataFrame:
         if self.current_date_index >= len(self.date_range):
             self.current_date_index = 0  # Reset to start if we reach the end
 
