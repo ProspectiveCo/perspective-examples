@@ -3,6 +3,78 @@ import numpy as np
 import random
 from datetime import timedelta, datetime
 from data_generators.generators import StreamDataGenerator
+from stock_fetchers import AlphaVantageTickerInterval, AlphaVantageIntradayInterval, fetch_stock_values
+from utils import logger
+
+
+class StockValueStreamGenerator(StreamDataGenerator):
+    def __init__(self, 
+                 tickers: str | list[str],
+                 function_interval: AlphaVantageTickerInterval | str = AlphaVantageTickerInterval.DAILY,
+                 intraday_interval: AlphaVantageIntradayInterval | str = AlphaVantageIntradayInterval.FIFTEEN_MIN,
+                 api_key: str = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.tickers = [tickers] if isinstance(tickers, str) else tickers
+        self.function_interval = function_interval
+        self.intraday_interval = intraday_interval
+        self.api_key = api_key
+        self.cache: dict[str, pd.DataFrame] = None
+
+    def fetch_stock_values(self, **kwargs) -> dict[str, pd.DataFrame]:
+        # overwrite class members from kwargs
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        # set local configuration variables
+        tickers = self.tickers
+        ticker_interval = self.tickers_interval
+        intraday_interval = self.intraday_interval
+        api_key = self.api_key
+        # clear existing cache
+        self.cache: dict[str, pd.DataFrame] = {}
+        # fetch stock values for each ticker
+        for ticker in tickers:
+            try:
+                df = fetch_stock_values(
+                    ticker=ticker,
+                    ticker_interval=ticker_interval,
+                    intraday_interval=intraday_interval,
+                    api_key=api_key
+                )
+                # Simulate streaming by setting the current timestamp to now
+                df['timestamp'] = datetime.now()
+                self.cache[ticker] = df
+            except Exception as e:
+                logger.error(f"Error fetching stock values: {e}")
+                self.cache[ticker] = pd.DataFrame()
+            return df
+
+        
+    def get_data(self) -> pd.DataFrame:
+        df = fetch_stock_values(
+            ticker=self.ticker,
+            ticker_interval=self.function_interval,
+            intraday_interval=self.intraday_interval,
+            api_key=self.api_key
+        )
+        # Simulate streaming by setting the current timestamp to now
+        df['timestamp'] = datetime.now()
+        return df
+
+    @property
+    def schema(self) -> dict:
+        return {
+            'timestamp': 'datetime64[ns]',
+            'ticker': 'str',
+            'open': 'float',
+            'high': 'float',
+            'low': 'float',
+            'close': 'float',
+            'volume': 'int'
+        }
+
+
 
 class StockStreamDataGenerator(StreamDataGenerator):
     def __init__(self, data_filepath: str, min_trades_per_day: int = 50, max_trades_per_day: int = 200, share_prct_range: tuple = (0.00001, 0.0001)):

@@ -99,3 +99,13 @@ class StreamDataGenerator(ABC):
     @abstractmethod
     def schema(self) -> dict:
         pass
+
+    @staticmethod
+    @abstractmethod
+    def required_parameters() -> list:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def check_parameters(**kwargs) -> bool:
+        pass
