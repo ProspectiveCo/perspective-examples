@@ -2,7 +2,7 @@ import time
 from datetime import datetime
 import threading
 import pandas as pd
-from utils import logger
+from data_generators.utils import logger
 from abc import ABC, abstractmethod
 import codetiming
 
@@ -27,7 +27,7 @@ class StreamDataGenerator(ABC):
         # parsing start_time and end_time if they are strings
         try:
             if isinstance(start_time, str):
-                self.start_time = pd.to_datetime(start_time)
+                self.start_time = pd.to_datetime(start_time).replace(microsecond=0)
             elif isinstance(start_time, datetime):
                 self.start_time = start_time
             else:
@@ -37,7 +37,7 @@ class StreamDataGenerator(ABC):
             self.start_time = datetime.now()
         try:
             if isinstance(end_time, str):
-                self.end_time = pd.to_datetime(end_time)
+                self.end_time = pd.to_datetime(end_time).replace(microsecond=0)
             elif isinstance(end_time, datetime):
                 self.end_time = end_time
             else:
@@ -54,7 +54,8 @@ class StreamDataGenerator(ABC):
         self.data_generator_thread: threading.Thread = None
         self.data_generator_callback_function: callable = data_generator_callback_function
         # setting additional keyword arguments
-        self._kwargs = kwargs
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def start(self) -> None:
         if not self.running:
@@ -80,12 +81,12 @@ class StreamDataGenerator(ABC):
     def _data_generator_runner(self) -> None:
         while self.running:
             # Generate data for a single interval
-            with codetiming.Timer(text="Stream-Generator::DataGenTime: {milliseconds:.4f} ms", logger=logger.debug):
+            with codetiming.Timer(text="Stream-Generator::DataGenTime: {milliseconds:.3f} ms", logger=logger.debug):
                 df: pd.DataFrame = self.get_data()
             # Push data to callback
             if self.data_generator_callback_function is not None:
                 # Call the callback function with the generated data
-                with codetiming.Timer(text="Stream-Generator::CallbackFunctionTime: {milliseconds:.4f} ms", logger=logger.debug):
+                with codetiming.Timer(text="Stream-Generator::CallbackFunctionTime: {milliseconds:.3f} ms", logger=logger.debug):
                     self.data_generator_callback_function(df)
             # Sleep for interval
             time.sleep(self.interval)
@@ -105,7 +106,7 @@ class StreamDataGenerator(ABC):
     def required_parameters() -> list:
         pass
 
-    @staticmethod
-    @abstractmethod
-    def check_parameters(**kwargs) -> bool:
-        pass
+    # @staticmethod
+    # @abstractmethod
+    # def check_parameters(**kwargs) -> bool:
+    #     pass
