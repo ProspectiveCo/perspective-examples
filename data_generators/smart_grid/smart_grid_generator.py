@@ -246,14 +246,7 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
 
     @staticmethod
     def required_parameters() -> dict[str, str]:
-        return {
-            "interval": "float",
-            "nrows": "int or tuple[int, int]",
-            "start_time": "str or datetime",
-            "end_time": "str or datetime",
-            "loopback": "bool",
-            "data_callback_function": "callable",
-        }
+        return {}
 
     @staticmethod
     def from_config(config: dict) -> 'NewYorkSmartGridStreamGenerator':
