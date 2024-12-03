@@ -335,3 +335,4 @@ examples/influxdb/influxdb-docker/volumes/config
 examples/influxdb/influxdb-docker/volumes/influxdb
 examples/influxdb/influxdb-docker/volumes/data/trades-lg.tar.gz
 examples/influxdb/influxdb-docker.tar.gz
+test.csv
