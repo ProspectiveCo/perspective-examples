@@ -42,16 +42,12 @@ Functions:
 import numpy as np
 import pandas as pd
 import random
+from data_generators.utils import logger
 
 
 __all__ = (
     "seed",
-    "full_wave",
-    "half_wave",
-    "half_waves_fixed_freq_varying_amp",
-    "half_waves_varying_freq_varying_amp",
-    "full_waves_fixed_freq_varying_amp",
-    "full_waves_varying_freq_varying_amp",
+    "sinusoidal_wave",
 )
 
 
@@ -324,3 +320,63 @@ def apply_wave_modifications(
     if noise:
         wave = apply_noise(wave, noise)
     return wave
+
+
+def sinusoidal_wave(
+    num_points: int = 1000,                             # Number of data points
+    periods: int = 1,                                   # Number of periods in the wave
+    amplitude: float | tuple[float, float] = 1.0,       # Amplitude of the wave (default is 1.0)
+    wave_mode: str = "full",                            # Wave mode (default is "full"). Values: "full", "half"
+    varying_mode: str = "both",                         # Varying mode for amplitude and frequency (default is "both"). Values: "fixed", "amp", "freq", "both"
+    phase: float = 0.0,                                 # Phase shift of the wave (default is 0.0)
+    smooth: int = None,                                 # Smoothing factor for the wave (default is None)
+    noise: float = None,                                # Noise level to add to the wave (default is None)
+    ) -> pd.Series:
+    """
+    Generate a sinusoidal wave with optional modifications.
+
+    Parameters:
+    num_points (int): Number of data points to generate. Default is 1000.
+    periods (int): Number of periods in the wave. Default is 1.
+    amplitude (float | tuple[float, float]): Amplitude of the wave. Default is 1.0.
+    wave_mode (str): Wave mode. Values can be "full" or "half". Default is "full".
+    varying_mode (str): Varying mode for amplitude and frequency. Values can be "fixed", "amp", "freq", or "both". Default is "both".
+    phase (float): Phase shift of the wave. Default is 0.0.
+    smooth (int): Smoothing factor for the wave. Default is None.
+    noise (float): Noise level to add to the wave. Default is None.
+
+    Returns:
+    pd.Series: A pandas Series containing the generated wave data.
+    """
+    # check and validate input parameters
+    if wave_mode not in ["full", "half"]:
+        logger.warning("Invalid wave_mode. Valid values are 'full' or 'half'. Set to 'full'.")
+        wave_mode = "full"
+    if isinstance(amplitude, int) or not isinstance(amplitude, tuple):
+        amplitude = (amplitude, amplitude)
+    # warn if amplitude range is the same but varying mode is set to vary amplitude
+    if (varying_mode in ["amp", "both"]) and (amplitude[0] == amplitude[1]):
+        logger.warning("Amplitude range is the same but varying_mode is set to set to vary amplitude. Amplitude will be fixed.")
+    # warn if varying mode is set to only vary frequency but amplitude range is different
+    if (varying_mode in ["fixed", "freq"]) and (amplitude[0] != amplitude[1]):
+        logger.warning(f"Varying mode is set to only vary frequency but amplitude range is different. Amplitude will be fixed. Using lower bound of amplitude: {amplitude[0]}")
+        amplitude = (amplitude[0], amplitude[0])
+
+    # function map
+    function_map = {
+        "full": {
+            "fixed": full_waves_fixed_freq_varying_amp,
+            "amp": full_waves_fixed_freq_varying_amp,
+            "freq": full_waves_varying_freq_varying_amp,
+            "both": full_waves_varying_freq_varying_amp,
+        },
+        "half": {
+            "fixed": half_waves_fixed_freq_varying_amp,
+            "amp": half_waves_fixed_freq_varying_amp,
+            "freq": half_waves_varying_freq_varying_amp,
+            "both": half_waves_varying_freq_varying_amp,
+        },
+    }
+    fn = function_map[wave_mode][varying_mode]
+    y = fn(num_points=num_points, periods=periods, amplitude=amplitude, phase=phase, smooth=smooth, noise=noise)
+    return y
