@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 import random
 from datetime import timedelta, datetime
-from data_generators.generators import StreamDataGenerator
+from data_generators.generators import StreamGenerator
 from data_generators.stocks.stock_fetchers import AlphaVantageTickerInterval, AlphaVantageIntradayInterval, fetch_stock_values
 from data_generators.utils import logger
 
 
-class StockValuesStreamGenerator(StreamDataGenerator):
+class StockValuesStreamGenerator(StreamGenerator):
     def __init__(self, 
                  tickers: str | list[str],
                  interval: float = 1.0,
@@ -96,7 +96,7 @@ class StockValuesStreamGenerator(StreamDataGenerator):
 
 
 
-class StockStreamDataGenerator(StreamDataGenerator):
+class StockStreamDataGenerator(StreamGenerator):
     def __init__(self, data_filepath: str, min_trades_per_day: int = 50, max_trades_per_day: int = 200, share_prct_range: tuple = (0.00001, 0.0001)):
         super().__init__()
         self.data_filepath = data_filepath
