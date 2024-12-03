@@ -152,9 +152,9 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
                 "name": POWER_STATIONS[i]["name"],
                 "lat": POWER_STATIONS[i]["lat"],
                 "lon": POWER_STATIONS[i]["lon"],
-                "power_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(2, 7), amplitude=(2.0, 10.0), phase=np.random.uniform(0.5, 2*np.pi), noise=0.05),
-                "battery_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(1, 5), amplitude=(1.0, 10.0), phase=np.random.uniform(0, 2*np.pi)),
-                "temperature_wave": 55 + rw.sinusoidal_wave(wave_mode='full', varying_mode='amp', num_points=self.nrows, periods=random.randint(1, 10), amplitude=(10.0, 30.0), phase=np.random.uniform(0, 2*np.pi)),
+                "power_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(2, 7), amplitude=(2.0, 10.0), phase=np.random.uniform(0.5, 2*np.pi), noise=0.05).tolist(),
+                "battery_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(1, 5), amplitude=(1.0, 10.0), phase=np.random.uniform(0, 2*np.pi)).tolist(),
+                "temperature_wave": (55 + rw.sinusoidal_wave(wave_mode='full', varying_mode='amp', num_points=self.nrows, periods=random.randint(1, 10), amplitude=(10.0, 30.0), phase=np.random.uniform(0, 2*np.pi))).tolist(),
                 "fault": 0,
                 "power_seed": random.randint(10_000, 15_000),
                 "battery_seed": random.randint(8_000, 12_000),
@@ -179,15 +179,15 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
         data = []
         for i, station in enumerate(self._cache.values()):
             timestamp = self.current_time + timedelta(seconds=(self.interval / self.num_stations) * i)
-            power_level = (station["power_seed"] + station["power_wave"].iloc[self._cur_frame]) * 10000           # power in mega watts
-            battery_level = station["battery_wave"].iloc[self._cur_frame]               # battery level in kilo watts
+            power_level = (station["power_seed"] + station["power_wave"][self._cur_frame]) * 10000           # power in mega watts
+            battery_level = station["battery_wave"][self._cur_frame]               # battery level in kilo watts
             voltage = random.uniform(110, 120)
             current = power_level / voltage
             power_factor = random.uniform(0.8, 1.0)
             battery_soc = 60 + battery_level
             batter_charge_rate = random.uniform(-10, 10)
             renewable_power_generation = station["battery_seed"] + (battery_level * 1000)  # renewable power in watts
-            transformer_temperature = station["temperature_wave"].iloc[self._cur_frame]
+            transformer_temperature = station["temperature_wave"][self._cur_frame]
             # check if station is in fault mode. fault duration is random between 10 and 100 frames
             if station["fault"] > 0:
                 power_level = 0
@@ -266,7 +266,7 @@ generator_registry["new_york_smart_grid"] = NewYorkSmartGridStreamGenerator
 
 def test():
     # create a new instance of the NewYorkSmartGridStreamGenerator
-    generator = NewYorkSmartGridStreamGenerator(interval=1.0, nrows=1000, num_stations=4, start_time=datetime.now(), loopback=True)
+    generator = NewYorkSmartGridStreamGenerator(interval=1.0, nrows=1000, num_stations=4, start_time=datetime.now().replace(microsecond=0), loopback=True)
     # get the schema
     print(generator.schema)
     frames = []
