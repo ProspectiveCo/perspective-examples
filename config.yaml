@@ -1,0 +1,14 @@
+
+# ========================================================
+# Logging settings
+logging:
+  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+  handlers:
+    - "console"
+    - "file"
+  file:
+    path: "app.log"
+    max_size: 10MB
+    backup_count: 1

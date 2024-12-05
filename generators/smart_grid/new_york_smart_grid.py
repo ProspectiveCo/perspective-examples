@@ -1,10 +1,10 @@
-from data_generators.generators import StreamGenerator, generator_registry
 import pandas as pd
 import numpy as np
 import random
 from datetime import datetime, timedelta
-from data_generators.utils import logger
-import data_generators.utils.random_waves as rw
+from generators.base import StreamGenerator
+from utils.logger import logger
+import generators.utils.random_waves as rw
 
 
 POWER_STATIONS: list[dict] = [
@@ -251,10 +251,6 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
     @staticmethod
     def from_config(config: dict) -> 'NewYorkSmartGridStreamGenerator':
         return NewYorkSmartGridStreamGenerator(**config)
-    
-
-# add the generator to the registry
-generator_registry["new_york_smart_grid"] = NewYorkSmartGridStreamGenerator
 
 
 def test():

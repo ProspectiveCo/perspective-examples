@@ -9,3 +9,4 @@ uvicorn
 requests
 dateparser
 codetiming
+influxdb-client

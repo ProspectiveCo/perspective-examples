@@ -39,3 +39,54 @@ from(bucket: "trades")
         "_time", "broker", "ticker", "bid_price", "ask_price", "trade_price","trade_value"
         ])
     |> yield(name: "table1")
+
+
+from(bucket: "smart_grid")
+  |> range(start: -1s, stop: 1s)
+  |> filter(fn: (r) => r["_measurement"] == "new_york_smart_grid")
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> yield(name: "mean")
+
+from(bucket: "smart_grid")
+  |> range(start: -1s)
+  |> filter(fn: (r) => r["_measurement"] == "new_york_smart_grid")
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> yield(name: "newyork")
+
+
+{
+  "version": "3.1.5",
+  "plugin": "Map Scatter",
+  "plugin_config": {
+    "center": [
+      -8233916.460974932,
+      4975833.61844814
+    ],
+    "zoom": 13.917077534993478
+  },
+  "columns_config": {},
+  "settings": true,
+  "theme": "Pro Dark",
+  "title": null,
+  "group_by": [
+    "station_name"
+  ],
+  "split_by": [],
+  "columns": [
+    "longitude",
+    "latitude",
+    null,
+    "energy_consumption",
+    null
+  ],
+  "filter": [],
+  "sort": [],
+  "expressions": {
+    "ts1": "bucket(\"_time\", '1m')"
+  },
+  "aggregates": {
+    "longitude": "last",
+    "latitude": "last",
+    "energy_consumption": "mean"
+  }
+}
