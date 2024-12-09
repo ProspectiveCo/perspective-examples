@@ -1,4 +1,3 @@
-
 import os
 import pandas as pd
 from .base import DataWriter
@@ -42,7 +41,8 @@ class FileWriter(DataWriter):
     def write(self, data: pd.DataFrame) -> None:
         # write data to file. Pick the correct method based on the file type
         if self.type == "csv":
-            data.to_csv(self.file_path, index=False, mode='a', sep=self.sep, lineterminator=self.lineterminator, date_format=self.date_format, encoding=self.encoding)
+            header = not os.path.exists(self.file_path)
+            data.to_csv(self.file_path, index=False, header=header, mode='a', sep=self.sep, lineterminator=self.lineterminator, date_format=self.date_format, encoding=self.encoding)
         elif self.type == "parquet":
             data.to_parquet(self.file_path, index=False, mode='a')
         elif self.type == "arrow":
