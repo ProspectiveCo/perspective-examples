@@ -84,6 +84,8 @@ class StreamGenerator(Generator):
                 self.end_time = pd.to_datetime(end_time).replace(microsecond=0)
             elif isinstance(end_time, datetime):
                 self.end_time = end_time
+            elif end_time is None:
+                self.end_time = None
             else:
                 raise ValueError("Invalid type for end_time")
         except Exception as e:

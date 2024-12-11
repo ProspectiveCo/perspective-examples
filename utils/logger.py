@@ -1,5 +1,6 @@
 
 import logging
+import logging.handlers
 import sys
 import os
 from .config_loader import config
@@ -69,7 +70,8 @@ def setup_logging_from_config(logger_config: dict, logger_name: str = 'main') ->
 
     # Create formatter
     log_formatter = logging.Formatter(
-        fmt=logger_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+        # fmt=logger_config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'),
+        fmt=logger_config.get('format', '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'),
         datefmt=logger_config.get('datefmt', '%Y-%m-%d %H:%M:%S')
     )
 
