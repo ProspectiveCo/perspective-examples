@@ -131,7 +131,7 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
                  **kwargs
                  ) -> None:
         # call the parent class constructor passing the required present parameters
-        super().__init__(interval=interval, nrows=nrows, start_time=start_time, end_time=end_time, loopback=loopback, data_callback_function=data_callback_function, **kwargs)
+        super().__init__(interval=interval, nrows=nrows, start_time=start_time, end_time=end_time, loopback=loopback, callback_subscribers=data_callback_function, **kwargs)
         # check the number of stations
         if num_stations > len(POWER_STATIONS):
             logger.warning(f"NewYorkSmartGridStreamGenerator: Number of stations cannot be greater than {len(POWER_STATIONS)}. Setting to {len(POWER_STATIONS)}")

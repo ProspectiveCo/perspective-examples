@@ -4,6 +4,7 @@ import threading
 import pandas as pd
 from utils.logger import logger
 from abc import ABC, abstractmethod
+from typing import Union, List, Tuple, Callable
 import codetiming
 
 
@@ -53,7 +54,7 @@ class StreamGenerator(Generator):
                  start_time: str | datetime = datetime.now(),               # start_time: The start time for the data generator. Timestamp of the first row. Set to None to start from current time. Sample date format: "2021-01-01 00:00:00"
                  end_time: str | datetime = None,                           # end_time: The end time for the data generator. Timestamp of the last row. Set to None if generator should run indefinitely. Sample date format: "2021-01-01 00:00:00"
                  loopback: bool = False,                                    # loopback: If True, the generator will loop back to the start time after reaching the end time.
-                 data_callback_function: callable = None,                   # data_generator_callback_function: Callback function to push generated data to when new batch of data is generated.
+                 callback_subscribers: Union[Callable, List[Callable]] = None,    # callback_subscribers: A list of callback functions to call with the generated data batch.
                  **kwargs) -> None:
         # Initialize the stream data generator
         super().__init__(**kwargs)
@@ -98,8 +99,15 @@ class StreamGenerator(Generator):
         # setting data generator callback function. The callback function is called with the generated data batch.
         self.running: bool = False
         self.data_generator_thread: threading.Thread = None
-        self.data_callback_function: callable = data_callback_function
-
+        if callback_subscribers is not None:
+            if isinstance(callback_subscribers, list):
+                self._callback_subscribers: list[callable] = callback_subscribers
+            elif callable(callback_subscribers):
+                self._callback_subscribers: list[callable] = [callback_subscribers]
+            else:
+                raise ValueError("Invalid type for callback_subscribers")
+        else:
+            self._callback_subscribers: list[callable] = []
 
     def start(self) -> None:
         if not self.running:
@@ -128,12 +136,19 @@ class StreamGenerator(Generator):
             with codetiming.Timer(text="Stream-Generator::DataGenTime: {milliseconds:.3f} ms", logger=logger.debug):
                 df: pd.DataFrame = self.get_data()
             # Push data to callback
-            if self.data_callback_function is not None:
+            if self._callback_subscribers:
                 # Call the callback function with the generated data
                 with codetiming.Timer(text="Stream-Generator::CallbackFunctionTime: {milliseconds:.3f} ms", logger=logger.debug):
-                    self.data_callback_function(df)
+                    for callback in self._callback_subscribers:
+                        callback(df)
             # Sleep for interval
             time.sleep(self.interval)
+
+    def add_subscriber(self, callback_function: callable) -> None:
+        self._callback_subscribers.append(callback_function)
+
+    def is_running(self) -> bool:
+        return self.running
 
 
 

@@ -107,5 +107,9 @@ if 'logging' in config and 'handlers' in config['logging'] and 'file' in config[
         except Exception as e:
             pass
 
+# ==============================================================================
 # global app logger
 logger: logging.Logger = setup_logging_from_config(config.get('logging', {}))
+# print an app startup message
+logger.info('-' * 80)
+logger.info('App: started')
