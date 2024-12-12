@@ -2,18 +2,9 @@
 # ========================================================
 # Logging settings
 logging:
-  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  # custom format: https://docs.python.org/3/library/logging.html#logrecord-attributes
-  # format: "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-  # format: "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
-  format: "%(asctime)s - %(levelname)s - %(message)s"
-  datefmt: "%Y-%m-%d %H:%M:%S"
-
-  # log to the following
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
   handlers:
     - "console"             # comment this line to disable console logging
-    - "file"                # comment this line to disable file logging
+    # - "file"                # comment this line to disable file logging
   file:
     path: "app.log"         # path to log file
-    max_size: 10MB          # max size of log file
-    backup_count: 1         # number of old log files to keep (1: keep only the current log file)
