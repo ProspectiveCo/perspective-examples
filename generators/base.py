@@ -6,7 +6,6 @@ from utils.logger import logger
 from abc import ABC, abstractmethod
 from typing import Union, List, Tuple, Callable
 import codetiming
-import atexit           # to ensure the generator thread exists with the main thread exists
 
 
 __all__ = [
@@ -109,7 +108,6 @@ class StreamGenerator(Generator):
                 raise ValueError("Invalid type for callback_subscribers")
         else:
             self._callback_subscribers: list[callable] = []
-        atexit.register(self.stop)  # Register the stop method to be called on exit
 
     def start(self) -> None:
         if not self.running:
@@ -134,7 +132,7 @@ class StreamGenerator(Generator):
                 try:
                     self.data_generator_thread.join()
                 except Exception as e:
-                    logger.info(f"Stream-Generator::ThreadJoinWarning: {e}")
+                    pass
         self.running = False
 
     def _data_generator_runner(self) -> None:
@@ -142,19 +140,19 @@ class StreamGenerator(Generator):
             # take note of the current time before the call to get new data and other inherited methods
             tmp_time = self.current_time
             # Generate data for a single interval
-            with codetiming.Timer(text="Stream-Generator::DataGenTime: {milliseconds:.3f} ms", logger=logger.debug):
+            with codetiming.Timer(text="Stream-Generator::DataGen: run_time={milliseconds:.3f} ms", logger=logger.debug):
                 df: pd.DataFrame = self.get_data()
             # Push data to callback
             if self._callback_subscribers:
                 # Call the callback function with the generated data
-                with codetiming.Timer(text="Stream-Generator::CallbackFunctionTime: {milliseconds:.3f} ms", logger=logger.debug):
+                with codetiming.Timer(text="Stream-Generator::DataSubscriberCallback: run_time={milliseconds:.3f} ms", logger=logger.debug):
                     for callback in self._callback_subscribers:
                         callback(df)
             # adnvance the current time by the interval if implemented methods haven't yet
             if tmp_time == self.current_time:
                 self.current_time += timedelta(seconds=self.interval)
+            logger.debug(f"Stream-Generator::CurrentFrameTime: current_time={self.current_time}, end_time={self.end_time}")
             # check the current time and end time to decide whether to stop the generator
-            logger.debug(f"Stream-Generator: current_time={self.current_time}, end_time={self.end_time}")
             if self.end_time is not None and self.current_time >= self.end_time:
                 logger.info("Stream-Generator::EndTimeReached: Stopping stream data generator.")
                 self.stop()
