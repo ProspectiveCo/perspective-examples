@@ -50,6 +50,7 @@ def load_config_yaml(config_file: str = None, default_config: dict = {}) -> dict
 
     # load config file
     if config_file:
+        print(f'Loading configuration from: {config_file}')
         with open(config_file, 'r') as file:
             file_config = yaml.safe_load(file)
         # overwrite default config with file config
@@ -58,5 +59,43 @@ def load_config_yaml(config_file: str = None, default_config: dict = {}) -> dict
     return default_config
 
 
+# Default configuration
+DEFAULT_CONFIG = {
+    'alpha_vantage': {
+        'api_key': '',  # set your API key here
+        'base_url': 'https://www.alphavantage.co/query',
+        'ticker_interval': 'TIME_SERIES_DAILY'
+    },
+    'stocks_generator': {
+        'tech_symbols': [
+            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB', 'NFLX', 'NVDA', 'TSLA', 'INTC', 'CSCO', 'ADBE', 'ORCL', 'IBM', 'CRM', 'PYPL', 'AMD', 'TXN', 'QCOM', 'AVGO', 'SHOP', 'SNAP', 'TWTR', 'SQ', 'DOCU', 'UBER', 'LYFT', 'ZM', 'SPOT'
+        ],
+        'chip_symbols': [
+            'INTC', 'NVDA', 'AMD', 'TXN', 'QCOM', 'AVGO'
+        ],
+        'social_media_symbols': [
+            'FB', 'TWTR', 'SNAP', 'PINS'
+        ],
+        'e_commerce_symbols': [
+            'AMZN', 'SHOP', 'EBAY', 'ETSY', 'WMT', 'TGT'
+        ],
+        'ride_share_symbols': [
+            'UBER', 'LYFT'
+        ],
+        'brokers': [
+            'Slick Sam', 'Trading Tina', 'Money Mike', 'Clever Cathy', 'Profit Pete', 'Risky Rachel', 'Big Bucks Bob', 'Smart Susan', 'Lucky Luke'
+        ]
+    }
+}
+
+# look for default configuration file: config.yaml in this directory
+DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.yaml')
+if not os.path.exists(DEFAULT_CONFIG_PATH):
+    print(f'WARNING: Default configuration file missing! No file found at: {DEFAULT_CONFIG_PATH}.')
+    print('Using default configuration values.')
+else:
+    # load & update default configuration
+    DEFAULT_CONFIG.update(load_config_yaml(DEFAULT_CONFIG_PATH))
+
 # global app configuration
-config = load_config_yaml()
+config = load_config_yaml(default_config=DEFAULT_CONFIG)

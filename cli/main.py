@@ -4,7 +4,7 @@ from utils.logger import setup_logging
 from registry import generator_registry, writer_registry
 
 @click.command()
-@click.option('--config', type=click.Path(exists=True), help='Path to the YAML configuration file.')
+@click.option('--config', type=click.Path(exists=True), help='Path to the YAML configuration file.', required=True)
 @click.option('--log-level', default='INFO', help='Logging level.')
 def main(config, log_level):
     logger = setup_logging(log_level)

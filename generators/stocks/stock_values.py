@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import random
 from datetime import timedelta, datetime
-from data_generators.generators import StreamGenerator
-from data_generators.stocks.stock_fetchers import AlphaVantageTickerInterval, AlphaVantageIntradayInterval, fetch_stock_values
-from data_generators.utils import logger
+from ..base import StreamGenerator
+from .stock_fetcher import AlphaVantageIntradayInterval, AlphaVantageTickerInterval, fetch_stock_values
+from utils.logger import logger
 
 
 class StockValuesStreamGenerator(StreamGenerator):
@@ -25,7 +25,7 @@ class StockValuesStreamGenerator(StreamGenerator):
         self.api_key = api_key
         self.cache: dict[str, pd.DataFrame] = None
         self.ticker_indices: dict[str, int] = {ticker: 0 for ticker in self.tickers}    # Keep track of the current index position within the dataframe for each ticker
-        self_current_period = 0
+        self._current_period = 0
 
     def fetch_stock_values(self, **kwargs) -> dict[str, pd.DataFrame]:
         # overwrite class members from kwargs
@@ -161,8 +161,7 @@ class StockStreamDataGenerator(StreamGenerator):
         return pd.DataFrame(trades)
     
     
-
-if __name__ == '__main__':
+def test():
     stock_stream_generator = StockValuesStreamGenerator(tickers=['AAPL', 'GOOGL', 'MSFT'], interval=1.0, periods=8, start_time='2024-01-01 00:00:00')
     for _ in range(10):
         print(stock_stream_generator.get_data())
@@ -171,3 +170,7 @@ if __name__ == '__main__':
     print({ticker: len(df) for ticker, df in stock_stream_generator.cache.items()})
     print(f"current indices:")
     print(stock_stream_generator.ticker_indices)
+
+
+if __name__ == '__main__':
+    test()

@@ -4,8 +4,8 @@ from enum import Enum
 import dateparser
 import pandas as pd
 from datetime import datetime, timedelta
-from data_generators.stocks import stocks_generator_config
-from data_generators.utils import logger
+from utils.config_loader import config as config
+from utils.logger import logger
 
 
 # Define the public interface for the module
@@ -105,8 +105,8 @@ def fetch_stock_values(
     # --- Fetching Stock Values from the API ---
     # Fetch the stock values from the Alpha Vantage API
     if not api_key:
-        api_key = stocks_generator_config['alpha_vantage']['api_key']
-    url = stocks_generator_config['alpha_vantage']['base_url']
+        api_key = config['alpha_vantage']['api_key']
+    url = config['alpha_vantage']['base_url']
     params = {
         'function': ticker_interval.value,
         'symbol': ticker,
