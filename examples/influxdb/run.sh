@@ -6,6 +6,6 @@ docker run -d --rm \
     -e DOCKER_INFLUXDB_INIT_USERNAME="admin" \
     -e DOCKER_INFLUXDB_INIT_PASSWORD="sudo-banana-404" \
     -e DOCKER_INFLUXDB_INIT_ORG="perspective" \
-    -e DOCKER_INFLUXDB_INIT_BUCKET="smartgrid" \
+    -e DOCKER_INFLUXDB_INIT_BUCKET="smart_grid" \
     -e DOCKER_INFLUXDB_INIT_ADMIN_TOKEN="sudo-banana-404" \
     "influxdb:2"
