@@ -1,5 +1,6 @@
 import requests
 import io
+import os
 from enum import Enum
 import dateparser
 import pandas as pd
@@ -104,9 +105,14 @@ def fetch_stock_values(
 
     # --- Fetching Stock Values from the API ---
     # Fetch the stock values from the Alpha Vantage API
-    if not api_key:
-        api_key = config['alpha_vantage']['api_key']
-    url = config['alpha_vantage']['base_url']
+    if api_key is None:
+        api_key = config.get('alpha_vantage', {}).get('api_key', None)
+    if api_key is None or api_key == '':
+        api_key = os.getenv('ALPHA_VANTAGE_API_KEY', 'DEFAULT')
+    if api_key == 'DEFAULT':
+        logger.warning("No API key provided. Please set the $ALPHA_VANTAGE_API_KEY environment variable OR configure the config.yaml file.")
+        logger.warning("Continuing without an API key. This may result in rate limiting from the Alpha Vantage API.")
+    url = config.get('alpha_vantage', {}).get('base_url', 'https://www.alphavantage.co/query')
     params = {
         'function': ticker_interval.value,
         'symbol': ticker,
@@ -119,7 +125,9 @@ def fetch_stock_values(
         params['interval'] = intraday_interval.value
     logger.info(f"Fetching Alpha Vantage Stock Values: ticker={ticker} start_date={start_date} interval={ticker_interval}")
     logger.info("This may take a few seconds...")
-    response = requests.get(url, params=params)        
+    logger.info(f"api_key={api_key}")
+    response = requests.get(url, params=params)
+        
     # Check if the response is successful
     if response.status_code != 200:
         raise ValueError(f"Error fetching data from Alpha Vantage API: {response.status_code}")

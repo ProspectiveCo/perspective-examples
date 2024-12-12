@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import random
 from datetime import timedelta, datetime
-from ..base import StreamGenerator
+from ..base import StreamGenerator, BatchGenerator
 from .stock_fetcher import AlphaVantageIntradayInterval, AlphaVantageTickerInterval, fetch_stock_values
 from utils.logger import logger
 
@@ -94,6 +94,64 @@ class StockValuesStreamGenerator(StreamGenerator):
         return ['tickers']
     
 
+
+class HistoricalStockValuesBatchGenerator(BatchGenerator):
+    def __init__(
+            self,
+            tickers: str | list[str],
+            time_span: str = '1y',
+            ticker_interval: AlphaVantageTickerInterval | str = AlphaVantageTickerInterval.DAILY,
+            intraday_interval: AlphaVantageIntradayInterval | str = AlphaVantageIntradayInterval.FIFTEEN_MIN,
+            api_key: str = None,
+            **kwargs
+            ) -> None:
+        super().__init__(**kwargs)
+        self.tickers = [tickers] if isinstance(tickers, str) else tickers
+        self.time_span = time_span
+        self.ticker_interval = ticker_interval
+        self.intraday_interval = intraday_interval
+        self.api_key = api_key
+
+    def get_data(self) -> pd.DataFrame:
+        data = []
+        for ticker in self.tickers:
+            try:
+                df = fetch_stock_values(
+                    ticker=ticker, 
+                    time_span=self.time_span, 
+                    ticker_interval=self.ticker_interval, 
+                    intraday_interval=self.intraday_interval, 
+                    api_key=self.api_key,
+                    )
+                data.append(df)
+            except Exception as e:
+                logger.error(f"StocksBatchGenerator::FetchError: Error fetching historical stock values for ticker: {ticker}")
+                logger.error(f"tocksBatchGenerator::FetchError: {e}")
+        # concatenate the data frames and sort by timestamp and ticker
+        df = pd.concat(data, ignore_index=True)
+        df = df.sort_values(by=['timestamp', 'ticker'], ignore_index=True)
+        return df
+    
+    @property
+    def schema(self) -> dict:
+        return {
+            'timestamp': 'datetime64[ns]',
+            'ticker': 'str',
+            'open': 'float',
+            'high': 'float',
+            'low': 'float',
+            'close': 'float',
+            'volume': 'int'
+        }
+    
+    @staticmethod
+    def required_parameters() -> list:
+        return ['tickers']
+    
+    @staticmethod
+    def from_config(config: dict) -> 'HistoricalStockValuesBatchGenerator':
+        return HistoricalStockValuesBatchGenerator(**config)
+    
 
 
 class StockStreamDataGenerator(StreamGenerator):

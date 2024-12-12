@@ -34,12 +34,7 @@ alpha_vantage:
 
 # Data generation settings
 stocks_generator:
-  data_filepath: "data/historical_tech_stock_prices.csv"
-  output_filepath: "data/tech_trades.csv"
-  min_trades_per_day: 50
-  max_trades_per_day: 200
-  share_prct_range: [0.00001, 0.0001]
-  tech_symbols:
+  tech_tickers:
     - "AAPL"   # Apple Inc.
     - "MSFT"   # Microsoft Corporation
     - "GOOGL"  # Alphabet Inc. (Class A)
@@ -68,26 +63,26 @@ stocks_generator:
     - "LYFT"   # Lyft, Inc.
     - "ZM"     # Zoom Video Communications, Inc.
     - "SPOT"   # Spotify Technology S.A.
-  chip_symbols:
+  chip_tickers:
     - "INTC"   # Intel Corporation
     - "NVDA"   # NVIDIA Corporation
     - "AMD"    # Advanced Micro Devices, Inc.
     - "TXN"    # Texas Instruments Incorporated
     - "QCOM"   # Qualcomm Incorporated
     - "AVGO"   # Broadcom Inc.
-  social_media_symbols:
+  social_media_tickers:
     - "FB"     # Meta Platforms, Inc. (formerly Facebook)
     - "TWTR"   # Twitter, Inc.
     - "SNAP"   # Snap Inc.
     - "PINS"   # Pinterest, Inc.
-  e_commerce_symbols:
+  e_commerce_tickers:
     - "AMZN"   # Amazon.com Inc.
     - "SHOP"   # Shopify Inc.
     - "EBAY"   # eBay Inc.
     - "ETSY"   # Etsy, Inc.
     - "WMT"    # Walmart Inc.
     - "TGT"    # Target Corporation
-  ride_share_symbols:
+  ride_share_tickers:
     - "UBER"   # Uber Technologies, Inc.
     - "LYFT"   # Lyft, Inc.
   brokers:
