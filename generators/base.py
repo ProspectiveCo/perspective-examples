@@ -2,10 +2,11 @@ import time
 from datetime import datetime, timedelta
 import threading
 import pandas as pd
-from utils.logger import logger
 from abc import ABC, abstractmethod
 from typing import Union, List, Tuple, Callable
 import codetiming
+from utils.logger import logger
+from writers.base import DataWriter
 
 
 __all__ = [
@@ -159,8 +160,14 @@ class StreamGenerator(Generator):
             # Sleep for interval
             time.sleep(self.interval)
 
-    def add_subscriber(self, callback_function: callable) -> None:
-        self._callback_subscribers.append(callback_function)
+    def add_subscriber(self, subscriber_callback: Union[Callable, DataWriter]) -> None:
+        if isinstance(subscriber_callback, DataWriter):
+            self._callback_subscribers.append(subscriber_callback.write)
+        elif callable(subscriber_callback):
+            self._callback_subscribers.append(subscriber_callback)
+        else:
+            logger.error("Stream-Generator::InvalidSubscriberCallback: Subscriber callback must be a callable or an instance of DataWriter")
+            raise ValueError("Invalid type for subscriber_callback")
 
     def is_running(self) -> bool:
         return self.running
