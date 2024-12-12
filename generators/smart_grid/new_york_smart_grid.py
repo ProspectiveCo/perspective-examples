@@ -221,7 +221,7 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
             }
             data.append(row)
         # advance the time and frame
-        # self.current_time += timedelta(seconds=self.interval)
+        self.current_time += timedelta(seconds=self.interval)
         self._cur_frame += 1
         # return the data as a DataFrame
         return pd.DataFrame(data)

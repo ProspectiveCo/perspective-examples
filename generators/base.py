@@ -139,6 +139,8 @@ class StreamGenerator(Generator):
 
     def _data_generator_runner(self) -> None:
         while self.running:
+            # take note of the current time before the call to get new data and other inherited methods
+            tmp_time = self.current_time
             # Generate data for a single interval
             with codetiming.Timer(text="Stream-Generator::DataGenTime: {milliseconds:.3f} ms", logger=logger.debug):
                 df: pd.DataFrame = self.get_data()
@@ -148,8 +150,10 @@ class StreamGenerator(Generator):
                 with codetiming.Timer(text="Stream-Generator::CallbackFunctionTime: {milliseconds:.3f} ms", logger=logger.debug):
                     for callback in self._callback_subscribers:
                         callback(df)
+            # adnvance the current time by the interval if implemented methods haven't yet
+            if tmp_time == self.current_time:
+                self.current_time += timedelta(seconds=self.interval)
             # check the current time and end time to decide whether to stop the generator
-            self.current_time += timedelta(seconds=self.interval)
             logger.debug(f"Stream-Generator: current_time={self.current_time}, end_time={self.end_time}")
             if self.end_time is not None and self.current_time >= self.end_time:
                 logger.info("Stream-Generator::EndTimeReached: Stopping stream data generator.")
