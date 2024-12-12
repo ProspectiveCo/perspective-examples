@@ -2,7 +2,9 @@ from influxdb_client import InfluxDBClient, Point, WritePrecision, WriteOptions
 import pandas as pd
 from .base import DataWriter
 from utils.logger import logger
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
+import timeit
+
 
 class InfluxdbWriter(DataWriter):
     def __init__(self, 
@@ -34,7 +36,7 @@ class InfluxdbWriter(DataWriter):
         self.write_api = self.client.write_api(write_options=WriteOptions(batch_size=batch_size, flush_interval=flush_interval))
         # setting the influxdb bucket and organization
         self.setup_influxdb_org_bucket(org_name=org, bucket_name=bucket)
-        logger.info(f"InfluxdbWriter: Initialized with url={self.url}, org={self.org.name}, bucket={self.bucket.name}, measurement={self.measurement}")
+        logger.info(f"InfluxdbWriter::WriterInitiated: Initialized with url={self.url}, org={self.org.name}, bucket={self.bucket.name}, measurement={self.measurement}")
 
     def setup_influxdb_org_bucket(self, org_name: str, bucket_name: str) -> None:
         """
@@ -44,7 +46,7 @@ class InfluxdbWriter(DataWriter):
         orgs = self.client.organizations_api().find_organizations()
         if not any(org.name == org_name for org in orgs):
             # Create the organization
-            logger.warning(f"InfluxdbWriter: Organization {org_name} does not exist. Creating it.")
+            logger.warning(f"InfluxdbWriter::OrgCreate: Organization {org_name} does not exist. Creating it.")
             org = self.client.organizations_api().create_organization(name=org_name)
             self.org = org
             self.org_id = org.id
@@ -56,7 +58,7 @@ class InfluxdbWriter(DataWriter):
         # Check if the bucket exists
         if not self.client.buckets_api().find_bucket_by_name(self.bucket):
             # Create the bucket
-            logger.warning(f"InfluxdbWriter: Bucket {self.bucket} does not exist. Creating it.")
+            logger.warning(f"InfluxdbWriter::BucketCreate: Bucket {self.bucket} does not exist. Creating it.")
             bucket = self.client.buckets_api().create_bucket(bucket_name=self.bucket, org_id=self.org_id)
             self.bucket = bucket
             self.bucket_id = bucket.id
@@ -67,11 +69,12 @@ class InfluxdbWriter(DataWriter):
             self.bucket_id = bucket.id
 
     def write(self, data: pd.DataFrame) -> None:
-        # df = data.copy(deep=True)
+        start_time = timeit.default_timer()
         df = data
+        # df = data.copy(deep=True)
         # Ensure the timestamp column is of integer or datetime type
         if not pd.api.types.is_integer_dtype(df[self.timestamp_col]) and not pd.api.types.is_datetime64_any_dtype(df[self.timestamp_col]):
-            logger.debug(f"InfluxdbWriter: Timestamp column {self.timestamp_col} is not integer or datetime. Setting it to now.")
+            logger.debug(f"InfluxdbWriter::InvalidTimestampColumn: Timestamp column {self.timestamp_col} is not integer or datetime. Setting it to now.")
             df[self.timestamp_col] = pd.Timestamp.now()
         # Convert datetime to int epoch time if necessary
         if pd.api.types.is_datetime64_any_dtype(df[self.timestamp_col]):
@@ -89,10 +92,12 @@ class InfluxdbWriter(DataWriter):
         }, self.write_persion) for _, row in df.iterrows()]
         # write the points to InfluxDB
         self.write_api.write(bucket=self.bucket.name, org=self.org.name, record=points)
-        logger.debug(f"InfluxdbWriter: Wrote {len(points)} points to InfluxDB")
+        end_time = timeit.default_timer()
+        duration_ms = (end_time - start_time) * 1000
+        logger.debug(f"InfluxdbWriter::WriteBatch: rows={len(points)}, time={duration_ms:.3f} ms")
     
     def close(self) -> None:
-        logger.info("InfluxdbWriter: Closing InfluxDB client")
+        logger.info("InfluxdbWriter::WriterClosed: Closing InfluxDB client")
         self.client.close()
 
     @staticmethod
