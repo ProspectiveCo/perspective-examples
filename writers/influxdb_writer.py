@@ -67,7 +67,8 @@ class InfluxdbWriter(DataWriter):
             self.bucket_id = bucket.id
 
     def write(self, data: pd.DataFrame) -> None:
-        df = data.copy()
+        # df = data.copy(deep=True)
+        df = data
         # Ensure the timestamp column is of integer or datetime type
         if not pd.api.types.is_integer_dtype(df[self.timestamp_col]) and not pd.api.types.is_datetime64_any_dtype(df[self.timestamp_col]):
             logger.debug(f"InfluxdbWriter: Timestamp column {self.timestamp_col} is not integer or datetime. Setting it to now.")
