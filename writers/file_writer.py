@@ -46,7 +46,7 @@ class FileWriter(DataWriter):
         elif self.type == "parquet":
             data.to_parquet(self.file_path, index=False, mode='a')
         elif self.type == "arrow":
-            data.to_feather(self.file_path, index=False, mode='a')
+            data.to_feather(self.file_path)
         elif self.type == "ndjson":
             data.to_json(self.file_path, orient='records', lines=True, date_format=self.date_format, mode='a')
         else:

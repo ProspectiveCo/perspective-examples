@@ -73,7 +73,7 @@ DEFAULT_CONFIG = {
         'chip_symbols': [
             'INTC', 'NVDA', 'AMD', 'TXN', 'QCOM', 'AVGO'
         ],
-        'social_media_symbols': [
+        'socials_tickers': [
             'FB', 'TWTR', 'SNAP', 'PINS'
         ],
         'e_commerce_symbols': [
@@ -93,9 +93,6 @@ DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.yaml')
 if not os.path.exists(DEFAULT_CONFIG_PATH):
     print(f'WARNING: Default configuration file missing! No file found at: {DEFAULT_CONFIG_PATH}.')
     print('Using default configuration values.')
-else:
-    # load & update default configuration
-    DEFAULT_CONFIG.update(load_config_yaml(DEFAULT_CONFIG_PATH))
 
 # global app configuration
-config = load_config_yaml(default_config=DEFAULT_CONFIG)
+config = load_config_yaml(DEFAULT_CONFIG_PATH, default_config=DEFAULT_CONFIG)

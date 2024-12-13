@@ -126,7 +126,10 @@ class HistoricalStockValuesBatchGenerator(BatchGenerator):
                 data.append(df)
             except Exception as e:
                 logger.error(f"StocksBatchGenerator::FetchError: Error fetching historical stock values for ticker: {ticker}")
-                logger.error(f"tocksBatchGenerator::FetchError: {e}")
+                logger.error(f"StocksBatchGenerator::FetchError: {e}")
+        # if data is empty, return an empty data frame
+        if not data:
+            return pd.DataFrame()
         # concatenate the data frames and sort by timestamp and ticker
         df = pd.concat(data, ignore_index=True)
         df = df.sort_values(by=['timestamp', 'ticker'], ignore_index=True)

@@ -70,7 +70,7 @@ stocks_generator:
     - "TXN"    # Texas Instruments Incorporated
     - "QCOM"   # Qualcomm Incorporated
     - "AVGO"   # Broadcom Inc.
-  social_media_tickers:
+  socials_tickers:
     - "FB"     # Meta Platforms, Inc. (formerly Facebook)
     - "TWTR"   # Twitter, Inc.
     - "SNAP"   # Snap Inc.

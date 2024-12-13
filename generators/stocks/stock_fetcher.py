@@ -3,6 +3,7 @@ import io
 import os
 from enum import Enum
 import dateparser
+import re
 import pandas as pd
 from datetime import datetime, timedelta
 from utils.config_loader import config as config
@@ -125,13 +126,21 @@ def fetch_stock_values(
         params['interval'] = intraday_interval.value
     logger.info(f"Fetching Alpha Vantage Stock Values: ticker={ticker} start_date={start_date} interval={ticker_interval}")
     logger.info("This may take a few seconds...")
-    logger.info(f"api_key={api_key}")
     response = requests.get(url, params=params)
         
     # Check if the response is successful
     if response.status_code != 200:
         raise ValueError(f"Error fetching data from Alpha Vantage API: {response.status_code}")
-    
+    # check for common error responses from Alpha Vanatage API
+    patterns: list[str] = [
+        (r'"Information":\s*".*rate limit.*premium.*"', "API rate limit exceeded. Please upgrade to a premium plan."),
+        (r'"Error*":\s*".*"', "Generic Error"),
+    ]
+    for pattern, error_message in patterns:
+        match = re.search(pattern, response.text)
+        if match:
+            raise ValueError(f"Error fetching data from Alpha Vantage API. {error_message}\n{response.text}")
+    print(response.text)
     # --- Parsing CSV and Post Processing ---
     # Read the CSV data into a pandas DataFrame
     df = pd.read_csv(io.StringIO(response.text))
