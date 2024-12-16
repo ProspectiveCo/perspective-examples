@@ -58,7 +58,7 @@ cd examples/influxdb/influxdb-docker
 ./start_influxdb.sh
 ```
 
-This script contains the code to start and setup an influxdb container with the following configuration:
+This script contains the code to start and setup an [influxdb docker container](https://hub.docker.com/_/influxdb) with the following configuration:
 
 ```bash
 # This script runs an InfluxDB container with the following configuration:
@@ -189,17 +189,17 @@ if __name__ == '__main__':
 
 This script initializes the data generator and configures it to send data to InfluxDB at regular intervals (every 250ms). Please pay attention to the following:
 
-- `START_TIME` sets the start of stream to now (with offset of 0 mintues).
+- `START_TIME` sets the start of stream to now (with offset of 0 minutes).
 - `END_TIME` sets the end of stream to 30 minutes from now.
-- `NewYorkSmartGridStreamGenerator` is the class simulating an smart grid data for New York city power stations. You can follow the code in [`generators/smart_grid/new_york_smart_grid.py`]().
-- The script also adds a `InfluxdbWriter()` class which streams data to influxdb. You can follow the code in: [`writers/influxdb_writer.py`]().
+- `NewYorkSmartGridStreamGenerator` is the class simulating an smart grid data for New York city power stations. You can follow the code in [`generators/smart_grid/new_york_smart_grid.py`](https://github.com/ProspectiveCo/perspective-examples/blob/main/generators/smart_grid/new_york_smart_grid.py).
+- The script also adds a `InfluxdbWriter()` class which streams data to influxdb. You can follow the code in: [`writers/influxdb_writer.py`](https://github.com/ProspectiveCo/perspective-examples/blob/main/writers/influxdb_writer.py).
 
 This will start a background thread which continuously generates and streams data. The main loop can be stopped at any time with CTRL + C. 
 
 
 #### 4. InfluxDB Dashboard
 
-Let's first start by inspecting the data with the influxdb dashabord: 
+Let's first start by inspecting the data with the influxdb dashboard: 
 
 - Navigate to Data Explorer on the left panel
 - Switch the Script Editor
@@ -234,7 +234,7 @@ Login with your credentials.
 Click on Create New Dashboard and open the SOURCES tab on the top right corner:
 
 - From the drop down choose InfluxDB
-- Enter influxdb toekn: "sudo-banana-404"
+- Enter influxdb token: "sudo-banana-404"
 - Set the endpoint URL: "http://localhost:8086"
 - Set organization to: "perspective" and data pull interval to `0.5` seconds
 - Use the same influxdb query:
@@ -255,7 +255,7 @@ You can now see the data being imported into the Data Grid view and refreshed ev
 
 You can start interacting and adjusting the view. Click the dashboard title called "untitled" on the top left corner to open the configuration tab.
 
-Once the configration tab is opened on the right, you can adjust the view setting. Try grouping by station_name and deactive some of the columns to show:
+Once the configuration tab is opened on the right, you can adjust the view setting. Try grouping by station_name and deactivate some of the columns to show:
 
 ![InfluxDB Dashboard](imgs/prsp-04.png)
 
@@ -306,7 +306,7 @@ Probably the best view for this data, is using the Map Scatter plot. Choose Map 
 }
 ```
 
-Perspective views can easily be saved to and imported from JSON config. This will initialize the perspective dashabord with all the correct setting.
+Perspective views can easily be saved to and imported from JSON config. This will initialize the perspective dashboard with all the correct setting.
 
 Perspective viewer pulls data from influxdb at every 500ms interval and refreshes the view. You can see the live power consumption for each station and stations switch ON/OFF regularly based on power outages!
 
