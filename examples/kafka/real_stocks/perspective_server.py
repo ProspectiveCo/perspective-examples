@@ -80,7 +80,6 @@ def perspective_thread(perspective_server):
         "low": "float",
         "close": "float",
         "volume": "float",
-        "date": "date",
     }
     # define the table schema
     table = client.table(

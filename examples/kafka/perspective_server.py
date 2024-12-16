@@ -74,6 +74,7 @@ def perspective_thread(perspective_server):
     schema = {
         "timestamp": "datetime",
         "ticker": "string",
+        "client": "string",
         "open": "float",
         "high": "float",
         "low": "float",
