@@ -1,0 +1,10 @@
+
+# ========================================================
+# Logging settings
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  handlers:
+    - "console"             # comment this line to disable console logging
+    # - "file"                # comment this line to disable file logging
+  file:
+    path: "app.log"         # path to log file

@@ -1,0 +1,97 @@
+# ========================================================
+# LOGGING SETTINGS
+# ========================================================
+logging:
+  level: "DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  # custom format: https://docs.python.org/3/library/logging.html#logrecord-attributes
+  # format: "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+  # format: "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+
+  # log to the following
+  handlers:
+    - "console"             # comment this line to disable console logging
+    - "file"                # comment this line to disable file logging
+  file:
+    path: "app.log"         # path to log file
+    max_size: 10MB          # max size of log file
+    backup_count: 1         # number of old log files to keep (1: keep only the current log file)
+
+
+# ========================================================
+# STOCKS GENERATOR SETTINGS
+# ========================================================
+
+# API info for Alpha Vantage live stock data
+alpha_vantage:
+  # Set your Alpha Vantage API key here. 
+  # If you don't have one, get it from https://www.alphavantage.co/support/#api-key
+  # If no key is set, the generators uses the `demo` key, which is limited to 5 requests per minute.
+  api_key: # set your API key here
+  base_url: "https://www.alphavantage.co/query"
+  ticker_interval: "TIME_SERIES_DAILY"  # Options: TIME_SERIES_INTRADAY, TIME_SERIES_DAILY, TIME_SERIES_WEEKLY, TIME_SERIES_MONTHLY
+
+# Data generation settings
+stocks_generator:
+  tech_tickers:
+    - "AAPL"   # Apple Inc.
+    - "MSFT"   # Microsoft Corporation
+    - "GOOGL"  # Alphabet Inc. (Class A)
+    - "AMZN"   # Amazon.com Inc.
+    - "FB"     # Meta Platforms, Inc. (formerly Facebook)
+    - "NFLX"   # Netflix, Inc.
+    - "NVDA"   # NVIDIA Corporation
+    - "TSLA"   # Tesla, Inc.
+    - "INTC"   # Intel Corporation
+    - "CSCO"   # Cisco Systems, Inc.
+    - "ADBE"   # Adobe Inc.
+    - "ORCL"   # Oracle Corporation
+    - "IBM"    # International Business Machines Corporation
+    - "CRM"    # Salesforce, Inc.
+    - "PYPL"   # PayPal Holdings, Inc.
+    - "AMD"    # Advanced Micro Devices, Inc.
+    - "TXN"    # Texas Instruments Incorporated
+    - "QCOM"   # Qualcomm Incorporated
+    - "AVGO"   # Broadcom Inc.
+    - "SHOP"   # Shopify Inc.
+    - "SNAP"   # Snap Inc.
+    - "TWTR"   # Twitter, Inc.
+    - "SQ"     # Block, Inc. (formerly Square)
+    - "DOCU"   # DocuSign, Inc.
+    - "UBER"   # Uber Technologies, Inc.
+    - "LYFT"   # Lyft, Inc.
+    - "ZM"     # Zoom Video Communications, Inc.
+    - "SPOT"   # Spotify Technology S.A.
+  chip_tickers:
+    - "INTC"   # Intel Corporation
+    - "NVDA"   # NVIDIA Corporation
+    - "AMD"    # Advanced Micro Devices, Inc.
+    - "TXN"    # Texas Instruments Incorporated
+    - "QCOM"   # Qualcomm Incorporated
+    - "AVGO"   # Broadcom Inc.
+  socials_tickers:
+    - "FB"     # Meta Platforms, Inc. (formerly Facebook)
+    - "TWTR"   # Twitter, Inc.
+    - "SNAP"   # Snap Inc.
+    - "PINS"   # Pinterest, Inc.
+  e_commerce_tickers:
+    - "AMZN"   # Amazon.com Inc.
+    - "SHOP"   # Shopify Inc.
+    - "EBAY"   # eBay Inc.
+    - "ETSY"   # Etsy, Inc.
+    - "WMT"    # Walmart Inc.
+    - "TGT"    # Target Corporation
+  ride_share_tickers:
+    - "UBER"   # Uber Technologies, Inc.
+    - "LYFT"   # Lyft, Inc.
+  brokers:
+    - "Slick Sam"
+    - "Trading Tina"
+    - "Money Mike"
+    - "Clever Cathy"
+    - "Profit Pete"
+    - "Risky Rachel"
+    - "Big Bucks Bob"
+    - "Smart Susan"
+    - "Lucky Luke"

@@ -39,3 +39,16 @@ from(bucket: "trades")
         "_time", "broker", "ticker", "bid_price", "ask_price", "trade_price","trade_value"
         ])
     |> yield(name: "table1")
+
+
+from(bucket: "smart_grid")
+  |> range(start: -1m, stop: 1s)
+  |> filter(fn: (r) => r["_measurement"] == "new_york_smart_grid")
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> yield(name: "table")
+
+from(bucket: "smart_grid")
+  |> range(start: -1s)
+  |> filter(fn: (r) => r["_measurement"] == "new_york_smart_grid")
+  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+  |> yield(name: "newyork")

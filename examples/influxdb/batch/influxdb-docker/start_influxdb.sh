@@ -6,8 +6,8 @@
 IMAGE_TAG="influxdb:2"
 CONTAINER_NAME="influxdb_container"
 # InfluxDB data dirs
-INFLUXDB_DATA_DIR="./volumes/influxdb"
-INFLUXDB_CONFIG_DIR="./volumes/config"
+# INFLUXDB_DATA_DIR="./volumes/influxdb"
+# INFLUXDB_CONFIG_DIR="./volumes/config"
 DATA_DIR="./volumes/data"
 # InfluxDB credentials and initial setup
 INIT_TOKEN="sudo-banana-404-not-found"
@@ -64,8 +64,8 @@ echo "Starting the InfluxDB container..."
 docker run -d \
     --name "$CONTAINER_NAME" \
     -p 8086:8086 \
-    -v "$INFLUXDB_DATA_DIR":/var/lib/influxdb2 \
-    -v "$INFLUXDB_CONFIG_DIR":/etc/influxdb2 \
+    # -v "$INFLUXDB_DATA_DIR":/var/lib/influxdb2 \
+    # -v "$INFLUXDB_CONFIG_DIR":/etc/influxdb2 \
     -v "$DATA_DIR":/data \
     -e DOCKER_INFLUXDB_INIT_MODE=setup \
     -e DOCKER_INFLUXDB_INIT_USERNAME="$INFLUX_USER" \
@@ -125,4 +125,4 @@ echo "Organization: $ORG_NAME"
 echo "Buckets: $BUCKET_NAME, $SAMPLE_BUCKET_NAME"
 echo "Retention: $RETENTION"
 echo "Admin token: $INIT_TOKEN"
-echo "Web UI: http://localhost:8006/"
+echo "Web UI: http://localhost:8086/"

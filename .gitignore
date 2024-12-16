@@ -1,4 +1,19 @@
 # ===========================================================
+# PROJECT SETTINGS
+# ===========================================================
+
+# data files
+examples/influxdb/influxdb-docker/volumes/config
+examples/influxdb/influxdb-docker/volumes/influxdb
+examples/influxdb/influxdb-docker/volumes/data/trades-lg.tar.gz
+examples/influxdb/influxdb-docker.tar.gz
+data/*
+!data/README.md
+*.csv
+*.arrow
+*.parquet
+
+# ===========================================================
 # PYTHON
 # ===========================================================
 # Byte-compiled / optimized / DLL files
@@ -323,15 +338,4 @@ Cargo.lock
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-# ===========================================================
-# CUSTOM
-# ===========================================================
 
-# data files
-historical_stock_prices.csv
-sample_social_media.csv
-tech_trades.csv
-examples/influxdb/influxdb-docker/volumes/config
-examples/influxdb/influxdb-docker/volumes/influxdb
-examples/influxdb/influxdb-docker/volumes/data/trades-lg.tar.gz
-examples/influxdb/influxdb-docker.tar.gz

@@ -2,10 +2,11 @@ pandas
 numpy
 pyarrow
 jupyterlab
-# csp
-# fastapi
+plotly
 ipywidgets
 perspective-python
-# superstore
 uvicorn
 requests
+dateparser
+codetiming
+influxdb-client
