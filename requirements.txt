@@ -4,9 +4,10 @@ pyarrow
 jupyterlab
 plotly
 ipywidgets
-perspective-python
 uvicorn
+tornado
 requests
 dateparser
 codetiming
 influxdb-client
+perspective-python
