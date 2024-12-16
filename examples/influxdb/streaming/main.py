@@ -19,7 +19,7 @@ from writers.influxdb_writer import InfluxdbWriter
 # DEMO CONFIGURATION PARAMETERS
 # change these parameters to customize the demo
 # ============================================
-START_TIME = datetime.now() - timedelta(minutes=5)                  # demo start time
+START_TIME = datetime.now() - timedelta(minutes=0)                  # demo start time
 END_TIME = datetime.now() + timedelta(minutes=30, seconds=0)        # demo end time
 INFLUXDB_URL = 'http://localhost:8086'
 INFLUXDB_TOKEN = 'sudo-banana-404'
@@ -74,6 +74,7 @@ def main():
         smart_grid.stop()
     finally:
         # Ensure the InfluxDB writer is closed properly
+        smart_grid.stop()
         influx_writer.close()
         del influx_writer
         del smart_grid
