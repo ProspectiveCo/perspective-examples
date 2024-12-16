@@ -93,6 +93,10 @@ class StockValuesStreamGenerator(StreamGenerator):
     def required_parameters() -> list:
         return ['tickers']
     
+    @staticmethod
+    def from_config(config: dict) -> 'StockValuesStreamGenerator':
+        return StockValuesStreamGenerator(**config)
+    
 
 
 class HistoricalStockValuesBatchGenerator(BatchGenerator):

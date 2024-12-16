@@ -19,16 +19,29 @@ from datetime import date, datetime
 import perspective
 import perspective.handlers.tornado
 import json
-from confluent_kafka import Consumer, KafkaException
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('main')
 
 
-KAFKA_BROKER = "localhost:9092"
-KAFKA_TOPIC = "stock_values"
-KAFKA_GROUP_ID = "stock_values_consumer"
+SECURITIES = [
+    "AAPL.N",
+    "AMZN.N",
+    "QQQ.N",
+    "NVDA.N",
+    "TSLA.N",
+    "FB.N",
+    "MSFT.N",
+    "TLT.N",
+    "XIV.N",
+    "YY.N",
+    "CSCO.N",
+    "GOOGL.N",
+    "PCLN.N",
+]
+
+CLIENTS = ["Homer", "Marge", "Bart", "Lisa", "Maggie", "Moe", "Lenny", "Carl", "Krusty"]
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -46,28 +59,21 @@ class CustomJSONEncoder(json.JSONEncoder):
 json.JSONEncoder.default = CustomJSONEncoder().default
 
 
-def read_kafka_topic(consumer: Consumer, timeout: float = 0.250):
+def data_source():
     """
-    Read latest records from a Kafka topic and return them as an array of dict objects.
+    Generate random data for the Perspective table
     """
-    messages = []
-    try:
-        while True:
-            msg = consumer.poll(timeout)
-            if msg is None:
-                break
-            if msg.error():
-                if msg.error().code() == KafkaException._PARTITION_EOF:
-                    break
-                else:
-                    raise KafkaException(msg.error())
-            messages.append(json.loads(msg.value().decode('utf-8')))
-    except KafkaException as e:
-        logger.warning(f"KafkaException: {e}")
-    except Exception as e:
-        logger.warning(f"Exception: {e}")
-    print(messages)
-    return messages
+    modifier = random.random() * random.randint(1, 50)
+    return [{
+        "name": random.choice(SECURITIES),
+        "client": random.choice(CLIENTS),
+        "open": random.uniform(0, 75) + random.randint(0, 9) * modifier,
+        "high": random.uniform(0, 105) + random.randint(1, 3) * modifier,
+        "low": random.uniform(0, 85) + random.randint(1, 3) * modifier,
+        "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
+        "lastUpdate": datetime.now(),
+        "date": date.today(),
+    } for _ in range(5)]
 
 
 def perspective_thread(perspective_server):
@@ -79,36 +85,27 @@ def perspective_thread(perspective_server):
     # define the table schema
     table = client.table(
         {
-            "timestamp": "datetime",
-            "ticker": "string",
+            "name": "string",
+            "client": "string",
             "open": "float",
             "high": "float",
             "low": "float",
             "close": "float",
-            "volume": "float",
+            "lastUpdate": "datetime",
+            "date": "date",
         },
         limit=2500,                 # maximum number of rows in the table
-        name="stock_values",        # table name. Use this with perspective-viewer on the client side
+        name="rand_stocks",         # table name. Use this with perspective-viewer on the client side
     )
     logger.info("Created new Perspective table")
 
-    # create a kafka consumer
-    conf = {
-        'bootstrap.servers': KAFKA_BROKER,
-        'group.id': KAFKA_GROUP_ID,
-        'auto.offset.reset': 'earliest',  # Start reading from the beginning of the topic
-        'security.protocol': 'PLAINTEXT',
-    }
-    consumer = Consumer(conf)
-    consumer.subscribe([KAFKA_TOPIC])
-
     # update with new data every 50ms
     def updater():
-        table.update(read_kafka_topic(consumer, timeout=.1))
+        table.update(data_source())
 
     logger.info("Starting tornado ioloop update loop every 50ms")
     # start the periodic callback to update the table data
-    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=250)
+    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=50)
     callback.start()
 
 
