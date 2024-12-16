@@ -46,7 +46,8 @@ class CustomJSONEncoder(json.JSONEncoder):
 json.JSONEncoder.default = CustomJSONEncoder().default
 
 
-def read_kafka_topic(consumer: Consumer, timeout: float = 0.250):
+
+def read_kafka(consumer: Consumer, timeout: float = 0.250):
     """
     Read latest records from a Kafka topic and return them as an array of dict objects.
     """
@@ -54,19 +55,14 @@ def read_kafka_topic(consumer: Consumer, timeout: float = 0.250):
     try:
         while True:
             msg = consumer.poll(timeout)
-            if msg is None:
+            if msg is None or (msg.error() and msg.error().code() == KafkaException._PARTITION_EOF):
                 break
-            if msg.error():
-                if msg.error().code() == KafkaException._PARTITION_EOF:
-                    break
-                else:
-                    raise KafkaException(msg.error())
             messages.append(json.loads(msg.value().decode('utf-8')))
     except KafkaException as e:
         logger.warning(f"KafkaException: {e}")
     except Exception as e:
         logger.warning(f"Exception: {e}")
-    print(messages)
+    # print(messages)
     return messages
 
 
@@ -76,17 +72,19 @@ def perspective_thread(perspective_server):
     """
     # create a new Perspective table
     client = perspective_server.new_local_client()
+    schema = {
+        "timestamp": "datetime",
+        "ticker": "string",
+        "open": "float",
+        "high": "float",
+        "low": "float",
+        "close": "float",
+        "volume": "float",
+        "date": "date",
+    }
     # define the table schema
     table = client.table(
-        {
-            "timestamp": "datetime",
-            "ticker": "string",
-            "open": "float",
-            "high": "float",
-            "low": "float",
-            "close": "float",
-            "volume": "float",
-        },
+        schema,
         limit=2500,                 # maximum number of rows in the table
         name="stock_values",        # table name. Use this with perspective-viewer on the client side
     )
@@ -104,7 +102,7 @@ def perspective_thread(perspective_server):
 
     # update with new data every 50ms
     def updater():
-        table.update(read_kafka_topic(consumer, timeout=.1))
+        table.update(read_kafka(consumer, timeout=.1))
 
     logger.info("Starting tornado ioloop update loop every 50ms")
     # start the periodic callback to update the table data

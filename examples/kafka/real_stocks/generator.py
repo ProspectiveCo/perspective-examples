@@ -24,7 +24,7 @@ from time import sleep
 try:
     from utils.logger import logger
 except ImportError:
-    sys.path.append('../../')
+    sys.path.append('../../../')
 finally:
     from utils.logger import logger
 
