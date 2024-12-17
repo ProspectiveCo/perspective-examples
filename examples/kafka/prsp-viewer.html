@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perspective Viewer</title>
+    <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css" />
+</head>
+<body>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/cdn/perspective-viewer.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid/dist/cdn/perspective-viewer-datagrid.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc/dist/cdn/perspective-viewer-d3fc.js"></script>
+
+    <style>
+        #viewer-container {
+            height: 95vh;
+            width: 95vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        perspective-viewer {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <script type="module">
+        import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective@3.1.3/dist/cdn/perspective.js";
+
+        document.addEventListener("DOMContentLoaded", function() {
+            async function load_viewer() {
+
+                const table_name = "stock_values";
+                const viewer = document.getElementById("prsp-viewer");
+
+                // Bind to the server's worker instead of instantiating a Web Worker.
+                // const websocket = await perspective.websocket(
+                //     window.location.origin.replace("http", "ws")
+                // );
+                const websocket = await perspective.websocket("ws://localhost:8080/websocket");
+
+                // Bind the viewer to the preloaded data source.  `table` and `view` objects
+                // live on the server.
+                const server_table = await websocket.open_table(table_name);
+                await viewer.load(server_table);
+
+                // // Or load data from a table using a view. The browser now also has a copy of
+                // // this view in its own `table`, as well as its updates transferred to the
+                // // browser using Apache Arrow.
+                // const worker = await perspective.worker();
+                // const server_view = await server_table.view();
+                // const client_table = worker.table(server_view);
+                // await viewer.load(client_table);
+
+            }
+            load_viewer();
+        });
+    </script>
+
+    <div id="viewer-container">
+        <perspective-viewer id="prsp-viewer" theme="Pro Dark"></perspective-viewer>
+    </div>
+</body>
+</html>
