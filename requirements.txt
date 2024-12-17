@@ -9,5 +9,6 @@ tornado
 requests
 dateparser
 codetiming
-influxdb-client
 perspective-python
+confluent-kafka
+influxdb-client
