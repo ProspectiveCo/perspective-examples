@@ -29,6 +29,8 @@ KAFKA_BROKER = "localhost:9092"
 KAFKA_TOPIC = "stock_values"
 KAFKA_GROUP_ID = "stock_values_consumer"
 
+PERSPECTIVE_TABLE_NAME = "stock_values"
+
 
 class CustomJSONEncoder(json.JSONEncoder):
     """
@@ -85,8 +87,8 @@ def perspective_thread(perspective_server):
     # define the table schema
     table = client.table(
         schema,
-        limit=2500,                 # maximum number of rows in the table
-        name="stock_values",        # table name. Use this with perspective-viewer on the client side
+        limit=2500,                     # maximum number of rows in the table
+        name=PERSPECTIVE_TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
     )
     logger.info("Created new Perspective table")
 
