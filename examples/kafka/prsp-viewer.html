@@ -35,26 +35,14 @@
 
                 const table_name = "stock_values";
                 const viewer = document.getElementById("prsp-viewer");
-
-                // Bind to the server's worker instead of instantiating a Web Worker.
-                // const websocket = await perspective.websocket(
-                //     window.location.origin.replace("http", "ws")
-                // );
+                // Connect to the perspective websocket server
                 const websocket = await perspective.websocket("ws://localhost:8080/websocket");
 
-                // Bind the viewer to the preloaded data source.  `table` and `view` objects
-                // live on the server.
+                // Bind the viewer to the perspective table on the server.
+                // Data transfer between the server and the viewer is optimized via apache arrow; 
+                // exchanging delta changes only.
                 const server_table = await websocket.open_table(table_name);
                 await viewer.load(server_table);
-
-                // // Or load data from a table using a view. The browser now also has a copy of
-                // // this view in its own `table`, as well as its updates transferred to the
-                // // browser using Apache Arrow.
-                // const worker = await perspective.worker();
-                // const server_view = await server_table.view();
-                // const client_table = worker.table(server_view);
-                // await viewer.load(client_table);
-
             }
             load_viewer();
         });
