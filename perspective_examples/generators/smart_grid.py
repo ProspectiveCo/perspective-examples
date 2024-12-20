@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 import random
 from datetime import datetime, timedelta
-from generators.base import StreamGenerator
-from utils.logger import logger
-import generators.utils.random_waves as rw
+
+from perspective_examples.utils import logger
+from perspective_examples.generators.base import StreamGenerator
+from perspective_examples.generators.utils import RandomWaveGenerator as rwg
 
 
 POWER_STATIONS: list[dict] = [
@@ -152,9 +153,9 @@ class NewYorkSmartGridStreamGenerator(StreamGenerator):
                 "name": POWER_STATIONS[i]["name"],
                 "lat": POWER_STATIONS[i]["lat"],
                 "lon": POWER_STATIONS[i]["lon"],
-                "power_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(2, 7), amplitude=(2.0, 10.0), phase=np.random.uniform(0.5, 2*np.pi), noise=0.05).tolist(),
-                "battery_wave": rw.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(1, 5), amplitude=(1.0, 10.0), phase=np.random.uniform(0, 2*np.pi)).tolist(),
-                "temperature_wave": (55 + rw.sinusoidal_wave(wave_mode='full', varying_mode='amp', num_points=self.nrows, periods=random.randint(1, 10), amplitude=(10.0, 30.0), phase=np.random.uniform(0, 2*np.pi))).tolist(),
+                "power_wave": rwg.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(2, 7), amplitude=(2.0, 10.0), phase=np.random.uniform(0.5, 2*np.pi), noise=0.05).tolist(),
+                "battery_wave": rwg.sinusoidal_wave(wave_mode='full', varying_mode='both', num_points=self.nrows, periods=random.randint(1, 5), amplitude=(1.0, 10.0), phase=np.random.uniform(0, 2*np.pi)).tolist(),
+                "temperature_wave": (55 + rwg.sinusoidal_wave(wave_mode='full', varying_mode='amp', num_points=self.nrows, periods=random.randint(1, 10), amplitude=(10.0, 30.0), phase=np.random.uniform(0, 2*np.pi))).tolist(),
                 "fault": 0,
                 "power_seed": random.randint(10_000, 15_000),
                 "battery_seed": random.randint(8_000, 12_000),

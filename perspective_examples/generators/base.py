@@ -5,8 +5,9 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from typing import Union, List, Tuple, Callable
 import codetiming
-from utils.logger import logger
-from writers.base import DataWriter
+
+from ..utils import logger
+from ..writers.base import DataWriter
 
 
 __all__ = [
