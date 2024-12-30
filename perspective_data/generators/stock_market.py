@@ -9,8 +9,8 @@ from enum import Enum
 from datetime import timedelta, datetime
 import dateparser
 
-from perspective_examples.utils import config, logger
-from perspective_examples.generators.base import StreamGenerator, BatchGenerator
+from perspective_data.utils import config, logger
+from perspective_data.generators.base import StreamGenerator, BatchGenerator
 
 
 

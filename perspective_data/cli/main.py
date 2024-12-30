@@ -1,5 +1,5 @@
 import click
-from perspective_examples.utils import load_config_yaml, setup_logging_from_config
+from perspective_data.utils import load_config_yaml, setup_logging_from_config
 from registry import generator_registry, writer_registry
 
 @click.command()

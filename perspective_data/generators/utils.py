@@ -43,7 +43,7 @@ import numpy as np
 import pandas as pd
 import random
 
-from perspective_examples.utils import logger
+from perspective_data.utils import logger
 
 
 __all__ = (

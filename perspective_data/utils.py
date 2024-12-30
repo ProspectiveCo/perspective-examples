@@ -95,7 +95,7 @@ DEFAULT_CONFIG = {
 }
 
 # look for default configuration file: config.yaml in this directory
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.yaml')
+DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../config.yaml')
 if not os.path.exists(DEFAULT_CONFIG_PATH):
     print(f'WARNING: Default configuration file missing! No file found at: {DEFAULT_CONFIG_PATH}.')
     print('Using default configuration values.')

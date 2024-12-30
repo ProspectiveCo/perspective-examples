@@ -3,9 +3,9 @@ import numpy as np
 import random
 from datetime import datetime, timedelta
 
-from perspective_examples.utils import logger
-from perspective_examples.generators.base import StreamGenerator
-from perspective_examples.generators.utils import RandomWaveGenerator as rwg
+from perspective_data.utils import logger
+from perspective_data.generators.base import StreamGenerator
+from perspective_data.generators.utils import RandomWaveGenerator as rwg
 
 
 POWER_STATIONS: list[dict] = [
