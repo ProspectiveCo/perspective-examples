@@ -3,15 +3,18 @@
 # ===========================================================
 
 # data files
-examples/influxdb/influxdb-docker/volumes/config
-examples/influxdb/influxdb-docker/volumes/influxdb
-examples/influxdb/influxdb-docker/volumes/data/trades-lg.tar.gz
-examples/influxdb/influxdb-docker.tar.gz
-data/*
+data/
 !data/README.md
+!data/get_data.sh
 *.csv
 *.arrow
 *.parquet
+*.tar.gz
+*.tar
+*.zip
+*.gz
+*.tgz
+*.bz2
 
 # ===========================================================
 # PYTHON
