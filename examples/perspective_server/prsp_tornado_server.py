@@ -39,6 +39,28 @@ SECURITIES = [
     "CSCO.N",
     "GOOGL.N",
     "PCLN.N",
+    "NFLX.N",
+    "BABA.N",
+    "INTC.N",
+    "V.N",
+    "JPM.N",
+    "WMT.N",
+    "DIS.N",
+    "PYPL.N",
+    "ADBE.N",
+    "CMCSA.N",
+    "PEP.N",
+    "KO.N",
+    "NKE.N",
+    "MRK.N",
+    "PFE.N",
+    "T.N",
+    "VZ.N",
+    "ORCL.N",
+    "IBM.N",
+    "CRM.N",
+    "BA.N",
+    "GE.N",
 ]
 
 CLIENTS = ["Homer", "Marge", "Bart", "Lisa", "Maggie", "Moe", "Lenny", "Carl", "Krusty"]
@@ -65,7 +87,7 @@ def data_source():
     """
     modifier = random.random() * random.randint(1, 50)
     return [{
-        "name": random.choice(SECURITIES),
+        "ticker": random.choice(SECURITIES),
         "client": random.choice(CLIENTS),
         "open": random.uniform(0, 75) + random.randint(0, 9) * modifier,
         "high": random.uniform(0, 105) + random.randint(1, 3) * modifier,
@@ -73,7 +95,8 @@ def data_source():
         "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
         "lastUpdate": datetime.now(),
         "date": date.today(),
-    } for _ in range(5)]
+    # } for _ in range(random.randint(4500, 5500))]
+    } for _ in range(100)]
 
 
 def perspective_thread(perspective_server):
@@ -85,7 +108,7 @@ def perspective_thread(perspective_server):
     # define the table schema
     table = client.table(
         {
-            "name": "string",
+            "ticker": "string",
             "client": "string",
             "open": "float",
             "high": "float",
@@ -95,7 +118,7 @@ def perspective_thread(perspective_server):
             "date": "date",
         },
         limit=2500,                 # maximum number of rows in the table
-        name="rand_stocks",         # table name. Use this with perspective-viewer on the client side
+        name="stock_values",        # table name. Use this with perspective-viewer on the client side
     )
     logger.info("Created new Perspective table")
 
