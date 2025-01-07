@@ -12,3 +12,4 @@ codetiming
 perspective-python
 confluent-kafka
 influxdb-client
+pytest
