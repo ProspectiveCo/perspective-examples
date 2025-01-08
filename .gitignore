@@ -16,10 +16,15 @@ data/
 *.tgz
 *.bz2
 
-# tdengine
+# taos / tdengine
+# -----------------------------------------------------------
 TDengine-client-**/
 tdengine-client/*
 examples/tdengine/tdengine-client
+examples/tdengine/TDengine-client-*
+examples-python/tdengine/tdengine-client
+examples-python/tdengine/tdengine-client
+examples-examples/tdengine/TDengine-client-*
 
 # ===========================================================
 # PYTHON
