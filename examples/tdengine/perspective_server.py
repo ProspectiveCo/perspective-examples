@@ -140,9 +140,9 @@ def perspective_thread(perspective_server: perspective.Server, tdengine_conn: ta
         table.update(data)
         logger.debug(f"Updated Perspective table: {len(data)} rows")
 
-    logger.info("Starting tornado ioloop update loop every 1 sec")
+    logger.info(f"Starting tornado ioloop update loop every {PERSPECTIVE_REFRESH_RATE} milliseconds")
     # start the periodic callback to update the table data
-    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=1000)
+    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=PERSPECTIVE_REFRESH_RATE)
     callback.start()
 
 
