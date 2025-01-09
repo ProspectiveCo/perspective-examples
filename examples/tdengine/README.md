@@ -2,6 +2,18 @@
 
 This document explains how to configure Perspective with a TDEngine data source. 
 
+![TDEngine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
+
+The architecture is as follow:
+
+1. Instantiate a TDEngine docker container and initialize it with data (using TAOS benchmark dataset).
+2. Install TDEngine python client libs (taospy).
+3. Start a perspective-python server (`perspective_server.py`) which reads data periodically from TDEngine and publishes it out to Perspective real-time Table via a Tornado Websocket.
+4. Embed a Perspective viewer in HTML and connect to the backend Server.
+5. Visualize and interact with TDEngine data in real-time
+
+<br/>
+
 ### Getting Started
 
 #### 1. Install TDEngine Client Libraries
