@@ -1,15 +1,25 @@
+# ------------------------------------------------------------
+# core libs
 pandas
 numpy
-pyarrow
 jupyterlab
 plotly
 ipywidgets
-uvicorn
-tornado
 requests
 dateparser
 codetiming
-perspective-python
-confluent-kafka
-influxdb-client
 pytest
+
+# ------------------------------------------------------------
+# perspective libs
+perspective-python
+pyarrow
+tornado
+uvicorn
+
+# ------------------------------------------------------------
+# 3rd party data sources libs
+confluent-kafka     # kafka
+influxdb-client     # influxdb
+taospy              # tdengine
+taos-ws-py          # tdengine
