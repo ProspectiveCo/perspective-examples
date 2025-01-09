@@ -50,9 +50,18 @@ cd ../..
 # add the driver lib to python LD_LIBRARY_PATH
 echo "setting LD_LIBRARY_PATH..."
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver
+
 # add this line to your .bashrc or .bash_profile to make it permanent
-echo -e "\n# TDengine client driver" >> ~/.bashrc
-echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver" >> ~/.bashrc
+if [ -f ~/.bashrc ]; then
+    echo -e "\n# TDengine client driver" >> ~/.bashrc
+    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver" >> ~/.bashrc
+elif [ "$(uname)" == "Darwin" ]; then
+    echo -e "\n# TDengine client driver" >> ~/.bash_profile
+    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver" >> ~/.bash_profile
+else
+    echo -e "\nPLEASE ADD this line to your bash profile:" >> ~/.bashrc
+    echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver"
+fi
 
 # installation successful
 echo "installation successful!"
@@ -60,4 +69,4 @@ echo "next steps:"
 echo "1. source your .bashrc or .bash_profile"
 echo "2. start a new tdengine docker container: https://docs.tdengine.com/get-started/deploy-in-docker/"
 echo "3. create a new python3 virtualenv and pip install taospy"
-echo "4. run the example in tdengine-client/examples/python/query_example.py"
+echo "4. test the python driver by running the example in: tdengine-client/examples/python/query_example.py"
