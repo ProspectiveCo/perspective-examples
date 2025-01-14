@@ -85,36 +85,6 @@ def gen_data():
     } for _ in range(5)]
 
 
-def create_kafka_producer(
-        bootstrap_servers,
-        topic: str,
-        client_id: str = None,
-        security_protocol: str = 'PLAINTEXT',
-        sasl_mechanism: str = None,
-        sasl_username: str = None,
-        sasl_password: str = None,
-        ):
-    """
-    Create a Kafka producer
-    """
-    conf = {
-        'bootstrap.servers': bootstrap_servers,
-        'client.id': client_id,
-        'security.protocol': security_protocol,
-    }
-
-    if sasl_mechanism and sasl_username and sasl_password:
-        conf.update({
-            'sasl.mechanism': sasl_mechanism,
-            'sasl.username': sasl_username,
-            'sasl.password': sasl_password,
-        })
-    # create a producer
-    producer = Producer(conf)
-    logger.info("init - Kafka producer initialized")
-    return producer
-
-
 def clickhouse_create_table(
         client: ClickhouseClient, 
         table_name: str = "stock_values"
@@ -138,27 +108,34 @@ def send_to_kafka(producer, topic):
 
 def main():
     # create a clickhouse client
-    client = clickhouse_connect.create_client(
+    client = clickhouse_connect.get_client(
         host="localhost",
         port=8123,
         user="admin",
         password="admin1234",
         database="test",
     )
-    clickhouse_create_table(CLICKHOUSE_TABLE)
-    producer = create_kafka_producer(CLICKHOUSE_HOST, CLICKHOUSE_TABLE)
+    # test out the client
+    results = client.query('SELECT version()')
+    print(dir(results))
+    print(results.column_names)
 
-    interval = 0.250
-    progress_counter = 0
-    logger.info(f"Sending data to Kafka topic every {interval:.3f}s...")
-    try:
-        while True:
-            send_to_kafka(producer, CLICKHOUSE_TABLE)
-            progress_counter += 1
-            print('.', end='' if progress_counter % 80 else '\n', flush=True)
-            sleep(interval)
-    except KeyboardInterrupt:
-        logger.info("Shutting down...")
+    for result in results.result_rows:
+        print(result)
+
+    # clickhouse_create_table(CLICKHOUSE_TABLE)
+
+    # interval = 0.250
+    # progress_counter = 0
+    # logger.info(f"Sending data to Kafka topic every {interval:.3f}s...")
+    # try:
+    #     while True:
+    #         send_to_kafka(producer, CLICKHOUSE_TABLE)
+    #         progress_counter += 1
+    #         print('.', end='' if progress_counter % 80 else '\n', flush=True)
+    #         sleep(interval)
+    # except KeyboardInterrupt:
+    #     logger.info("Shutting down...")
 
 
 if __name__ == "__main__":
