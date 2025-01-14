@@ -115,9 +115,6 @@ def create_kafka_producer(
     return producer
 
 
-def clickhouse_create_client() -> ClickhouseClient:
-    pass
-
 def clickhouse_create_table(
         client: ClickhouseClient, 
         table_name: str = "stock_values"
