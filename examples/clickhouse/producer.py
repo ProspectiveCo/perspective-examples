@@ -109,15 +109,15 @@ def send_to_kafka(producer, topic):
 def main():
     # create a clickhouse client
     client = clickhouse_connect.get_client(
-        host="localhost",
-        port=8123,
-        user="admin",
-        password="admin1234",
-        database="test",
+        host=CLICKHOUSE_HOST,
+        port=CLICKHOUSE_PORT,
+        user=CLICKHOUSE_USER,
+        password=CLICKHOUSE_PASSWORD,
+        database=CLICKHOUSE_DATABASE,
     )
     # test out the client
     results = client.query('SELECT version()')
-    print(dir(results))
+    # print(dir(results))
     print(results.column_names)
 
     for result in results.result_rows:
