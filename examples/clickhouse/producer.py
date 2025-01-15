@@ -32,6 +32,8 @@ CLICKHOUSE_PASSWORD = "admin1234"
 CLICKHOUSE_DATABASE = "test"
 CLICKHOUSE_TABLE = "stock_values"
 
+INTERVAL = 1  # seconds
+
 
 SECURITIES = [
     "AAPL.N",
@@ -172,15 +174,14 @@ def main():
     create_database(client, database_name=CLICKHOUSE_DATABASE)
     create_table(client, table_name=CLICKHOUSE_TABLE)
 
-    interval = 0.250
     progress_counter = 0
-    logger.info(f"Inserting data to Clickhouse @ interval={interval:.3f}s...")
+    logger.info(f"Inserting data to Clickhouse @ interval={INTERVAL:.3f}s...")
     try:
         while True:
             insert_data(client, table_name=CLICKHOUSE_TABLE)
             progress_counter += 1
             print('.', end='' if progress_counter % 80 else '\n', flush=True)
-            sleep(interval)
+            sleep(INTERVAL)
     except KeyboardInterrupt:
         logger.info(f"Shutting down...")
 
