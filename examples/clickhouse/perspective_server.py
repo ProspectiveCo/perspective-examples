@@ -106,7 +106,7 @@ def perspective_thread(perspective_server, clickhouse_client):
     # define the table schema
     table = client.table(
         schema,
-        limit=2500,                     # maximum number of rows in the table
+        limit=1000,         # maximum number of rows in the table
         name=TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
     )
     logger.info(f"Created new Perspective table={TABLE_NAME}")
@@ -157,9 +157,6 @@ if __name__ == "__main__":
     results = clickhouse_client.query('SELECT version()')
     version = results.result_rows[0][0]
     logger.info(f"Connected to Clickhouse version={version}")
-
-    df = read_data_from_clickhouse(clickhouse_client)
-    print(df)
 
     # create a new Perspective server
     perspective_server = perspective.Server()
