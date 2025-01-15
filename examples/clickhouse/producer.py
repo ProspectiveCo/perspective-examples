@@ -32,7 +32,8 @@ CLICKHOUSE_PASSWORD = "admin1234"
 CLICKHOUSE_DATABASE = "test"
 CLICKHOUSE_TABLE = "stock_values"
 
-INTERVAL = 1  # seconds
+INTERVAL = 1                        # seconds. insert data every INTERVAL seconds
+NUM_ROWS_PER_INTERVAL = 1000        # number of rows to insert every INTERVAL seconds
 
 
 SECURITIES = [
@@ -84,7 +85,7 @@ def gen_data():
         "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
         "volume": random.randint(10_000, 100_000),
         "date": date.today(),
-    } for _ in range(5)]
+    } for _ in range(NUM_ROWS_PER_INTERVAL)]
 
 
 def create_database(
@@ -150,7 +151,7 @@ def insert_data(
         database=CLICKHOUSE_DATABASE, 
         column_names=['timestamp', 'ticker', 'client', 'open', 'high', 'low', 'close', 'volume', 'date'],
         )
-    logger.debug(f"Clickhouse - Wrote rows={result.written_rows}, bytes={result.written_bytes}, table={table_name}, database={CLICKHOUSE_DATABASE}")
+    logger.debug(f"Clickhouse - Wrote rows={result.written_rows}, bytes={(result.written_bytes() / 1_000.00):.2f}kb, table={table_name}, database={CLICKHOUSE_DATABASE}")
 
 
 def main():
