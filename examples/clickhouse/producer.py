@@ -69,7 +69,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 def gen_data():
     """
-    Generate random data for the Perspective table
+    Generate random data
     """
     modifier = random.random() * random.randint(1, 50)
     return [{
@@ -85,28 +85,76 @@ def gen_data():
     } for _ in range(5)]
 
 
-def clickhouse_create_table(
+def create_database(
         client: ClickhouseClient, 
-        table_name: str = "stock_values"
+        database_name: str = CLICKHOUSE_DATABASE
+        ) -> None:
+    """
+    Create a Clickhouse database. Drop the database if it already exists.
+    """
+    # create the database
+    sql = f"CREATE DATABASE IF NOT EXISTS {database_name}"
+    client.command(sql)
+    logger.info(f"Clickhouse - Created database {database_name}")
+
+
+def create_table(
+        client: ClickhouseClient, 
+        table_name: str = CLICKHOUSE_TABLE
         ) -> None:
     """
     Create a Clickhouse table to store the data. Drop the table if it already exists.
     """
-    pass
-
-
-def send_to_kafka(producer, topic):
+    # drop the table if it already exists
+    sql = f"DROP TABLE IF EXISTS {table_name}"
+    try:
+        client.command(sql)
+        logger.info(f"Clikchouse - Dropped table {table_name}")
+    except Exception as e:
+        pass # table does not exist
+    # create the table
+    sql = f"""
+    CREATE TABLE {table_name} (
+        timestamp DateTime,
+        ticker String,
+        client String,
+        open Float32,
+        high Float32,
+        low Float32,
+        close Float32,
+        volume UInt32,
+        date Date
+    ) ENGINE MergeTree()
+    ORDER BY (timestamp, ticker)
     """
-    Send data to Kafka topic
+    client.command(sql)
+    logger.info(f"Clickhouse - Created table {table_name}")
+
+
+def insert_data(
+        client: ClickhouseClient, 
+        table_name: str = CLICKHOUSE_TABLE
+        ) -> None:
+    """
+    Insert data into the Clickhouse table
     """
     records = gen_data()
-    for record in records:
-        producer.produce(topic, json.dumps(record, cls=CustomJSONEncoder))
-    producer.flush()
-    logger.debug(f"write - Wrote {len(records)} records to topic {topic}")
+    # incoming data is a list of dictionaries -- convert to list of list of values
+    records = [list(record.values()) for record in records]
+    # insert the data
+    result = client.insert(
+        table=table_name, 
+        data=records, 
+        database=CLICKHOUSE_DATABASE, 
+        column_names=['timestamp', 'ticker', 'client', 'open', 'high', 'low', 'close', 'volume', 'date'],
+        )
+    logger.debug(f"Clickhouse - Wrote rows={result.written_rows}, bytes={result.written_bytes}, table={table_name}, database={CLICKHOUSE_DATABASE}")
 
 
 def main():
+    """
+    Create a Clickhouse client, create the database and table, and insert data into the table
+    """
     # create a clickhouse client
     client = clickhouse_connect.get_client(
         host=CLICKHOUSE_HOST,
@@ -117,25 +165,24 @@ def main():
     )
     # test out the client
     results = client.query('SELECT version()')
-    # print(dir(results))
-    print(results.column_names)
+    version = results.result_rows[0][0]
+    logger.info(f"Clickhouse - Connected to Clickhouse version={version}")
+    
+    # create the database and table
+    create_database(client, database_name=CLICKHOUSE_DATABASE)
+    create_table(client, table_name=CLICKHOUSE_TABLE)
 
-    for result in results.result_rows:
-        print(result)
-
-    # clickhouse_create_table(CLICKHOUSE_TABLE)
-
-    # interval = 0.250
-    # progress_counter = 0
-    # logger.info(f"Sending data to Kafka topic every {interval:.3f}s...")
-    # try:
-    #     while True:
-    #         send_to_kafka(producer, CLICKHOUSE_TABLE)
-    #         progress_counter += 1
-    #         print('.', end='' if progress_counter % 80 else '\n', flush=True)
-    #         sleep(interval)
-    # except KeyboardInterrupt:
-    #     logger.info("Shutting down...")
+    interval = 0.250
+    progress_counter = 0
+    logger.info(f"Inserting data to Clickhouse @ interval={interval:.3f}s...")
+    try:
+        while True:
+            insert_data(client, table_name=CLICKHOUSE_TABLE)
+            progress_counter += 1
+            print('.', end='' if progress_counter % 80 else '\n', flush=True)
+            sleep(interval)
+    except KeyboardInterrupt:
+        logger.info(f"Shutting down...")
 
 
 if __name__ == "__main__":
