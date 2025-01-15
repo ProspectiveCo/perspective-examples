@@ -1,0 +1,6 @@
+pandas
+pyarrow
+tornado
+uvicorn
+perspective-python
+clickhouse-connect
