@@ -29,6 +29,7 @@ Technical Advantages:
 **Primary Use-cases:**
 
 Together, _Clickhouse_ and _Perspective_ are widely used in industries such as finance, telecommunications, and e-commerce for applications that require real-time analytics and reporting. It excels in scenarios involving fast-moving or time-series data, such as:
+
 - **Monitoring and Observability:** Real-time monitoring of system metrics and logs.
 - **Financial Analytics:** High-frequency trading data analysis and risk management.
 - **User Behavior Analytics:** Tracking and analyzing user interactions on websites and applications.
@@ -38,10 +39,12 @@ Together, _Clickhouse_ and _Perspective_ are widely used in industries such as f
 
 ## Demo Architecture & Components
 
+![Architecture](imgs/perspective_clickhouse_demo_architecture.jpg)
+
 This demo includes the following components:
 
 - `docker.sh`: Starts a Clickhouse Docker container.
-- `producer.py`: Generates a random stream of data and inserts it into Clickhouse every <span style="color: magenta;">_250ms_</span>.
+- `producer.py`: Generates a random stream of data and inserts it into Clickhouse every _250ms_.
 - `perspective_server.py`: Reads the data stream from Clickhouse and sets up a _Perspective Server_. Multiple Perspective viewers (HTML clients) can then connect and provide interactive dashboards to users.
 - `prsp-viewer.html`: Demonstrates how to embed an interactive `<perspective-viewer>` custom component in a web application.
 
