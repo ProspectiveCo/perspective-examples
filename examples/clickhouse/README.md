@@ -33,3 +33,5 @@ As a while, this demo contains the following components:
 - `producer.py`: A script that generates a random stream of data and inserts it to Clickhouse every 500ms.
 - `perspective_server.py`: A script which reads the data stream from Clickhouse and stands up a _Perspective Server_. Multiple perspective viewers (HTML clients) can then connect and provide interactive dashboards to users.
 
+
+## Getting Started
