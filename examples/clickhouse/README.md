@@ -4,7 +4,7 @@
 
 <br/>
 
-This page demonstrates how to integrate Perspective with Clickhouse to visualize _fast-moving data streams_. By following this example, you will learn how to:
+This guide demonstrates how to integrate Perspective with Clickhouse to visualize _fast-moving data streams_. By following this example, you will learn how to:
 
 1. Set up a connection between Perspective and Clickhouse.
 2. Embed an interactive `<perspective-viewer>` in your web apps enabling real-time _data visualization_ and _analysis_.
@@ -257,9 +257,11 @@ These components work together to create an interactive and real-time data visua
 
 ## Prospective Commercial Product
 
-[Prospective.co](https://prospective.co) which is the commercial version of Perspective with additional functionality and capabilities provides a built-in _Perspective Server_ data connector. Users can build, customize, and share their dashboards built on Clickhouse data. 
+[Prospective.co](https://prospective.co), the commercial version of Perspective, offers additional functionality and capabilities, including a built-in _Perspective Server_ data connector. This allows users to build, customize, and share dashboards based on Clickhouse data seamlessly.
 
-To get a trial license of Prospective, send an email to _`hello@perspective.co`_ with subject: _"Clickhouse trial"_
+![Prospective](./imgs/prospective_clickhouse.png)
+
+To get a trial license of Prospective, send an email to _hello@prospective.co_ with the subject: _"Clickhouse trial"_.
 
 <br/>
 
@@ -268,7 +270,3 @@ To get a trial license of Prospective, send an email to _`hello@perspective.co`_
 For any additional questions or further assistance, please feel free to email me at _parham@prospective.co_.
 
 Thank you for following this guide!
-
-<br/><br/>
-
-_Author: parham@prospective.co_
