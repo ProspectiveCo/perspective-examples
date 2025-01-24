@@ -100,9 +100,10 @@ This script performs the following actions:
 
 ### 4. Run the Perspective Server
 
+
 The `perspective_server.py` script is responsible for consuming data from Clickhouse, standing up a Perspective server, and refreshing data every _250ms_. It publishes changes to Perspective clients via a Tornado WebSocket.
 
-To run the Perspective server, execute the following command:
+Open a new terminal and activate your virtualenv. To run the Perspective server, execute the following command:
 
 ```bash
 python perspective_server.py
