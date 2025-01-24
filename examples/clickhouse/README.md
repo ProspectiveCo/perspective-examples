@@ -41,7 +41,7 @@ Together, _Clickhouse_ and _Perspective_ are widely used in industries such as f
 This demo includes the following components:
 
 - `docker.sh`: Starts a Clickhouse Docker container.
-- `producer.py`: Generates a random stream of data and inserts it into Clickhouse every _`250ms`_.
+- `producer.py`: Generates a random stream of data and inserts it into Clickhouse every <span style="color: magenta;">_250ms_</span>.
 - `perspective_server.py`: Reads the data stream from Clickhouse and sets up a _Perspective Server_. Multiple Perspective viewers (HTML clients) can then connect and provide interactive dashboards to users.
 - `prsp-viewer.html`: Demonstrates how to embed an interactive `<perspective-viewer>` custom component in a web application.
 
