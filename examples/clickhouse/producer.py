@@ -33,7 +33,7 @@ CLICKHOUSE_DATABASE = "test"
 CLICKHOUSE_TABLE = "stock_values"
 
 INTERVAL = 1                        # seconds. insert data every INTERVAL seconds
-NUM_ROWS_PER_INTERVAL = 1000        # number of rows to insert every INTERVAL seconds
+NUM_ROWS_PER_INTERVAL = 250         # number of rows to insert every INTERVAL seconds
 
 
 SECURITIES = [
