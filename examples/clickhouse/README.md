@@ -1,5 +1,9 @@
 # Perspective <> Clickhouse Integration
 
+![Perspective-Clickhouse Integration](./imgs/perspective_clickhouse_integration.gif)
+
+<br/>
+
 This page demonstrates how to integrate Perspective with Clickhouse to visualize _fast-moving data streams_. By following this example, you will learn how to:
 
 1. Set up a connection between Perspective and Clickhouse.

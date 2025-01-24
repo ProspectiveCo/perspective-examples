@@ -39,7 +39,7 @@ CLICKHOUSE_DATABASE = "test"
 # Demo Parameters
 # -----------------------------------------------------------------------------
 TABLE_NAME = "stock_values"
-INTERVAL = 1  # seconds
+INTERVAL = 250  # milliseconds
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -117,9 +117,9 @@ def perspective_thread(perspective_server, clickhouse_client):
         table.update(data)
         logger.debug(f"Updated Perspective table with {len(data)} rows")
 
-    logger.info(f"Starting tornado ioloop update loop @ interval={INTERVAL:.3f}s")
+    logger.info(f"Starting tornado ioloop update loop @ interval={INTERVAL:.3f}ms")
     # start the periodic callback to update the table data
-    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=(INTERVAL * 1000))
+    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=INTERVAL)
     callback.start()
 
 
