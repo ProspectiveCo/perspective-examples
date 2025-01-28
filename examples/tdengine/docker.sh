@@ -29,6 +29,10 @@ if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
     docker rm -vf $CONTAINER_NAME
 fi
 
+# pull the latest tdengine docker image
+echo "pulling the latest tdengine docker image..."
+docker pull tdengine/tdengine:latest
+
 # start a new tdengine docker container
 echo "starting a new tdengine docker container..."
 docker run -d --name $CONTAINER_NAME \

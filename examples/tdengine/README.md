@@ -1,31 +1,34 @@
-## TDEngine <-> Perspective 
+# TDengine <> Perspective Integration
 
-This document explains how to configure Perspective with a TDEngine data source. 
+This document explains how to configure Perspective with a TDengine data source. 
 
-![TDEngine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
+![TDengine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
 
 The architecture is as follow:
 
-1. Instantiate a TDEngine docker container and initialize it with data (using TAOS benchmark dataset).
-2. Install TDEngine python client libs (taospy).
-3. Start a perspective-python server (`perspective_server.py`) which reads data periodically from TDEngine and publishes it out to Perspective real-time Table via a Tornado Websocket.
+1. Instantiate a TDengine docker container and initialize it with data (using TAOS benchmark dataset).
+2. Install TDengine python client libs (taospy).
+3. Start a perspective-python server (`perspective_server.py`) which reads data periodically from TDengine and publishes it out to Perspective real-time Table via a Tornado Websocket.
 4. Embed a Perspective viewer in HTML and connect to the backend Server.
-5. Visualize and interact with TDEngine data in real-time
+5. Visualize and interact with TDengine data in real-time
 
 <br/>
 
-### Getting Started
+## Getting Started
 
-#### 1. Install TDEngine Client Libraries
+### 1. Install TDengine client
 
-- Run the `install.sh` script to download and install the TDEngine client libraries locally. This is necessary for the TDEngine Python SDK (taospy) to function.
-- For more information on installing TDEngine's client libs, please refer to [install client library](https://docs.tdengine.com/tdengine-reference/client-libraries/#install-client-driver) docs.
+Run the `install.sh` script to download and install the TDengine client libraries locally. This is necessary for the TDengine Python SDK (taospy) to function.
+
+For more information on installing TDengine's client, please refer to [install client library](https://docs.tdengine.com/tdengine-reference/client-libraries/#install-client-driver) docs.
 
 ```sh
 ./install.sh
 ```
 
-- After the install script runs, please verify if the everything is setup correctly.
+### 2. Check the client installation
+
+After the install script runs, please verify if the everything is setup correctly.
 - You should see a symlink for `libtaos.so` in:
 
 ```sh
@@ -44,53 +47,51 @@ lrwxrwxrwx 1 warthog warthog       18 Jan  7 16:08 libtaos.so -> libtaos.so.3.3.
 echo $LD_LIBRARY_PATH
 ```
 
+`LD_LIBRARY_PATH` should have been added to your bash profile file. Please check to ensure that it is set properly.
 
-#### 2. Pull and Run TDEngine Docker Image
-
-- Pull the TDEngine Docker image.
-- Run the `docker.sh` script to start a TDEngine container. This script will also wait for the database to initialize and populate it with data from the TDEngine benchmark.
+If you don't see this line at the end of your `~/.bashrc` or `~/.bash_profile`, please add it:
 
 ```sh
-docker pull tdengine/tdengine:latest
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver"
+```
 
+### 3. Start a TDengine Docker container
+
+Run the `docker.sh` script to start a TDengine container. This script will also wait for the database to initialize and populate it with data from the TDengine benchmark.
+
+```sh
 ./docker.sh
 ```
 
-For complete information on running TDEngine docker engine, please refer to [Get Started with TDengine Using Docker](https://docs.tdengine.com/get-started/deploy-in-docker/) docs.
+For complete information on running TDengine docker engine, please refer to [Get Started with TDengine Using Docker](https://docs.tdengine.com/get-started/deploy-in-docker/) docs.
 
-#### 3. Set Up Python Virtual Environment and Install Dependencies
+### 4. Activate your virtualenv
 
-- Go to the project root dir and install the dependencies (including tdengine's python SDK: taospy) in `requirements.txt`:
+`install.sh` already sets up a virtual environment for you and installs the TDengine `taospy` client. If you need to activate it manually, use the following commands:
 
 ```sh
-cd perspective-examples
-python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+
+pip install --upgrade pip
+pip install --upgrade -r requirements.txt
 ```
 
-Alternatively, you can just pip install `taospy`:
+### 5. Run Perspective Server
 
-```sh
-pip install taospy
-```
-
-#### 4. Run Perspective Server
-
-- Run the `perspective_server.py` script to start a Perspective server. This server will pull data from TDEngine and stream it into a Tornado WebSocket.
+Run the `perspective_server.py` script to start a Perspective server. This server will pull data from TDengine and stream it into a Tornado WebSocket.
 
 ```sh
 python perspective_server.py
 ```
 <br/><br/>
 
-### Helpful Resources
+## Helpful Resources
 
-- **TDEngine client library examples including python and node.js:** Download [TDEngine's client library](https://docs.tdengine.com/tdengine-reference/client-libraries/#install-client-driver) tar file and unpack it. Look inside the examples directory for a comprehensive list of examples.
+- **TDengine client library examples including python and node.js:** Download [TDengine's client library](https://docs.tdengine.com/tdengine-reference/client-libraries/#install-client-driver) tar file and unpack it. Look inside the examples directory for a comprehensive list of examples.
 
-- [TDEngine Docker Container with Data](https://docs.tdengine.com/get-started/deploy-in-docker/)
-- [TDEngine SQL Reference](https://docs.tdengine.com/basic-features/data-querying/)
-- [Inserting data into TDEngine](https://docs.tdengine.com/basic-features/data-ingestion/)
+- [TDengine Docker Container with Data](https://docs.tdengine.com/get-started/deploy-in-docker/)
+- [TDengine SQL Reference](https://docs.tdengine.com/basic-features/data-querying/)
+- [Inserting data into TDengine](https://docs.tdengine.com/basic-features/data-ingestion/)
 
 Next steps:
-- [Streaming data from TDEngine](https://docs.tdengine.com/advanced-features/stream-processing/)
+- [Streaming data from TDengine](https://docs.tdengine.com/advanced-features/stream-processing/)
