@@ -3,5 +3,4 @@ pyarrow
 tornado
 uvicorn
 perspective-python
-taospy
-taos-ws-py
+taospy[ws]
