@@ -4,6 +4,8 @@ This document explains how to configure Perspective with a TDengine data source.
 
 ![TDengine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
 
+<br/>
+
 The architecture is as follow:
 
 1. Instantiate a TDengine docker container and initialize it with data (using TAOS benchmark dataset).
@@ -29,11 +31,16 @@ For more information on installing TDengine's client, please refer to [install c
 ### 2. Check the client installation
 
 After the install script runs, please verify if the everything is setup correctly.
-- You should see a symlink for `libtaos.so` in:
+
+You should see a symlink for `libtaos.so` in:
 
 ```sh
 ls -l tdengine-client/driver/
+```
 
+Output:
+
+```txt
 total 68488
 lrwxrwxrwx 1 warthog warthog       18 Jan  7 16:08 libtaos.so -> libtaos.so.3.3.5.0
 -rwxr-xr-x 1 warthog warthog 59186032 Dec 31 03:42 libtaos.so.3.3.5.0
@@ -41,7 +48,7 @@ lrwxrwxrwx 1 warthog warthog       18 Jan  7 16:08 libtaos.so -> libtaos.so.3.3.
 -rw-r--r-- 1 warthog warthog        8 Dec 31 03:42 vercomp.txt
 ```
 
-- Check if the client lib folder is correctly added to `$LD_LIBRARY_PATH`:
+Check if the client lib folder is correctly added to `$LD_LIBRARY_PATH`:
 
 ```sh
 echo $LD_LIBRARY_PATH
@@ -52,7 +59,7 @@ echo $LD_LIBRARY_PATH
 If you don't see this line at the end of your `~/.bashrc` or `~/.bash_profile`, please add it:
 
 ```sh
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/tdengine-client/driver"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:***YOUR PATH***/tdengine-client/driver"
 ```
 
 ### 3. Start a TDengine Docker container
