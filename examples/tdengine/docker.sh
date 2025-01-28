@@ -14,13 +14,24 @@
 # populates the database with some test data, and 
 # checks the status of the database.
 
+CONTAINER_NAME="prsp-tdengine"
+
+# check if docker is installed
+if ! command -v docker &> /dev/null; then
+    echo "WARNING: docker is not installed. Please install docker first."
+    exit 1
+fi
 
 # remove any existing tdengine docker container
-docker rm -f tdengine
+if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    echo "stopping existing tdengine docker container..."
+    docker stop $CONTAINER_NAME
+    docker rm -vf $CONTAINER_NAME
+fi
 
 # start a new tdengine docker container
 echo "starting a new tdengine docker container..."
-docker run -d --name tdengine \
+docker run -d --name $CONTAINER_NAME \
     -e TAOS_USER=root \
     -e TAOS_PASSWORD=taosdata \
     -p 6030:6030 \
@@ -33,7 +44,7 @@ docker run -d --name tdengine \
 # check the tdengine database status
 echo -n "waiting for tdengine database to initiate..."
 while true; do
-    status=$(docker exec tdengine taos --check)
+    status=$(docker exec $CONTAINER_NAME taos --check)
     if [[ $status == *"service ok"* ]]; then
         echo -e "\ntdengine database is ready!"
         break
@@ -44,7 +55,7 @@ done
 
 # populate the database with some data
 echo "populating the database with test data..."
-docker exec -it tdengine taosBenchmark -y
+docker exec -it $CONTAINER_NAME taosBenchmark -y
 
 # done
 echo "done!"
