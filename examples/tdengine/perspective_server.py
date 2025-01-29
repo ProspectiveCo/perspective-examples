@@ -33,10 +33,13 @@ TAOS_PORT = 6041                        # TDengine server port
 TAOS_USER = "root"                      # TDengine username
 TAOS_PASSWORD = "taosdata"              # TDengine password
 
+TAOS_DATABASE = "stocks"                # TDengine database name
+TAOS_TABLENAME = "stocks"               # TDengine table name
+
 # =============================================================================
 # Perspective server parameters
 # =============================================================================
-PERSPECTIVE_TABLE_NAME = "meters"       # name of the Perspective table
+PERSPECTIVE_TABLE_NAME = "stock_values" # name of the Perspective table
 PERSPECTIVE_REFRESH_RATE = 1000         # refresh rate in milliseconds
 
 
@@ -55,53 +58,67 @@ class CustomJSONEncoder(json.JSONEncoder):
 json.JSONEncoder.default = CustomJSONEncoder().default
 
 
+def convert_ts(ts) -> datetime:
+    """
+    Convert a timestamp string to a datetime object
+    """
+    for fmt in ('%Y-%m-%d %H:%M:%S.%f %z', '%Y-%m-%d %H:%M:%S %z'):
+        try:
+            return datetime.strptime(ts, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"Time data '{ts}' does not match any format")
+
+
 def create_tdengine_connection(
         host: str = TAOS_HOST,
         port: int = TAOS_PORT,
         user: str = TAOS_USER,
         password: str = TAOS_PASSWORD,
         ) -> taosws.Connection:
-    conn = None
     try:
+        # connect to the tdengine server
         conn = taosws.connect(
             user=user,
             password=password,
             host=host,
             port=port,
         )
-        logger.info(f"Connected to tdengine successfully: {host}:{port}");
+        # switch to the right database
+        conn.execute(f"USE {TAOS_DATABASE}")
+        # connection successful
+        logger.info(f"Connected to tdengine successfully: {host}:{port}")
+        return conn
     except Exception as err:
-        logger.error(f"Failed to connect to tdengine: {host}:{port} -- ErrMessage:{err}")
+        logger.error(f"Failed to connect to tdengine: {host}:{port} -- ErrMessage: {err}")
         raise err
-    return conn
 
 
 def read_tdengine(
         conn: taosws.Connection, 
-        ) -> list:
-    
-    # convert the timestamp string to datetime object
-    def convert_ts(ts) -> datetime:
-        for fmt in ('%Y-%m-%d %H:%M:%S.%f %z', '%Y-%m-%d %H:%M:%S %z'):
-            try:
-                return datetime.strptime(ts, fmt)
-            except ValueError:
-                continue
-        raise ValueError(f"Time data '{ts}' does not match any format")
-
+        ) -> list[dict]:
     try:
         # query the database
-        sql = """SELECT ts, current, voltage, phase, groupid, location FROM test.meters LIMIT 10000"""
+        sql = f"""
+            SELECT `timestamp`, ticker, client, open, high, low, close, volume, date
+            FROM {TAOS_TABLENAME}
+            WHERE `timestamp` >= NOW() - 1s
+            ORDER BY `timestamp` DESC
+            LIMIT 1000
+            """
         logger.debug(f"Executing query: {sql}")
         res = conn.query(sql)
         data = [
             {
-            "ts": convert_ts(row[0]),
-            "current": row[1],
-            "voltage": row[2],
-            "phase": row[3],
-            "groupid": row[4],
-            "location": row[5],
+                "timestamp": convert_ts(row[0]),
+                "ticker": row[1],
+                "client": row[2],
+                "open": row[3],
+                "high": row[4],
+                "low": row[5],
+                "close": row[6],
+                "volume": row[7],
+                "date": convert_ts(row[8]),
             }
             for row in res
         ]
@@ -119,12 +136,15 @@ def perspective_thread(perspective_server: perspective.Server, tdengine_conn: ta
     # create a new Perspective table
     client = perspective_server.new_local_client()
     schema = {
-        "ts": "datetime",
-        "current": "float",
-        "voltage": "integer",
-        "phase": "float",
-        "groupid": "integer",
-        "location": "string",
+        "timestamp": datetime,
+        "ticker": str,
+        "client": str,
+        "open": float,
+        "high": float,
+        "low": float,
+        "close": float,
+        "volume": int,
+        "date": datetime,
     }
     # define the table schema
     table = client.table(
