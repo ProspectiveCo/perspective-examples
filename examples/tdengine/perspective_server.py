@@ -149,7 +149,7 @@ def perspective_thread(perspective_server: perspective.Server, tdengine_conn: ta
     # define the table schema
     table = client.table(
         schema,
-        limit=10000,                    # maximum number of rows in the table
+        limit=25000,                    # maximum number of rows in the table
         name=PERSPECTIVE_TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
     )
     logger.info("Created new Perspective table")
