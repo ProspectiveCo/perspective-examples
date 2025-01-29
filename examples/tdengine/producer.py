@@ -138,8 +138,6 @@ def insert_data(
     Insert data into the TDengine table
     """
     records = gen_data()
-
-    # TODO: https://docs.tdengine.com/developer-guide/parameter-binding/
     
     # prepare a parameterized SQL statement
     sql = f"INSERT INTO {table_name} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -158,16 +156,17 @@ def insert_data(
     dates = [int(datetime.combine(record['date'], datetime.min.time()).timestamp() * 1000) for record in records]
 
     # bind the parameters and execute the statement
-    stmt.bind_param(
+    stmt.bind_param([
         taosws.millis_timestamps_to_column(timestamps),
-        taosws.strings_to_column(tickers),
-        taosws.strings_to_column(clients),
+        taosws.nchar_to_column(tickers),
+        taosws.nchar_to_column(clients),
         taosws.floats_to_column(opens),
         taosws.floats_to_column(highs),
         taosws.floats_to_column(lows),
         taosws.floats_to_column(closes),
         taosws.ints_to_column(volumes),
         taosws.millis_timestamps_to_column(dates),
+        ]
     )
     # send the batch for insert
     stmt.add_batch()
