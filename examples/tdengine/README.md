@@ -1,6 +1,6 @@
 # TDengine <> Perspective Integration
 
-<img src="imgs/prsp-tdengine_short.gif" />
+[![TDengine - Perspective Integration](imgs/prsp-tdengine_short.gif)](https://www.loom.com/share/5aa9f1d435d6430c99efa02559d3cd6c?sid=54d0ffbe-1906-4513-ad05-1898c8cbbe2d)
 
 This document explains how to configure Perspective with a TDengine data source. 
 
