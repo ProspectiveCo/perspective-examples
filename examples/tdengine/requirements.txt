@@ -1,0 +1,6 @@
+pandas
+pyarrow
+tornado
+uvicorn
+perspective-python
+taospy[ws]
