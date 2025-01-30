@@ -64,10 +64,16 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:***YOUR PATH***/tdengine-client/driver"
 
 ### 3. Start a TDengine Docker container
 
-Run the `docker.sh` script to start a TDengine container. This script will also wait for the database to initialize and populate it with data from the TDengine benchmark.
+Run the `docker.sh` script to start a TDengine container. This script will also wait for the database to initialize.
 
 ```sh
 ./docker.sh
+```
+
+If you with to pre-populate the TDengine container with benchmark data. Run the script with the following flag:
+
+```sh
+./docker --benchmark
 ```
 
 For complete information on running TDengine docker engine, please refer to [Get Started with TDengine Using Docker](https://docs.tdengine.com/get-started/deploy-in-docker/) docs.
@@ -83,14 +89,247 @@ pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### 4. Run the producer
+
+Run the `producer.py` script to periodically insert data into TDengine. This script simulates real-time data ingestion by generating random data points and inserting them into the TDengine database.
+
+```sh
+python producer.py
+```
+
 ### 5. Run Perspective Server
 
-Run the `perspective_server.py` script to start a Perspective server. This server will pull data from TDengine and stream it into a Tornado WebSocket.
+Run the `perspective_server.py` script to start a Perspective server (on a new terminal). This server will pull data from TDengine and stream it into a Tornado WebSocket.
 
 ```sh
 python perspective_server.py
 ```
+
+**NOTE:** Don't forget to activate your virtual environment before running the script.
+
 <br/><br/>
+
+## Explained
+
+### `docker.sh`
+
+The `docker.sh` script starts a TDengine Docker container. It waits for the database to initialize before returning. You can run this script with the following flags:
+
+- `--benchmark`: Pre-populates the TDengine container with benchmark data.
+- `--no-pull`: Skips pulling the TDengine Docker image.
+
+```sh
+./docker.sh --benchmark --no-pull
+```
+
+<br/>
+
+### `producer.py`
+
+The `producer.py` script connects to the TDengine database and inserts data at regular intervals. 
+
+Here's how it works:
+
+1. **Connecting to TDengine:**
+
+```python
+import taosws
+
+TAOS_HOST = "localhost"
+TAOS_PORT = 6041
+TAOS_USER = "root"
+TAOS_PASSWORD = "taosdata"
+
+conn = taosws.connect(host=TAOS_HOST, port=TAOS_PORT, user=TAOS_USER, password=TAOS_PASSWORD)
+```
+
+2. **Creating a table:**
+
+```python
+create_table = """
+CREATE TABLE IF NOT EXISTS stocks_values (
+    timestamp TIMESTAMP,
+    ticker NCHAR(10),
+    client NCHAR(10),
+    open FLOAT,
+    high FLOAT,
+    low FLOAT,
+    close FLOAT,
+    volume INT UNSIGNED,
+    date TIMESTAMP
+)
+"""
+conn.execute(create_table)
+```
+
+3. **Inserting data:**
+
+The `gen_data()` method generates a series of random stock trades on every call:
+
+```python
+import random
+from datetime import datetime, date, timezone as tz
+
+def gen_data():
+    modifier = random.random() * random.randint(1, 50)
+    return [{
+        "timestamp": datetime.now(tz=tz.utc),
+        "ticker": random.choice(["AAPL.N", "AMZN.N", "QQQ.N", "NVDA.N", "TSLA.N", "FB.N", "MSFT.N", "TLT.N", "XIV.N", "YY.N", "CSCO.N", "GOOGL.N", "PCLN.N"]),
+        "client": random.choice(["Homer", "Marge", "Bart", "Lisa", "Maggie", "Moe", "Lenny", "Carl", "Krusty"]),
+        "open": random.uniform(0, 75) + random.randint(0, 9) * modifier,
+        "high": random.uniform(0, 105) + random.randint(1, 3) * modifier,
+        "low": random.uniform(0, 85) + random.randint(1, 3) * modifier,
+        "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
+        "volume": random.randint(10_000, 100_000),
+        "date": date.today(),
+    } for _ in range(250)]
+```
+
+The `insert_data()` method uses prepared statements and batch inserts to enhance performance. By generating a batch of records at a time and using a prepared SQL statement, the method minimizes the overhead associated with multiple individual insert operations. This approach ensures efficient data insertion into the TDengine database.
+
+```python
+def insert_data(conn):
+    records = gen_data()
+    sql = "INSERT INTO stocks_values VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    stmt = conn.statement()
+    stmt.prepare(sql)
+    timestamps = [int(record['timestamp'].timestamp() * 1000) for record in records]
+    tickers = [record['ticker'] for record in records]
+    clients = [record['client'] for record in records]
+    opens = [record['open'] for record in records]
+    highs = [record['high'] for record in records]
+    lows = [record['low'] for record in records]
+    closes = [record['close'] for record in records]
+    volumes = [record['volume'] for record in records]
+    dates = [int(datetime.combine(record['date'], datetime.min.time()).timestamp() * 1000) for record in records]
+    stmt.bind_param([
+        taosws.millis_timestamps_to_column(timestamps),
+        taosws.nchar_to_column(tickers),
+        taosws.nchar_to_column(clients),
+        taosws.floats_to_column(opens),
+        taosws.floats_to_column(highs),
+        taosws.floats_to_column(lows),
+        taosws.floats_to_column(closes),
+        taosws.ints_to_column(volumes),
+        taosws.millis_timestamps_to_column(dates),
+    ])
+    stmt.add_batch()
+    stmt.execute()
+
+
+while True:
+    insert_data(conn)
+    time.sleep(0.25)
+```
+
+### `perspective_server.py`
+
+The `perspective_server.py` script starts a Perspective server that reads data from TDengine and streams it to a Perspective Table via a Tornado WebSocket.
+
+Here's how it works:
+
+1. **Connecting to TDengine:**
+
+```python
+import taosws
+
+TAOS_HOST = "localhost"
+TAOS_PORT = 6041
+TAOS_USER = "root"
+TAOS_PASSWORD = "taosdata"
+
+conn = taosws.connect(host=TAOS_HOST, port=TAOS_PORT, user=TAOS_USER, password=TAOS_PASSWORD)
+```
+
+2. **Reading data from TDengine:**
+
+The `read_tdengine()` function queries the TDengine database and retrieves the latest stock data:
+
+```python
+def read_tdengine(conn):
+    sql = """
+        SELECT `timestamp`, ticker, client, open, high, low, close, volume, date
+        FROM stocks_values
+        WHERE `timestamp` >= NOW() - 1s
+        ORDER BY `timestamp` DESC
+        LIMIT 1000
+    """
+    res = conn.query(sql)
+    data = [
+        {
+            "timestamp": convert_ts(row[0]),
+            "ticker": row[1],
+            "client": row[2],
+            "open": row[3],
+            "high": row[4],
+            "low": row[5],
+            "close": row[6],
+            "volume": row[7],
+            "date": convert_ts(row[8]),
+        }
+        for row in res
+    ]
+    return data
+```
+
+3. **Updating Perspective Table:**
+
+The `perspective_thread()` function creates a Perspective table and updates it with new data from TDengine every 250 milliseconds:
+
+```python
+def perspective_thread(perspective_server, tdengine_conn):
+    client = perspective_server.new_local_client()
+    schema = {
+        "timestamp": datetime,
+        "ticker": str,
+        "client": str,
+        "open": float,
+        "high": float,
+        "low": float,
+        "close": float,
+        "volume": int,
+        "date": datetime,
+    }
+    table = client.table(schema, limit=1000, name="stock_values")
+    
+    def updater():
+        data = read_tdengine(tdengine_conn)
+        table.update(data)
+    
+    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=250)
+    callback.start()
+```
+
+4. **Starting Tornado WebSocket Server:**
+
+The `make_app()` function sets up a Tornado application with a WebSocket handler to serve the Perspective table:
+
+```python
+def make_app(perspective_server):
+    return tornado.web.Application([
+        (
+            r"/websocket",
+            perspective.handlers.tornado.PerspectiveTornadoHandler,
+            {"perspective_server": perspective_server},
+        ),
+    ])
+```
+
+5. **Running the server:**
+
+The main block initializes the Perspective server, TDengine connection, and starts the Tornado IOLoop:
+
+```python
+if __name__ == "__main__":
+    perspective_server = perspective.Server()
+    tdengine_conn = create_tdengine_connection()
+    app = make_app(perspective_server)
+    app.listen(8080, address='0.0.0.0')
+    
+    loop = tornado.ioloop.IOLoop.current()
+    loop.call_later(0, perspective_thread, perspective_server, tdengine_conn)
+    loop.start()
+```
 
 ## Helpful Resources
 
