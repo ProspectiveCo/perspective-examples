@@ -47,6 +47,46 @@
                 // exchanging delta changes only.
                 const server_table = await websocket.open_table(table_name);
                 await viewer.load(server_table);
+
+                const prsp_view_config = {
+                    "version": "3.3.1",
+                    "plugin": "Datagrid",
+                    "plugin_config": {
+                        "columns": {},
+                        "edit_mode": "READ_ONLY",
+                        "scroll_lock": false
+                    },
+                    "columns_config": {},
+                    "settings": true,
+                    "theme": "Pro Dark",
+                    "title": null,
+                    "group_by": ["ticker", "client"],
+                    "split_by": [],
+                    "columns": [
+                        "timestamp",
+                        "ticker",
+                        "client",
+                        "open",
+                        "high",
+                        "low",
+                        "close",
+                        "volume",
+                        "date"
+                    ],
+                    "filter": [],
+                    "sort": [],
+                    "expressions": {},
+                    "aggregates": {
+                        "low": "avg",
+                        "timestamp": "last",
+                        "open": "mean",
+                        "client": "dominant",
+                        "close": "avg",
+                        "date": "dominant",
+                        "high": "avg"
+                    }
+                };
+                await viewer.restore(prsp_view_config);
             }
             load_viewer();
         });
