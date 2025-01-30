@@ -1,8 +1,8 @@
 # TDengine <> Perspective Integration
 
-This document explains how to configure Perspective with a TDengine data source. 
+<img src="imgs/prsp-tdengine_short.gif" />
 
-![TDengine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
+This document explains how to configure Perspective with a TDengine data source. 
 
 <br/>
 
@@ -20,6 +20,8 @@ The architecture is as follow:
 ## Overview
 
 This guide demonstrates how to integrate [TDengine](https://tdengine.com/), a high-performance time-series database, with [Perspective](https://perspective.finos.org/), a powerful data visualization library. By combining these technologies, you can create a real-time data visualization platform that streams data from TDengine to a web-based Perspective viewer.
+
+![TDengine - Perspective Architecture](imgs/tdengine_prsp_architecture.jpg)
 
 ### Key Steps:
 
