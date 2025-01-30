@@ -34,13 +34,13 @@ TAOS_USER = "root"                      # TDengine username
 TAOS_PASSWORD = "taosdata"              # TDengine password
 
 TAOS_DATABASE = "stocks"                # TDengine database name
-TAOS_TABLENAME = "stocks"               # TDengine table name
+TAOS_TABLENAME = "stocks_values"        # TDengine table name
 
 # =============================================================================
 # Perspective server parameters
 # =============================================================================
 PERSPECTIVE_TABLE_NAME = "stock_values" # name of the Perspective table
-PERSPECTIVE_REFRESH_RATE = 1000         # refresh rate in milliseconds
+PERSPECTIVE_REFRESH_RATE = 250          # refresh rate in milliseconds
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -149,7 +149,7 @@ def perspective_thread(perspective_server: perspective.Server, tdengine_conn: ta
     # define the table schema
     table = client.table(
         schema,
-        limit=2500,                     # maximum number of rows in the table
+        limit=1000,                     # maximum number of rows in the table
         name=PERSPECTIVE_TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
     )
     logger.info("Created new Perspective table")

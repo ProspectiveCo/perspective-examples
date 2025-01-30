@@ -20,6 +20,39 @@ TAOS_USER="root"
 TAOS_PASSWORD="taosdata"
 
 
+# parse command line arguments
+BENCHMARK=false
+HELP=false
+PULL_IMAGE=true
+
+for arg in "$@"; do
+    case $arg in
+        --benchmark)
+        BENCHMARK=true
+        shift
+        ;;
+        --no-pull)
+        PULL_IMAGE=false
+        shift
+        ;;
+        --help)
+        HELP=true
+        shift
+        ;;
+        *)
+        echo "Unknown option: $arg"
+        ;;
+    esac
+done
+
+if [ "$HELP" = true ]; then
+    echo "Usage: $0 [--benchmark] [--help]"
+    echo "  --benchmark  Populate the database with benchmark data"
+    echo "  --no-pull    Do not pull the latest tdengine docker image"
+    echo "  --help       Display this help message"
+    exit 0
+fi
+
 # check if docker is installed
 if ! command -v docker &> /dev/null; then
     echo "WARNING: docker is not installed. Please install docker first."
@@ -33,9 +66,11 @@ if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
     docker rm -vf $CONTAINER_NAME
 fi
 
-# pull the latest tdengine docker image
-echo "pulling the latest tdengine docker image..."
-docker pull $TAOS_IMAGE
+if [ "$PULL_IMAGE" = true ]; then
+    # pull the latest tdengine docker image
+    echo "pulling the latest tdengine docker image..."
+    docker pull $TAOS_IMAGE
+fi
 
 # start a new tdengine docker container
 echo "starting a new tdengine docker container..."
@@ -61,9 +96,12 @@ while true; do
     echo -n "."
 done
 
-# populate the database with some data
-echo "populating the database with test data..."
-docker exec -it $CONTAINER_NAME taosBenchmark -y
+# check if the benchmark flag is set
+if [ "$BENCHMARK" = true ]; then
+    # populate the database with some data
+    echo "populating the database with test data..."
+    docker exec -it $CONTAINER_NAME taosBenchmark -y
+fi
 
 # done
 echo "done!"

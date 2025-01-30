@@ -31,12 +31,12 @@ TAOS_USER = "root"                      # TDengine username
 TAOS_PASSWORD = "taosdata"              # TDengine password
 
 TAOS_DATABASE = "stocks"                # TDengine database name
-TAOS_TABLENAME = "stocks"               # TDengine table name
+TAOS_TABLENAME = "stocks_values"        # TDengine table name
 
 # =============================================================================
 # Data generation parameters
 # =============================================================================
-INTERVAL = 1                        # seconds. insert data every INTERVAL seconds
+INTERVAL = 250                      # seconds. insert data every INTERVAL milliseconds
 NUM_ROWS_PER_INTERVAL = 250         # number of rows to insert every INTERVAL seconds
 SECURITIES = [
     "AAPL.N",
@@ -187,13 +187,13 @@ def main():
     create_table(conn, table_name=TAOS_TABLENAME)
     
     progress_counter = 0
-    logger.info(f"Inserting data to TDengine @ interval={INTERVAL:.3f}s...")
+    logger.info(f"Inserting data to TDengine @ interval={INTERVAL:d}ms...")
     try:
         while True:
             insert_data(conn, table_name=TAOS_TABLENAME)
             progress_counter += 1
             print('.', end='' if progress_counter % 80 else '\n', flush=True)
-            sleep(INTERVAL)
+            sleep((INTERVAL / 1000.0))
     except KeyboardInterrupt:
         logger.info(f"Shutting down...")
 
