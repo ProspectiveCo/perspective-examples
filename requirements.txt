@@ -9,6 +9,8 @@ requests
 dateparser
 codetiming
 pytest
+pydantic
+pydantic-settings
 
 # ------------------------------------------------------------
 # perspective libs
