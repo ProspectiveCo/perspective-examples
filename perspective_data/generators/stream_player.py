@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, timedelta
 from enum import Enum
@@ -9,6 +11,7 @@ class SupportedFileTypes(Enum):
     CSV = ".csv"
     PARQUET = ".parquet"
     ARROW = ".arrow"
+    DATAFRAME = "dataframe"
 
 _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
@@ -26,9 +29,9 @@ class StreamDataSource(BaseModel):
     df_read_options: dict = Field({}, description="Additional options to pass to the pandas read function.")
 
     # private fields
-    _df: pd.DataFrame = None
-    _batched_read: bool = False
-    _filetype: SupportedFileTypes = None
+    _chunk_iterator: pd.io.parsers.readers.TextFileReader | pq.ParquetFile = None
+    _cur_df: pd.DataFrame = None
+    # _batched_read: bool = False
 
     @field_validator("source")
     @classmethod
@@ -63,50 +66,65 @@ class StreamDataSource(BaseModel):
             return ext
         else:
             return None
-
+    
     def model_post_init(self, __context):
-        self._df = self._read_df()
+        self._chunk_iterator = self.open()
         return super().model_post_init(__context)
-
-    def _read_df(self):
-        if isinstance(self.source, str):
+    
+    @property
+    def filetype(self) -> SupportedFileTypes:
+        if self.source is None:
+            raise ValueError("Source must be provided before accessing the file type.")
+        if isinstance(self.source, pd.DataFrame):
+            return SupportedFileTypes.DATAFRAME
+        elif isinstance(self.source, str):
             ext = self._get_file_extension()
             if ext == ".csv":
-                # calcualte csv reading params and read the file
-                return pd.read_csv(self.source, chunksize=self.chunksize, **self.df_read_options)
+                return SupportedFileTypes.CSV
             elif ext == ".parquet":
-                return pd.read_parquet(self.source, **self.df_read_options)
+                return SupportedFileTypes.PARQUET
+            elif ext == ".arrow":
+                return SupportedFileTypes.ARROW
             else:
                 raise ValueError(f"Invalid file type: {ext}")
+        else:
+            raise ValueError("Unsupported source type.")
+
+    def open(self) -> None:
+        if isinstance(self.source, str):
+            filetype = self.filetype
+            if filetype == SupportedFileTypes.CSV:
+                self._chunk_iterator = pd.read_csv(self.source, chunksize=self.chunksize, **self.df_read_options)
+            elif filetype == SupportedFileTypes.PARQUET or filetype == SupportedFileTypes.ARROW:
+                _f = pq.ParquetFile(self.source, **self.df_read_options)
+                self._chunk_iterator = _f.iter_batches(batch_size=self.chunksize)
+            else:
+                raise ValueError(f"Invalid file type: {filetype}")
         elif isinstance(self.source, pd.DataFrame):
             raise NotImplementedError("Pandas DataFrame source is not yet supported.")
-            # return self.source
         else:
-            raise ValueError("Source must be a pandas DataFrame or a path to a CSV file.")
+            raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
         
-    def read_next_batch(self):
-        if isinstance(self._df, pd.io.parsers.TextFileReader):
+    def read(self) -> pd.DataFrame:
+        if isinstance(self._chunk_iterator, pd.io.parsers.readers.TextFileReader):
             try:
-                return next(self._df)
+                return next(self._chunk_iterator)
             except StopIteration:
                 if self.loopback:
-                    self._df = self._read_df()
-                    return next(self._df)
+                    self._chunk_iterator = self.open()
+                    return next(self._chunk_iterator)
                 else:
                     return None
         
     def get_df(self):
-        return self._df
+        return self._chunk_iterator
     
     def set_df(self, df: pd.DataFrame):
         if isinstance(df, pd.DataFrame):
-            self._df = df
+            self._chunk_iterator = df
         else:
             raise ValueError("Data must be a pandas DataFrame.")
         
-    def get_schema(self):
-        df = self._read_df()
-        return {col: str(df[col].dtype) for col in df.columns}
 
 
 class StreamPlayer(StreamDataSource):
