@@ -2,8 +2,15 @@ import os
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime, timedelta
+from enum import Enum
 
-_SUPPORTED_FILE_TYPES = [".csv", ".parquet"]
+
+class SupportedFileTypes(Enum):
+    CSV = ".csv"
+    PARQUET = ".parquet"
+    ARROW = ".arrow"
+
+_SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
 class StreamDataSource(BaseModel):
@@ -12,9 +19,16 @@ class StreamDataSource(BaseModel):
     cols_description: dict[str, str] = Field(None, description="The description of the columns of the source data.")
 
     # dataframe options
-    index_cols: str | list[str] = Field(None, description="The index column of the source data.")
-    ts_col: str = Field(None, description="The timestamp column of the source data.")
-    read_batch_size: int = Field(100_000, description="The batch size to use when playing the stream.")
+    # index_cols: str | list[str] = Field(None, description="The index column of the source data.")
+    # ts_col: str = Field(None, description="The timestamp column of the source data.")
+    chunksize: int = Field(100_000, description="The batch size to use when playing the stream.")
+    loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
+    df_read_options: dict = Field({}, description="Additional options to pass to the pandas read function.")
+
+    # private fields
+    _df: pd.DataFrame = None
+    _batched_read: bool = False
+    _filetype: SupportedFileTypes = None
 
     @field_validator("source")
     @classmethod
@@ -30,31 +44,68 @@ class StreamDataSource(BaseModel):
                 _, ext = os.path.splitext(v)
                 if ext not in _SUPPORTED_FILE_TYPES:
                     raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(_SUPPORTED_FILE_TYPES)}")
+        elif isinstance(v, pd.DataFrame):
+            raise NotImplementedError("Pandas DataFrame source is not yet supported.")
         return v
     
-    def _get_extension(self):
+    @field_validator("chunksize")
+    @classmethod
+    def validate_chunksize(cls, v):
+        if v is None:
+            raise NotImplementedError("Chunk size must be greater than 0 and cannot be None.")
+        elif v <= 0:
+            raise ValueError("Chunk size must be greater than 0.")
+        return v
+    
+    def _get_file_extension(self):
         if isinstance(self.source, str):
             _, ext = os.path.splitext(self.source)
             return ext
         else:
             return None
 
-    def get_df(self):
+    def model_post_init(self, __context):
+        self._df = self._read_df()
+        return super().model_post_init(__context)
+
+    def _read_df(self):
         if isinstance(self.source, str):
-            ext = self._get_extension()
+            ext = self._get_file_extension()
             if ext == ".csv":
-                return pd.read_csv(self.source, index_col=self.index_col)
+                # calcualte csv reading params and read the file
+                return pd.read_csv(self.source, chunksize=self.chunksize, **self.df_read_options)
             elif ext == ".parquet":
-                return pd.read_parquet(self.source, engine="pyarrow", index_col=self.index_col)
+                return pd.read_parquet(self.source, **self.df_read_options)
             else:
                 raise ValueError(f"Invalid file type: {ext}")
         elif isinstance(self.source, pd.DataFrame):
-            return self.source
+            raise NotImplementedError("Pandas DataFrame source is not yet supported.")
+            # return self.source
         else:
             raise ValueError("Source must be a pandas DataFrame or a path to a CSV file.")
         
+    def read_next_batch(self):
+        if isinstance(self._df, pd.io.parsers.TextFileReader):
+            try:
+                return next(self._df)
+            except StopIteration:
+                if self.loopback:
+                    self._df = self._read_df()
+                    return next(self._df)
+                else:
+                    return None
+        
+    def get_df(self):
+        return self._df
+    
+    def set_df(self, df: pd.DataFrame):
+        if isinstance(df, pd.DataFrame):
+            self._df = df
+        else:
+            raise ValueError("Data must be a pandas DataFrame.")
+        
     def get_schema(self):
-        df = self.get_df()
+        df = self._read_df()
         return {col: str(df[col].dtype) for col in df.columns}
 
 
@@ -105,7 +156,6 @@ class StreamPlayer(StreamDataSource):
     @classmethod
     def validate_stream(cls, v):
         from perspective_data import get_streams
-
         streams = get_streams()
         if v not in streams:
             raise ValueError(f"Stream {v} not found. Available streams: {list(streams.keys())}")
