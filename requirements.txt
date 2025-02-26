@@ -11,6 +11,7 @@ codetiming
 pytest
 pydantic
 pydantic-settings
+aiohttp
 
 # ------------------------------------------------------------
 # perspective libs
