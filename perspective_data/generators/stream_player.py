@@ -106,15 +106,18 @@ class StreamDataSource(BaseModel):
             raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
         
     def read(self) -> pd.DataFrame:
-        if isinstance(self._chunk_iterator, pd.io.parsers.readers.TextFileReader):
+        if isinstance(self._chunk_iterator, (pd.io.parsers.readers.TextFileReader, pq.ParquetFile)):
             try:
-                return next(self._chunk_iterator)
+                self._cur_df = next(self._chunk_iterator)
+                return self._cur_df
             except StopIteration:
                 if self.loopback:
                     self._chunk_iterator = self.open()
-                    return next(self._chunk_iterator)
+                    return self.read()
                 else:
                     return None
+        else:
+            raise ValueError("Invalid chunk iterator.")
         
     def get_df(self):
         return self._chunk_iterator
