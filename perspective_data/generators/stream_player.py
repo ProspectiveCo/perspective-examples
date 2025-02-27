@@ -166,11 +166,30 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             raise ValueError("Either frame_batch_size or frame_ts_interval must be provided.")
         elif self.frame_nrows and self.frame_ts_interval:
             raise ValueError("Only one of frame_batch_size or frame_ts_interval must be provided.")
-        
-        # ---- TODO: validate the ts_col & sort & index by it ----
+        # read the dataframe
+        self.read()
+        # validate the timestamp column and prepare for advancing frames by ts_interval
+        if self.frame_ts_interval is not None:
+            self._validate_ts_col()
+            self._prepare_for_ts_interval()
 
         # return the context
         return super().model_post_init(__context)
+    
+    def _validate_ts_col(self):
+        print("Validating timestamp column...")
+        if self.ts_col is None:
+            raise ValueError("Timestamp column must be provided.")
+        if self.ts_col not in self._df.columns:
+            raise ValueError(f"Invalid timestamp column: {self.ts_col}.")
+        # test to make sure ts_col is a datetime column, if not convert it
+        if not pd.api.types.is_datetime64_any_dtype(self._df[self.ts_col]):
+            self._df[self.ts_col] = pd.to_datetime(self._df[self.ts_col])
+
+    def _prepare_for_ts_interval(self):
+        # sort and index the dataframe by the timestamp column
+        self._df.sort_values(by=self.ts_col, inplace=True)
+        self._df.reset_index(drop=True, inplace=True)
     
     def next(self) -> pd.DataFrame:
         """
@@ -182,6 +201,7 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
         if self.frame_nrows:
             # get the current index
             current_index = self._cur_index
+            # loopback logic -- loop back to the beginning of the stream
             if current_index >= len(self._df):
                 if self.loopback:
                     current_index = 0
@@ -194,16 +214,25 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             return next_frame
         # ---- advance the stream by frame_ts_interval ----
         elif self.frame_ts_interval:
-            # get the current timestamp
-            current_ts = self._df[self.ts_col].iloc[self._cur_index]
-            # calculate the next timestamp
-            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)
-            # find the index of the next timestamp
-            next_index = self._df[self._df[self.ts_col] >= next_ts].index[0]
-            # get the next frame
-            next_frame = self._df.iloc[self._cur_index:next_index]
+            # get the current index
+            current_index = self._cur_index
+            # loopback logic -- loop back to the beginning of the stream
+            if current_index >= len(self._df):
+                if self.loopback:
+                    current_index = 0
+                else:
+                    return None
+            current_ts = self._df[self.ts_col].iloc[current_index]                  # get the current timestamp
+            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)             # calculate the next timestamp
+
+            # ---- TODO: handle the case where the next_ts is greater than the max timestamp in the dataframe ----
+            # ---- TODO: possibly implement keeping curr_ts and next_ts in a queue and advancing the stream by the difference between the two timestamps ----
+
+            next_index = self._df[self._df[self.ts_col] >= next_ts].index[0]        # find the index of the next timestamp
+            next_frame = self._df.iloc[self._cur_index:next_index]                  # get the next frame
             # update the current index
             self._cur_index = next_index
+            print(f"Current index: {current_index}, Next index: {next_index}, current_ts: {current_ts}, next_ts: {next_ts}, len: {len(next_frame)}")
             return next_frame
         else:
             raise ValueError("Invalid frame advancement method.")
@@ -243,10 +272,11 @@ def test():
     min_ts = df[ts_col].min()
     max_ts = df[ts_col].max()
     print(f"Timestamp column '{ts_col}' min: {min_ts}, max: {max_ts}")
-    # play the stream
+    print(df[ts_col].head(n=100000))
+    # # play the stream
     # counter = 0
     # while (frame := ds.next()) is not None:
-    #     print('.', end='', flush=True)
+    #     # print('.', end='', flush=True)
     #     # print(f"Frame: len={len(frame)}")
     #     counter += 1
     #     if counter > 100:
