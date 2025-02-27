@@ -118,54 +118,129 @@ class PerspectiveDemoDataSource(BaseModel):
         self._df = df
 
 
-# class StreamPlayer(StreamDataSource):
-#     speed: float = Field(1.0, description="The speed at which to play the stream.")
-#     frame_ts_interval: str | float | timedelta | pd.timedelta = Field("1s", description="The time interval to advance the stream by in each frame. ts_column must be provided. Supports timedelta intervals.")
-#     frame_batch_size: int = Field(1, description="The number of rows to play in each frame.")
-#     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
+class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
+    # speed: float = Field(1.0, description="The speed at which to play the stream.")
+    frame_ts_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_ts_interval must be provided.")
+    frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_ts_interval must be provided.")
+    loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
 
-#     # dataframe options
-#     index_cols: str | list[str] = Field(None, description="The index column of the source data.")
-#     ts_col: str = Field(None, description="The timestamp column of the source data.")
-#     indexing_method: str = Field("ts_index_cols", description="The indexing method to use. Options are 'ts_index_cols', 'index_cols', or 'ts'.")
+    # dataframe options
+    # index_cols: str | list[str] = Field(None, description="The index column of the source data.")
+    ts_col: str = Field(None, description="The timestamp column of the source data.")
+    # indexing_method: str = Field("ts_idx", description="The indexing method to use. Options are 'ts_idx', 'idx', or 'ts'.")
 
-#     @field_validator("speed")
-#     @classmethod
-#     def validate_speed(cls, v):
-#         if v <= 0:
-#             raise ValueError("Speed must be greater than 0.")
-#         return v
+    # private fields
+    _cur_index: int = PrivateAttr(0)
 
-#     @field_validator("frame_batch_size")
-#     @classmethod
-#     def validate_frame_batch_size(cls, v):
-#         if v <= 0:
-#             raise ValueError("frame_batch_size must be greater than 0.")
-#         return v
+    @field_validator("frame_nrows")
+    @classmethod
+    def validate_frame_batch_size(cls, v):
+        if v <= 0:
+            raise ValueError("frame_nrows must be greater than 0.")
+        return v
     
-#     @field_validator("frame_ts_interval")
-#     @classmethod
-#     def validate_frame_ts_interval(cls, v):
-#         try:
-#             pd.Timedelta(v)
-#         except Exception as e:
-#             raise ValueError(f"Invalid time interval: {v}.") from e
-#         return v
+    @field_validator("frame_ts_interval")
+    @classmethod
+    def validate_frame_ts_interval(cls, v):
+        try:
+            pd.Timedelta(v)
+        except Exception as e:
+            raise ValueError(f"Invalid time interval: {v}.") from e
+        return v
 
-#     def model_post_init(self, __context):
-#         # make sure either frame_batch_size or frame_ts_interval is provided
-#         if not self.frame_batch_size and not self.frame_ts_interval:
-#             raise ValueError("Either frame_batch_size or frame_ts_interval must be provided.")
-#         return super().model_post_init(__context)
+    def model_post_init(self, __context):
+        # make sure either frame_batch_size or frame_ts_interval is provided
+        if not self.frame_nrows and not self.frame_ts_interval:
+            raise ValueError("Either frame_batch_size or frame_ts_interval must be provided.")
+        elif self.frame_nrows and self.frame_ts_interval:
+            raise ValueError("Only one of frame_batch_size or frame_ts_interval must be provided.")
+        
+        # ---- TODO: validate the ts_col & sort & index by it ----
+
+        # return the context
+        return super().model_post_init(__context)
+    
+    def next(self) -> pd.DataFrame:
+        """
+        Get the next frame of the stream.
+        """
+        if self._df is None:
+            self.read()
+        # ---- advance the stream by frame_nrows ----
+        if self.frame_nrows:
+            # get the current index
+            current_index = self._cur_index
+            if current_index >= len(self._df):
+                if self.loopback:
+                    current_index = 0
+                else:
+                    return None
+            # get the next frame
+            next_frame = self._df.iloc[current_index:current_index+self.frame_nrows]
+            # update the current index
+            self._cur_index = current_index + self.frame_nrows
+            return next_frame
+        # ---- advance the stream by frame_ts_interval ----
+        elif self.frame_ts_interval:
+            # get the current timestamp
+            current_ts = self._df[self.ts_col].iloc[self._cur_index]
+            # calculate the next timestamp
+            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)
+            # find the index of the next timestamp
+            next_index = self._df[self._df[self.ts_col] >= next_ts].index[0]
+            # get the next frame
+            next_frame = self._df.iloc[self._cur_index:next_index]
+            # update the current index
+            self._cur_index = next_index
+            return next_frame
+        else:
+            raise ValueError("Invalid frame advancement method.")
 
 
 
 def test():
     data_filepath = r"/home/warthog/work/perspective/perspective-examples/data/generators_monthly_2023_md.parquet"
-    ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
+    # ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
+    # df = ds.read()
+    # assert isinstance(df, pd.DataFrame)
+    # print(df.head())
+
+    # ---- testing frame_nrows ----
+    # ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_nrows=10_000, loopback=True)
+    # df = ds.read()
+    # print(df.head())
+    # print(f"Dataframe shape: {df.shape}, len={len(df)}")
+    # counter = 0
+    # while (frame := ds.next()) is not None:
+    #     print('.', end='', flush=True)
+    #     # print(f"Frame: len={len(frame)}")
+    #     counter += 1
+    #     if counter > 100:
+    #         print("\nBreaking...")
+    #         break
+    # print("\nDone")
+    
+    # ---- testing frame_ts_interval ----
+    ts_col = 'report_date'
+    ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_ts_interval='1d', ts_col=ts_col, loopback=False)
+    # let's look at the dataframe
     df = ds.read()
-    assert isinstance(df, pd.DataFrame)
     print(df.head())
+    print(f"Dataframe shape: {df.shape}, len={len(df)}")
+    # print the min/max boundaries of the ts_col in the dataframe
+    min_ts = df[ts_col].min()
+    max_ts = df[ts_col].max()
+    print(f"Timestamp column '{ts_col}' min: {min_ts}, max: {max_ts}")
+    # play the stream
+    # counter = 0
+    # while (frame := ds.next()) is not None:
+    #     print('.', end='', flush=True)
+    #     # print(f"Frame: len={len(frame)}")
+    #     counter += 1
+    #     if counter > 100:
+    #         print("\nBreaking...")
+    #         break
+    # print("\nDone")
 
 
 if __name__ == "__main__":
