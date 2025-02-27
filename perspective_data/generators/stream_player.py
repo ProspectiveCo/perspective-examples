@@ -5,7 +5,7 @@ import pyarrow.parquet as pq
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Optional, Any
 
 
 class SupportedFileTypes(Enum):
@@ -17,13 +17,13 @@ class SupportedFileTypes(Enum):
 _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
-class StreamDataSource(BaseModel):
-    source: str | pd.DataFrame = Field(..., description="The source data to play.")
+class PerspectiveDemoDataSource(BaseModel):
+    source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
 
     # dataframe options
-    loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
+    # loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
     df_read_options: Optional[dict] = Field({}, description="Additional options to pass to the pandas read function.")
 
     # private fields
@@ -52,8 +52,6 @@ class StreamDataSource(BaseModel):
     def model_post_init(self, __context):
         if isinstance(self.source, pd.DataFrame):
             self._df = self.source
-        # read the dataframe
-        self.read()
         # return the context
         return super().model_post_init(__context)
 
@@ -84,9 +82,11 @@ class StreamDataSource(BaseModel):
             raise ValueError("Unsupported source type.")
 
     def read(self) -> pd.DataFrame:
+        # if we have previously read the dataframe, return it
         if self._df is not None:
+            print("Returning previously read dataframe.")
             return self._df
-
+        # read the dataframe
         if isinstance(self.source, str):
             filetype = self.filetype
             if filetype == SupportedFileTypes.CSV:
@@ -104,15 +104,68 @@ class StreamDataSource(BaseModel):
         # return the dataframe
         return self._df
     
+    def get_df(self) -> pd.DataFrame:
+        if self._df is None:
+            self.read()
+        return self._df
+    
+    def set_df(self, df: pd.DataFrame):
+        """
+        Set the dataframe. Useful for applying manual transformations to the dataframe.
+        """
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("Invalid dataframe.")
+        self._df = df
+
+
+# class StreamPlayer(StreamDataSource):
+#     speed: float = Field(1.0, description="The speed at which to play the stream.")
+#     frame_ts_interval: str | float | timedelta | pd.timedelta = Field("1s", description="The time interval to advance the stream by in each frame. ts_column must be provided. Supports timedelta intervals.")
+#     frame_batch_size: int = Field(1, description="The number of rows to play in each frame.")
+#     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
+
+#     # dataframe options
+#     index_cols: str | list[str] = Field(None, description="The index column of the source data.")
+#     ts_col: str = Field(None, description="The timestamp column of the source data.")
+#     indexing_method: str = Field("ts_index_cols", description="The indexing method to use. Options are 'ts_index_cols', 'index_cols', or 'ts'.")
+
+#     @field_validator("speed")
+#     @classmethod
+#     def validate_speed(cls, v):
+#         if v <= 0:
+#             raise ValueError("Speed must be greater than 0.")
+#         return v
+
+#     @field_validator("frame_batch_size")
+#     @classmethod
+#     def validate_frame_batch_size(cls, v):
+#         if v <= 0:
+#             raise ValueError("frame_batch_size must be greater than 0.")
+#         return v
+    
+#     @field_validator("frame_ts_interval")
+#     @classmethod
+#     def validate_frame_ts_interval(cls, v):
+#         try:
+#             pd.Timedelta(v)
+#         except Exception as e:
+#             raise ValueError(f"Invalid time interval: {v}.") from e
+#         return v
+
+#     def model_post_init(self, __context):
+#         # make sure either frame_batch_size or frame_ts_interval is provided
+#         if not self.frame_batch_size and not self.frame_ts_interval:
+#             raise ValueError("Either frame_batch_size or frame_ts_interval must be provided.")
+#         return super().model_post_init(__context)
+
+
 
 def test():
     data_filepath = r"/home/warthog/work/perspective/perspective-examples/data/generators_monthly_2023_md.parquet"
-    reader = StreamDataSource(source=data_filepath, loopback=False)
-    reader.open()
-    while (df := reader.read()) is not None:
-        print(".")
-        assert isinstance(df, pd.DataFrame)
-    print("Done.")
+    ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
+    df = ds.read()
+    assert isinstance(df, pd.DataFrame)
+    print(df.head())
 
 
 if __name__ == "__main__":
