@@ -110,8 +110,6 @@ class PerspectiveDemoDataSource(BaseModel):
                 except Exception as e: 
                     del self.df_read_options['engine']
                     self._df = pd.read_feather(self.source, **self.df_read_options)
-            # elif filetype == SupportedFileTypes.ARROW:
-            #     self._df = pd.read_feather(self.source, **self.df_read_options)
             else:
                 raise ValueError(f"Invalid file type: {filetype}")
         elif isinstance(self.source, pd.DataFrame):
