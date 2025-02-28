@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, Any
 
+from perspective_data.utils import logger
+
 
 class SupportedFileTypes(Enum):
     CSV = ".csv"
@@ -33,9 +35,7 @@ class PerspectiveDemoDataSource(BaseModel):
     source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
-
     # dataframe options
-    # loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
     df_read_options: Optional[dict] = Field({}, description="Additional options to pass to the pandas read function.")
 
     # private fields
@@ -96,18 +96,18 @@ class PerspectiveDemoDataSource(BaseModel):
     def read(self) -> pd.DataFrame:
         # if we have previously read the dataframe, return it
         if self._df is not None:
-            print("Returning previously read dataframe.")
+            # logger.debug("PerspectiveDemoDataSource: Dataframe already read. Returning previously read dataframe.")
             return self._df
         # read the dataframe
         if isinstance(self.source, str):
             filetype = self.filetype
             if filetype == SupportedFileTypes.CSV:
                 self._df = pd.read_csv(self.source, **self.df_read_options)
-            elif filetype == SupportedFileTypes.PARQUET and filetype == SupportedFileTypes.ARROW:
+            elif filetype == SupportedFileTypes.PARQUET or filetype == SupportedFileTypes.ARROW:
                 # set the engine to 'pyarrow' to avoid the warning message
                 if 'engine' not in self.df_read_options: self.df_read_options['engine'] = 'pyarrow'
                 try: self._df = pd.read_parquet(self.source, **self.df_read_options)
-                except Exception as e: 
+                except Exception as e:
                     del self.df_read_options['engine']
                     self._df = pd.read_feather(self.source, **self.df_read_options)
             else:
@@ -134,15 +134,12 @@ class PerspectiveDemoDataSource(BaseModel):
 
 
 class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
-    # speed: float = Field(1.0, description="The speed at which to play the stream.")
     frame_ts_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_ts_interval must be provided.")
     frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_ts_interval must be provided.")
     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
 
     # dataframe options
-    # index_cols: str | list[str] = Field(None, description="The index column of the source data.")
     ts_col: str = Field(None, description="The timestamp column of the source data.")
-    # indexing_method: str = Field("ts_idx", description="The indexing method to use. Options are 'ts_idx', 'idx', or 'ts'.")
 
     # private fields
     _cur_index: int = PrivateAttr(0)
@@ -180,7 +177,7 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
         return super().model_post_init(__context)
     
     def _validate_ts_col(self):
-        print("Validating timestamp column...")
+        logger.debug(f"PerspectiveDemoStreamDataSrouce: Advancing by frame timestamp... Validating timestamp column: {self.ts_col}")
         if self.ts_col is None:
             raise ValueError("Timestamp column must be provided.")
         if self.ts_col not in self._df.columns:
@@ -223,7 +220,7 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             next_index = tmp.index[0] if len(tmp) > 0 else len(self._df)                # get the next index
             next_frame = self._df.iloc[self._cur_index:next_index]                      # get the next frame
             self._cur_index = next_index                                                # update the current index
-            # print(f"Current index: {current_index}, Next index: {next_index}, current_ts: {current_ts}, next_ts: {next_ts}, len: {len(next_frame)}")
+            # logger.debug(f"Current index: {current_index}, Next index: {next_index}, current_ts: {current_ts}, next_ts: {next_ts}, len: {len(next_frame)}")
             return next_frame
         else:
             raise ValueError("Invalid frame advancement method.")
