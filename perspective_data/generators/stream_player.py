@@ -227,6 +227,22 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
 
 
 
+class PerspectiveDemoBatchDataSrouce(PerspectiveDemoDataSource):
+    """
+    A data source that reads and returns the entire data in a single batch.
+
+    This class is nearly identical to PerspectiveDemoDataSource, but it is provided for clarity and to avoid confusion.
+    """
+
+    def next(self) -> pd.DataFrame:
+        """
+        Get the next frame of the stream.
+        """
+        if self._df is None:
+            self.read()
+        return self._df
+
+
 def test():
     data_filepath = r"/home/warthog/work/perspective/perspective-examples/data/generators_monthly_2023_md.parquet"
     # ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
