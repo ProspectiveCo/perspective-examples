@@ -103,10 +103,15 @@ class PerspectiveDemoDataSource(BaseModel):
             filetype = self.filetype
             if filetype == SupportedFileTypes.CSV:
                 self._df = pd.read_csv(self.source, **self.df_read_options)
-            elif filetype == SupportedFileTypes.PARQUET:
-                self._df = pd.read_parquet(self.source, **self.df_read_options)
-            elif filetype == SupportedFileTypes.ARROW:
-                self._df = pd.read_feather(self.source, **self.df_read_options)
+            elif filetype == SupportedFileTypes.PARQUET and filetype == SupportedFileTypes.ARROW:
+                # set the engine to 'pyarrow' to avoid the warning message
+                if 'engine' not in self.df_read_options: self.df_read_options['engine'] = 'pyarrow'
+                try: self._df = pd.read_parquet(self.source, **self.df_read_options)
+                except Exception as e: 
+                    del self.df_read_options['engine']
+                    self._df = pd.read_feather(self.source, **self.df_read_options)
+            # elif filetype == SupportedFileTypes.ARROW:
+            #     self._df = pd.read_feather(self.source, **self.df_read_options)
             else:
                 raise ValueError(f"Invalid file type: {filetype}")
         elif isinstance(self.source, pd.DataFrame):
@@ -199,40 +204,28 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             self.read()
         # ---- advance the stream by frame_nrows ----
         if self.frame_nrows:
-            # get the current index
-            current_index = self._cur_index
             # loopback logic -- loop back to the beginning of the stream
-            if current_index >= len(self._df):
-                if self.loopback:
-                    current_index = 0
-                else:
-                    return None
-            # get the next frame
-            next_frame = self._df.iloc[current_index:current_index+self.frame_nrows]
-            # update the current index
-            self._cur_index = current_index + self.frame_nrows
+            current_index = self._cur_index
+            if current_index >= len(self._df) and not self.loopback: return None
+            current_index = 0 if current_index >= len(self._df) else current_index
+            # next frame logic
+            next_frame = self._df.iloc[current_index:current_index+self.frame_nrows]    # get the next frame
+            self._cur_index = current_index + self.frame_nrows                          # update the current index
             return next_frame
         # ---- advance the stream by frame_ts_interval ----
         elif self.frame_ts_interval:
-            # get the current index
-            current_index = self._cur_index
             # loopback logic -- loop back to the beginning of the stream
-            if current_index >= len(self._df):
-                if self.loopback:
-                    current_index = 0
-                else:
-                    return None
-            current_ts = self._df[self.ts_col].iloc[current_index]                  # get the current timestamp
-            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)             # calculate the next timestamp
-
-            # ---- TODO: handle the case where the next_ts is greater than the max timestamp in the dataframe ----
-            # ---- TODO: possibly implement keeping curr_ts and next_ts in a queue and advancing the stream by the difference between the two timestamps ----
-
-            next_index = self._df[self._df[self.ts_col] >= next_ts].index[0]        # find the index of the next timestamp
-            next_frame = self._df.iloc[self._cur_index:next_index]                  # get the next frame
-            # update the current index
-            self._cur_index = next_index
-            print(f"Current index: {current_index}, Next index: {next_index}, current_ts: {current_ts}, next_ts: {next_ts}, len: {len(next_frame)}")
+            current_index = self._cur_index
+            if current_index >= len(self._df) and not self.loopback: return None
+            current_index = 0 if current_index >= len(self._df) else current_index
+            # next frame logic
+            current_ts = self._df[self.ts_col].iloc[current_index]                      # get the current timestamp
+            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)                 # calculate the next timestamp
+            tmp = self._df[self._df[self.ts_col] >= next_ts]                            # find the next batch of rows
+            next_index = tmp.index[0] if len(tmp) > 0 else len(self._df)                # get the next index
+            next_frame = self._df.iloc[self._cur_index:next_index]                      # get the next frame
+            self._cur_index = next_index                                                # update the current index
+            # print(f"Current index: {current_index}, Next index: {next_index}, current_ts: {current_ts}, next_ts: {next_ts}, len: {len(next_frame)}")
             return next_frame
         else:
             raise ValueError("Invalid frame advancement method.")
@@ -263,26 +256,26 @@ def test():
     
     # ---- testing frame_ts_interval ----
     ts_col = 'report_date'
-    ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_ts_interval='1d', ts_col=ts_col, loopback=False)
+    ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_ts_interval='1d', ts_col=ts_col, loopback=True)
     # let's look at the dataframe
     df = ds.read()
-    print(df.head())
     print(f"Dataframe shape: {df.shape}, len={len(df)}")
     # print the min/max boundaries of the ts_col in the dataframe
     min_ts = df[ts_col].min()
     max_ts = df[ts_col].max()
     print(f"Timestamp column '{ts_col}' min: {min_ts}, max: {max_ts}")
-    print(df[ts_col].head(n=100000))
-    # # play the stream
-    # counter = 0
-    # while (frame := ds.next()) is not None:
-    #     # print('.', end='', flush=True)
-    #     # print(f"Frame: len={len(frame)}")
-    #     counter += 1
-    #     if counter > 100:
-    #         print("\nBreaking...")
-    #         break
-    # print("\nDone")
+    # show df records with report_date == 2023-01-02
+    # print(df[df[ts_col] >= datetime(2023, 1, 2)].head())
+    # play the stream
+    counter = 0
+    while (frame := ds.next()) is not None:
+        print('.', end='', flush=True)
+        # print(f"Frame: len={len(frame)}")
+        counter += 1
+        if counter > 100:
+            print("\nBreaking...")
+            break
+    print("\nDone")
 
 
 if __name__ == "__main__":
