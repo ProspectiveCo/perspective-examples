@@ -29,7 +29,11 @@ class SupportedFileTypes(Enum):
 _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
+_unnamed_source_counter = 0
+
+
 class PerspectiveDemoDataSource(BaseModel):
+    name: Optional[str] = Field(None, description="The name of the data source.")
     source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
@@ -62,6 +66,15 @@ class PerspectiveDemoDataSource(BaseModel):
     def model_post_init(self, __context):
         if isinstance(self.source, pd.DataFrame):
             self._df = self.source
+        # --- validating the data source name:
+        #  if name is not provided, set it to the filename
+        if self.name is None:
+            if isinstance(self.source, str):
+                self.name = os.path.basename(self.source)
+            else:
+                global _unnamed_source_counter
+                _unnamed_source_counter += 1
+                self.name = f"ds_{_unnamed_source_counter:03d}"
         # return the context
         return super().model_post_init(__context)
 
@@ -131,9 +144,9 @@ class PerspectiveDemoDataSource(BaseModel):
         self._df = df
 
 
-class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
-    frame_ts_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_ts_interval must be provided.")
-    frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_ts_interval must be provided.")
+class PerspectiveDemoStreamDataSource(PerspectiveDemoDataSource):
+    frame_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_interval must be provided.")
+    frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_interval must be provided.")
     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
 
     # dataframe options
@@ -149,9 +162,9 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             raise ValueError("frame_nrows must be greater than 0.")
         return v
     
-    @field_validator("frame_ts_interval")
+    @field_validator("frame_interval")
     @classmethod
-    def validate_frame_ts_interval(cls, v):
+    def validate_frame_interval(cls, v):
         try:
             pd.Timedelta(v)
         except Exception as e:
@@ -159,15 +172,15 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
         return v
 
     def model_post_init(self, __context):
-        # make sure either frame_batch_size or frame_ts_interval is provided
-        if not self.frame_nrows and not self.frame_ts_interval:
-            raise ValueError("Either frame_batch_size or frame_ts_interval must be provided.")
-        elif self.frame_nrows and self.frame_ts_interval:
-            raise ValueError("Only one of frame_batch_size or frame_ts_interval must be provided.")
+        # make sure either frame_batch_size or frame_interval is provided
+        if not self.frame_nrows and not self.frame_interval:
+            raise ValueError("Either frame_batch_size or frame_interval must be provided.")
+        elif self.frame_nrows and self.frame_interval:
+            raise ValueError("Only one of frame_batch_size or frame_interval must be provided.")
         # read the dataframe
         self.read()
         # validate the timestamp column and prepare for advancing frames by ts_interval
-        if self.frame_ts_interval is not None:
+        if self.frame_interval is not None:
             self._validate_ts_col()
             self._prepare_for_ts_interval()
 
@@ -205,15 +218,15 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
             next_frame = self._df.iloc[current_index:current_index+self.frame_nrows]    # get the next frame
             self._cur_index = current_index + self.frame_nrows                          # update the current index
             return next_frame
-        # ---- advance the stream by frame_ts_interval ----
-        elif self.frame_ts_interval:
+        # ---- advance the stream by frame_interval ----
+        elif self.frame_interval:
             # loopback logic -- loop back to the beginning of the stream
             current_index = self._cur_index
             if current_index >= len(self._df) and not self.loopback: return None
             current_index = 0 if current_index >= len(self._df) else current_index
             # next frame logic
             current_ts = self._df[self.ts_col].iloc[current_index]                      # get the current timestamp
-            next_ts = current_ts + pd.Timedelta(self.frame_ts_interval)                 # calculate the next timestamp
+            next_ts = current_ts + pd.Timedelta(self.frame_interval)                 # calculate the next timestamp
             tmp = self._df[self._df[self.ts_col] >= next_ts]                            # find the next batch of rows
             next_index = tmp.index[0] if len(tmp) > 0 else len(self._df)                # get the next index
             next_frame = self._df.iloc[self._cur_index:next_index]                      # get the next frame
@@ -225,7 +238,7 @@ class PerspectiveDemoStreamDataSrouce(PerspectiveDemoDataSource):
 
 
 
-class PerspectiveDemoBatchDataSrouce(PerspectiveDemoDataSource):
+class PerspectiveDemoBatchDataSource(PerspectiveDemoDataSource):
     """
     A data source that reads and returns the entire data in a single batch.
 
@@ -241,8 +254,23 @@ class PerspectiveDemoBatchDataSrouce(PerspectiveDemoDataSource):
         return self._df
 
 
+class PerspectiveDemoStreamDataSourceBundle(PerspectiveDemoDataSource):
+    name: Optional[str] = Field(None, description="The name of the data source bundle.")
+    description: Optional[str] = Field(None, description="The description of the data source bundle.")
+    sources: list[PerspectiveDemoStreamDataSource] = Field([], description="The list of stream data sources to bundle together.")
+
+    @field_validator("sources")
+    @classmethod
+    def validate_sources(cls, v):
+        if not v:
+            raise ValueError("Sources must contain at least one item.")
+        return v
+
+
+
+
 def test():
-    data_filepath = r"/home/warthog/work/perspective/perspective-examples/data/generators_monthly_2023_md.parquet"
+    data_filepath = r"data/generators_monthly_2023_md.parquet"
     # ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
     # df = ds.read()
     # assert isinstance(df, pd.DataFrame)
@@ -263,9 +291,9 @@ def test():
     #         break
     # print("\nDone")
     
-    # ---- testing frame_ts_interval ----
+    # ---- testing frame_interval ----
     ts_col = 'report_date'
-    ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_ts_interval='1d', ts_col=ts_col, loopback=True)
+    ds = PerspectiveDemoStreamDataSource(source=data_filepath, frame_interval='1d', ts_col=ts_col, loopback=True)
     # let's look at the dataframe
     df = ds.read()
     print(f"Dataframe shape: {df.shape}, len={len(df)}")
