@@ -93,8 +93,8 @@ class PerspectiveServerStreamDemo(StreamDemo):
     def _refresh_perspective_tables(self):
         # update with new data every 50ms
         def updater():
-            for table in self._tables:
-                table.update(source.data_source())
+            for table, source in zip(self._tables, self.sources):
+                table.update(source.next())
         # start the periodic callback to update the table data
         callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=self.interval * 1000)
         callback.start()
