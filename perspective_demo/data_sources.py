@@ -34,6 +34,7 @@ _unnamed_source_counter = 0
 
 class PerspectiveDemoDataSource(BaseModel):
     name: Optional[str] = Field(None, description="The name of the data source.")
+    # -- TODO: change the source to be able to also take a http, s3 link and download the file first
     source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
