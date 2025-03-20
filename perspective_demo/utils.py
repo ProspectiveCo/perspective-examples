@@ -13,7 +13,8 @@
 import sys
 import logging
 from pydantic_settings import BaseSettings
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, ConfigDict
+import os
 import logging.handlers
 
 __all__ = [
@@ -30,8 +31,11 @@ __all__ = [
 class Settings(BaseSettings):
     log_level: str = Field('INFO', description='Logging level for the application. Allowed values are: DEBUG, INFO, WARNING, ERROR, CRITICAL')
 
+    # model_config = ConfigDict(extra='allow',)
+
     class Config:
-        env_file = 'configs.env'
+        env_file = os.path.join(os.path.dirname(__file__), 'configs.env')
+        extra = 'allow'
 
     @field_validator('log_level')
     def validate_log_level(cls, v):
@@ -47,6 +51,62 @@ class Settings(BaseSettings):
 settings = Settings()
 
 
+default_configs = {
+    'data_sources': {
+        'pudl': {
+            'module': 'perspective_demo.data_sources.pudl',
+            'class': 'PUDLDataSource',
+            'kwargs': {
+                'start_date': '2018-01-01',
+                'end_date': '2018-12-31',
+                'freq': 'D',
+            }
+        },
+        'stocks': {
+            'module': 'perspective_demo.data_sources.stocks',
+            'class': 'StocksDataSource',
+            'kwargs': {
+                'securities': [
+                    "AAPL.N",
+                    "AMZN.N",
+                    "QQQ.N",
+                    "NVDA.N",
+                    "TSLA.N",
+                    "FB.N",
+                    "MSFT.N",
+                    "TLT.N",
+                    "XIV.N",
+                    "YY.N",
+                    "CSCO.N",
+                    "GOOGL.N",
+                    "PCLN.N",
+                    "NFLX.N",
+                    "BABA.N",
+                    "INTC.N",
+                    "V.N",
+                    "JPM.N",
+                    "WMT.N",
+                    "DIS.N",
+                    "PYPL.N",
+                    "ADBE.N",
+                    "CMCSA.N",
+                    "PEP.N",
+                    "KO.N",
+                    "NKE.N",
+                    "MRK.N",
+                    "PFE.N",
+                    "T.N",
+                    "VZ.N",
+                    "ORCL.N",
+                    "IBM.N",
+                ]
+            }
+        }
+    }
+}
+
+# print(settings.sources_pudl_module)
+print(settings.sources_pudl_module)
 
 # ==============================================================================
 # LOGGING
