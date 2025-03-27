@@ -180,7 +180,7 @@ async function main() {
                     console.log("Max run duration reached. Exiting...");
                     clearInterval(intervalId);
                     await conn.close();
-                    taos.destroy();
+                    await taos.destroy();
                     process.exit(0);
                 }
                 // generate and insert data
