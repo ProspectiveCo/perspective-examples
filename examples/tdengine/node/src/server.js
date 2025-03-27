@@ -1,8 +1,5 @@
-
+const { WebSocketServer, table } = require("@finos/perspective");
 const taos = require("@tdengine/websocket");
-const perspective = require("@finos/perspective");
-
-
 
 // TDengine configuration
 const TAOS_CONNECTION_URL = 'ws://localhost:6041';
@@ -14,7 +11,6 @@ const TAOS_TABLENAME = 'meters';
 // Perspective configuration
 const PERSPECTIVE_TABLE_NAME = 'meters';
 
-
 /**
  * Connect to a TDengine database using WebSocket APIs.
  */
@@ -24,28 +20,23 @@ async function taosCreateConnection(
     password = TAOS_PASSWORD
 ) {
     try {
-        // create the connection configuration
         let conf = new taos.WSConfig(url);
         conf.setUser(user);
         conf.setPwd(password);
-        // connect to the TDengine database
-        conn = await taos.sqlConnect(conf);
+        const conn = await taos.sqlConnect(conf);
         console.log(`Connected to ${url} successfully.`);
         return conn;
     } catch (err) {
-        console.log(`Failed to connect to ${url}, ErrCode: ${err.code}, ErrMessage: ${err.message}`);
-        console.log("This is most likely due to the TDengine docker container not running or the connection information being incorrect... Please run `/docker.sh` to start the TDengine docker container.");
+        console.error(`Failed to connect to ${url}, ErrCode: ${err.code}, ErrMessage: ${err.message}`);
         process.exit(1);
     }
 }
 
-
 /**
- * Query the TDEngine meters table and return the result as an array of objects.
+ * Query the TDengine meters table and return the result as an array of objects.
  */
 async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TABLENAME) {
     try {
-        // query the table
         const sql = `
             SELECT 
                 ts, current, voltage, phase, location, groupid 
@@ -73,9 +64,11 @@ async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TA
     }
 }
 
-
-async function prspCreatePerspectiveTable(data) {
-    let schema = {
+/**
+ * Create a Perspective table and host it via WebSocket.
+ */
+async function createPerspectiveServer(data) {
+    const schema = {
         ts: "datetime",
         current: "float",
         voltage: "float",
@@ -83,19 +76,26 @@ async function prspCreatePerspectiveTable(data) {
         location: "string",
         groupid: "integer",
     };
-    let table = perspective.table(schema, { limit: 1000, format: "json" });
+    const perspectiveTable = table(schema, { limit: 1000, format: "json" });
+    await perspectiveTable.update(data);
+
+    // Start a WebSocket server on port 8080
+    const host = new WebSocketServer({ port: 8080 });
+    host.host_table(PERSPECTIVE_TABLE_NAME, perspectiveTable);
+    console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
 }
 
-
+/**
+ * Main function to orchestrate the workflow.
+ */
 async function main() {
-    console.log("preparing data...")
     const conn = await taosCreateConnection();
     await conn.exec(`USE ${TAOS_DATABASE};`);
     const data = await taosQuery(conn);
-    prspCreatePerspectiveTable(data);
+    console.log(data.slice(0, 2));
+    await createPerspectiveServer(data);
     conn.close();
     taos.destroy();
-    process.exit(0);
 }
 
 main();
