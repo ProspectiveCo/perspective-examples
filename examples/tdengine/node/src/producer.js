@@ -8,7 +8,7 @@ const TAOS_DATABASE = 'power';
 const TAOS_TABLENAME = 'meters';
 
 // Data generation constants
-const MAX_RUN_DURATION = 10 * 1000;    // 1 hour in milliseconds
+const MAX_RUN_DURATION = 60 * 60 * 1000;    // 1 hour in milliseconds
 const INTERVAL = 250;                       // interval in milliseconds
 const NUM_ROWS_PER_INTERVAL = 100;          // rows generated per interval
 const LOCATIONS = [
