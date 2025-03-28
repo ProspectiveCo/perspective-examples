@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "producer": "node src/producer.cjs",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "producer": "node src/producer.cjs",
+    "simple_ws": "node src/prsp_simple_ws_esm.js"
   },
   "keywords": [],
   "author": "",
