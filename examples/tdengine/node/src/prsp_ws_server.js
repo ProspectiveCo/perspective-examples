@@ -81,12 +81,12 @@ async function createPerspectiveServer(data) {
         location: "string",
         groupid: "integer",
     };
-    const table = perspective.table(schema, { limit: 1000, format: "json" });
-    await table.update(data);
 
     // Start a WebSocket server on port 8080
     const ws = new perspective.WebSocketServer({ port: 8080 });
-    ws.host_table(PERSPECTIVE_TABLE_NAME, table);
+    const table = await perspective.table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
+    await table.update(data);
+
     console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
 }
 
@@ -99,8 +99,8 @@ async function main() {
     const data = await taosQuery(conn);
     console.log(data.slice(0, 2));
     await createPerspectiveServer(data);
-    await conn.close();
-    await taos.destroy();
+    // await conn.close();
+    // await taos.destroy();
 }
 
 main();
