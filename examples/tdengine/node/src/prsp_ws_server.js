@@ -1,4 +1,4 @@
-import { WebSocketServer, table } from "@finos/perspective";
+import perspective from "@finos/perspective";
 import * as taos from "@tdengine/websocket";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -81,12 +81,12 @@ async function createPerspectiveServer(data) {
         location: "string",
         groupid: "integer",
     };
-    const perspectiveTable = table(schema, { limit: 1000, format: "json" });
-    await perspectiveTable.update(data);
+    const table = perspective.table(schema, { limit: 1000, format: "json" });
+    await table.update(data);
 
     // Start a WebSocket server on port 8080
-    const host = new WebSocketServer({ port: 8080 });
-    host.host_table(PERSPECTIVE_TABLE_NAME, perspectiveTable);
+    const ws = new perspective.WebSocketServer({ port: 8080 });
+    ws.host_table(PERSPECTIVE_TABLE_NAME, table);
     console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
 }
 
@@ -98,7 +98,7 @@ async function main() {
     await conn.exec(`USE ${TAOS_DATABASE};`);
     const data = await taosQuery(conn);
     console.log(data.slice(0, 2));
-    // await createPerspectiveServer(data);
+    await createPerspectiveServer(data);
     await conn.close();
     await taos.destroy();
 }
