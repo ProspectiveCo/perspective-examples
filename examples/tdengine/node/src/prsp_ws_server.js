@@ -1,5 +1,10 @@
-const { WebSocketServer, table } = require("@finos/perspective");
-const taos = require("@tdengine/websocket");
+import { WebSocketServer, table } from "@finos/perspective";
+import * as taos from "@tdengine/websocket";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // TDengine configuration
 const TAOS_CONNECTION_URL = 'ws://localhost:6041';
@@ -93,9 +98,9 @@ async function main() {
     await conn.exec(`USE ${TAOS_DATABASE};`);
     const data = await taosQuery(conn);
     console.log(data.slice(0, 2));
-    await createPerspectiveServer(data);
-    conn.close();
-    taos.destroy();
+    // await createPerspectiveServer(data);
+    await conn.close();
+    await taos.destroy();
 }
 
 main();
