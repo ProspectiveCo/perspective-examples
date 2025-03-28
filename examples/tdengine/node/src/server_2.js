@@ -1,5 +1,12 @@
 import { WebSocketServer, table } from "@finos/perspective";
 
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// Get the current directory in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Perspective configuration
 const PERSPECTIVE_TABLE_NAME = 'people';
 
@@ -12,12 +19,13 @@ async function createPerspectiveServer() {
         age: "integer",
     };
     const data = [{name: "John", age: 25}, {name: "Jane", age: 24}];
-    let perspectiveTable = table(schema, { limit: 1000, format: "json" });
-    await perspectiveTable.update(data);
 
     // Start a WebSocket server on port 8080
-    const host = new WebSocketServer({ port: 8080 });
-    host.host_table(PERSPECTIVE_TABLE_NAME, perspectiveTable);
+    const host = new WebSocketServer({ assets: [__dirname], port: 8080 });
+    
+    let prspTable = await table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
+    await prspTable.update(data);
+
     console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
 }
 
