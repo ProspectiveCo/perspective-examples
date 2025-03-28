@@ -1,10 +1,6 @@
 import perspective from "@finos/perspective";
 import * as taos from "@tdengine/websocket";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // TDengine configuration
 const TAOS_CONNECTION_URL = 'ws://localhost:6041';
@@ -14,7 +10,10 @@ const TAOS_DATABASE = 'power';
 const TAOS_TABLENAME = 'meters';
 
 // Perspective configuration
-const PERSPECTIVE_TABLE_NAME = 'meters';
+const PRSP_TABLE_NAME = TAOS_TABLENAME;
+const PRSP_TABLE_LIMIT = 100_000;                  // Limit for the Perspective table nmber of rows
+const PRSP_TABLE_REFRESH_INTERVAL = 250;           // Refresh interval in milliseconds
+
 
 /**
  * Connect to a TDengine database using WebSocket APIs.
@@ -53,7 +52,7 @@ async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TA
         while (await wsRows.next()) {
             let row = wsRows.getData();
             data.push({
-                ts: new Date(Number(row[0])),
+                ts: new Date(Number(row[0])),       // convert to timestamp
                 current: row[1],
                 voltage: row[2],
                 phase: row[3],
@@ -69,9 +68,10 @@ async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TA
 }
 
 /**
- * Create a Perspective table and host it via WebSocket.
+ * Create a Perspective table to host on the websocket.
  */
-async function createPerspectiveServer(data) {
+async function prspCreatePerspectiveTable() {
+    // create an empty table with schema
     const schema = {
         ts: "datetime",
         current: "float",
@@ -80,26 +80,43 @@ async function createPerspectiveServer(data) {
         location: "string",
         groupid: "integer",
     };
-
-    // Start a WebSocket server on port 8080
-    const ws = new perspective.WebSocketServer({ port: 8080 });
-    const table = await perspective.table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
-    await table.update(data);
-
-    console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
+    // create a table with schema and row limit
+    // other supported formats: "json", "columns", "csv" or "arrow", "ndjson"
+    const table = await perspective.table(schema, { name: PRSP_TABLE_NAME, limit: PRSP_TABLE_LIMIT, format: "json" });
+    return table;
 }
+
 
 /**
  * Main function to orchestrate the workflow.
  */
 async function main() {
+    // create tdengine connection and perspective websocket server
     const conn = await taosCreateConnection();
-    await conn.exec(`USE ${TAOS_DATABASE};`);
-    const data = await taosQuery(conn);
-    console.log(data.slice(0, 2));
-    await createPerspectiveServer(data);
-    // await conn.close();
-    // await taos.destroy();
+    const ws = new perspective.WebSocketServer({ port: 8080 });
+
+    // create a perspective table
+    const table = await prspCreatePerspectiveTable();
+
+    console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
+
+    // Set up a timer to periodically query TDengine and update the Perspective table
+    setInterval(async () => {
+        try {
+            const data = await taosQuery(conn);
+            await table.update(data);
+            // console.log(`Perspective table refreshed: ${data.length} rows.`);
+        } catch (err) {
+            console.error(`Error updating Perspective table: ${err.message}`);
+            console.error(`Exiting...`);
+            await table.clear();
+            await conn.close();
+            await taos.destroy();
+            process.exit(1);
+        }
+    }, PRSP_TABLE_REFRESH_INTERVAL);
 }
 
+
+// Run the main function
 main();
