@@ -93,7 +93,7 @@ async function prspCreatePerspectiveTable() {
 async function main() {
     // create tdengine connection and perspective websocket server
     const conn = await taosCreateConnection();
-    const ws = new perspective.WebSocketServer({ port: 8080 });
+    const ws = new perspective.WebSocketServer({ port: 8080 });         // perspective websocket is always hosted on: ws://localhost:8080/websocket
 
     // create a perspective table
     const table = await prspCreatePerspectiveTable();
