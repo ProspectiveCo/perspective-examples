@@ -54,7 +54,7 @@ async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TA
         while (await wsRows.next()) {
             let row = wsRows.getData();
             data.push({
-                ts: row[0],
+                ts: new Date(Number(row[0])),
                 current: row[1],
                 voltage: row[2],
                 phase: row[3],
