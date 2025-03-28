@@ -20,7 +20,6 @@ async function createPerspectiveServer() {
 
     // Start a WebSocket server on port 8080
     const host = new perspective.WebSocketServer({ assets: [__dirname], port: 8080 });
-    
     let prspTable = await perspective.table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
     await prspTable.update(data);
 
