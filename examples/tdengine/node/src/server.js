@@ -45,7 +45,8 @@ async function taosQuery(conn, databaseName = TAOS_DATABASE, tableName = TAOS_TA
             SELECT 
                 ts, current, voltage, phase, location, groupid 
             FROM ${databaseName}.${tableName} 
-            ORDER BY ts DESC;
+            ORDER BY ts DESC
+            LIMIT ${PRSP_TABLE_LIMIT};
         `;
         const wsRows = await conn.query(sql);
         const data = [];
