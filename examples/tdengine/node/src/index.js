@@ -1,7 +1,10 @@
+import perspective from "@finos/perspective";
+import * as taos from "@tdengine/websocket";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-const taos = require("@tdengine/websocket");
-const perspective = require("@finos/perspective");
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 
 // TDengine configuration
@@ -83,7 +86,10 @@ async function prspCreatePerspectiveTable(data) {
         location: "string",
         groupid: "integer",
     };
-    let table = perspective.table(schema, { limit: 1000, format: "json" });
+    let table = perspective.table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
+    await table.update(data);
+    // create a pespective viewer element and add it to the DOM
+    
 }
 
 
@@ -93,9 +99,8 @@ async function main() {
     await conn.exec(`USE ${TAOS_DATABASE};`);
     const data = await taosQuery(conn);
     prspCreatePerspectiveTable(data);
-    conn.close();
-    taos.destroy();
-    process.exit(0);
+    await conn.close();
+    await taos.destroy();
 }
 
 main();
