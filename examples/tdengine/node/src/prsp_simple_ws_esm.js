@@ -1,6 +1,6 @@
-import { WebSocketServer, table } from "@finos/perspective";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import perspective from "@finos/perspective";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,9 +19,9 @@ async function createPerspectiveServer() {
     const data = [{name: "John", age: 25}, {name: "Jane", age: 24}];
 
     // Start a WebSocket server on port 8080
-    const host = new WebSocketServer({ assets: [__dirname], port: 8080 });
+    const host = new perspective.WebSocketServer({ assets: [__dirname], port: 8080 });
     
-    let prspTable = await table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
+    let prspTable = await perspective.table(schema, { name: PERSPECTIVE_TABLE_NAME, limit: 1000, format: "json" });
     await prspTable.update(data);
 
     console.log(`Perspective WebSocket server is running on ws://localhost:8080`);
