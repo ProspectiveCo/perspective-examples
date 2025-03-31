@@ -23,15 +23,21 @@ Both TDengine and Perspective provide a vast library of client libraries (node, 
 
 ![TOAS Perspective Architecture](./imgs/taos_prsp_arch_combined.png)
 
-## Node Example
+<br/><br/>
+
+## Node
 
 To setup TDengine and Perspective wiht a node backend, please follow these instructions.
 
-## Python Example
+<br/>
+
+## Python
 
 To setup TDengine and Perspective wiht a node backend, please follow these instructions.
 
+<br/>
 
+---
 
 The architecture is as follow:
 
