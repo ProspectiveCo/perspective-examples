@@ -2,7 +2,7 @@
 
 This guide demonstrates how to integrate [TDengine](https://tdengine.com/), a high-performance time-series database, with [Perspective](https://perspective.finos.org/), a powerful data visualization library. By combining these technologies, you can create a real-time data visualization platform that streams data from TDengine to an interactive real-time Perspective dashboard.
 
-[![TDengine - Perspective Integration](../imgs/prsp-tdengine_short.gif)](https://www.loom.com/share/5aa9f1d435d6430c99efa02559d3cd6c?sid=54d0ffbe-1906-4513-ad05-1898c8cbbe2d)
+[![TDengine - Perspective Integration](./imgs/prsp-tdengine_short.gif)](https://www.loom.com/share/5aa9f1d435d6430c99efa02559d3cd6c?sid=54d0ffbe-1906-4513-ad05-1898c8cbbe2d)
 
 <br/>
 
