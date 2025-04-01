@@ -14,7 +14,7 @@
 # populates the database with some test data, and 
 # checks the status of the database.
 
-TAOS_IMAGE="tdengine/tdengine"
+TAOS_IMAGE="tdengine/tdengine:3.3.5.2"
 CONTAINER_NAME="prsp-tdengine"
 TAOS_USER="root"
 TAOS_PASSWORD="taosdata"
@@ -68,12 +68,12 @@ fi
 
 if [ "$PULL_IMAGE" = true ]; then
     # pull the latest tdengine docker image
-    echo "pulling the latest tdengine docker image..."
+    echo "pulling tdengine docker image: ${TOAS_IMAGE}..."
     docker pull $TAOS_IMAGE
 fi
 
 # start a new tdengine docker container
-echo "starting a new tdengine docker container..."
+echo "starting a tdengine docker container..."
 docker run -d --name $CONTAINER_NAME \
     -e TAOS_USER="$TAOS_USER" \
     -e TAOS_PASSWORD="$TAOS_PASSWORD" \
