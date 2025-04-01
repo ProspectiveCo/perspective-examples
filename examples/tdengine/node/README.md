@@ -30,7 +30,7 @@ This guide will walk you through the following steps:
 5. Use Vite to host the frontend `index.html` and visualize the data in real-time.
 6. Tear down all running processes.
 
----
+<br/><br/>
 
 ### Step 1: Start TDengine Database
 
