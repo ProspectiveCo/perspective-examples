@@ -209,6 +209,8 @@ Open the Vite development server URL (e.g., `http://localhost:3000`) in your bro
 
 <br/>
 
+![`<perspective-viewer>`](../imgs/taos_prsp_viewer.png)
+
 #### How `index.html` Works:
 1. Imports Perspective libraries from CDNs:
    ```html
