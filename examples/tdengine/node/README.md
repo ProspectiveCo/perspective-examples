@@ -76,6 +76,8 @@ node src/producer.cjs
 
 <br/>
 
+![`producer.cjs` architecture](../imgs/taos_prsp_node_producer.png)
+
 This script will:
 1. Connect to the TDengine database.
 2. Create a database and table if they don't already exist.
@@ -234,7 +236,7 @@ Open the Vite development server URL (e.g., `http://localhost:3000`) in your bro
 
 ### Step 7: Tear Down
 
-To stop all running processes with `CTRL+C`. Stop:
+To stop all running processes:
 1. `producer.cjs`
 2. `server.js`
 3. Vite dev server
@@ -242,8 +244,15 @@ To stop all running processes with `CTRL+C`. Stop:
 
 ---
 
-### Notes
+### Step 8: Important Notes
 
-- Always use the latest version of Perspective libraries. Check the [Perspective releases](https://github.com/finos/perspective/releases) for updates.
+- **Always** use the latest version of Perspective libraries. Check the [**Perspective releases**](https://github.com/finos/perspective/releases) for the latest version.
+- This example is using Perspective version `3.4.3`.
 - Ensure all ports (e.g., `8080` for the WebSocket server, `3000` for Vite) are available before running the demo.
 
+<br/><br/>
+
+
+### Conclusion
+
+By integrating TDengine with Perspective, you can build a robust, high-performance platform for real-time data visualization and analysis. This guide has demonstrated how to set up a complete pipeline, from data generation and storage in TDengine to real-time visualization in Perspective. With these tools, you can efficiently handle time-series data and create interactive dashboards tailored to your specific needs. Explore further customization and scaling options to adapt this setup for production environments.
