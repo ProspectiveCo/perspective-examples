@@ -1,4 +1,4 @@
-# TDengine <> Perspective - Python Backend
+# TDengine <> Perspective - Node.js Backend
 
 This guide demonstrates how to integrate [TDengine](https://tdengine.com/), a high-performance time-series database, with [Perspective](https://perspective.finos.org/), a powerful data visualization library. By combining these technologies, you can create a real-time data visualization platform that streams data from TDengine to an interactive real-time Perspective dashboard.
 
@@ -17,4 +17,233 @@ Together with TDengine and Perspective users can build high-performance -- milli
 <br/>
 
 ![TOAS-PRSP Python Architecture](../imgs/taos_prsp_arch_python.png)
+
+<br/>
+
+## Getting Started
+
+This guide will walk you through the following steps:
+1. Start a TDengine database using Docker.
+2. Install Node.js dependencies, including Vite.
+3. Run a producer script to populate the TDengine database with real-time data.
+4. Start the Perspective WebSocket server to query TDengine and serve data to the frontend.
+5. Use Vite to host the frontend `index.html` and visualize the data in real-time.
+6. Tear down all running processes.
+
+---
+
+### Step 1: Start TDengine Database
+
+Start a TDengine database in a Docker container by running the provided `docker.sh` script:
+
+```bash
+./docker.sh
+```
+
+<br/>
+
+This script will:
+- Pull the latest TDengine Docker image.
+- Start a new TDengine container.
+- Optionally populate the database with benchmark data (use the `--benchmark` flag).
+
+---
+
+### Step 2: Install Node.js Dependencies
+
+Ensure you have Node.js and npm installed. Then, install the required dependencies:
+
+```bash
+npm install
+```
+
+<br/>
+
+This will install all dependencies listed in `package.json`, including:
+- `@finos/perspective` for the Perspective backend.
+- `@tdengine/websocket` for connecting to TDengine.
+- `vite` for hosting the frontend.
+
+---
+
+### Step 3: Run the Producer Script
+
+Run the producer script to create a TDengine database and table, and insert real-time power line records into the table at regular intervals:
+
+```bash
+node src/producer.cjs
+```
+
+<br/>
+
+This script will:
+1. Connect to the TDengine database.
+2. Create a database and table if they don't already exist.
+3. Insert synthetic power line records into the table at a fixed interval (ie: 250ms).
+
+The scripts generates random powerline data to insert into the TDengine table:
+
+Example snippet from `src/producer.cjs`:
+```javascript
+function generateData(num_rows = NUM_ROWS_PER_INTERVAL) {
+    const modifier = Math.random() * (Math.random() * 50 + 1);
+    return Array.from({ length: num_rows }, (_, i) => ({
+        ts: Date.now() + i,
+        current: Math.random() * 75 + Math.random() * 10 * modifier,
+        voltage: Math.floor(Math.random() * 26) + 200,
+        phase: Math.random() * 105 + Math.random() * 3 * modifier,
+    }));
+}
+```
+
+It then, inserts the data into the table using the TDengine's websocket APIs:
+
+```javascript
+async function toasInsertData(conn, data, databaseName = TAOS_DATABASE, tableName = TAOS_TABLENAME) {
+    try {
+        // pick a random subtable
+        const subTableId = Math.floor(Math.random() * LOCATIONS.length);
+        const groupId = subTableId;
+        const locationName = LOCATIONS[subTableId];
+        const subTableName = `d_meters_${subTableId}`;
+
+        let stmt = await conn.stmtInit();
+        await stmt.prepare(`INSERT INTO ? USING ${databaseName}.${tableName} tags(?,?) VALUES (?,?,?,?)`);
+        await stmt.setTableName(subTableName);
+
+        // set tags
+        let tagParams = stmt.newStmtParam();
+        tagParams.setVarchar([locationName]);
+        tagParams.setInt([groupId]);
+        await stmt.setTags(tagParams);
+        // set data
+        let bindParams = stmt.newStmtParam();
+        bindParams.setTimestamp(data.map(row => row.ts));
+        bindParams.setFloat(data.map(row => row.current));
+        bindParams.setInt(data.map(row => row.voltage));
+        bindParams.setFloat(data.map(row => row.phase));
+        await stmt.bind(bindParams);
+        await stmt.batch();
+        await stmt.exec();
+        console.log(`Inserted ${data.length} rows into -- table: ${TAOS_TABLENAME}, subtable: ${subTableName}, location: ${locationName}`);
+    } catch (err) {
+        console.error(`Failed to insert rows into ${TAOS_TABLENAME}, ErrCode: ${err.code}, ErrMessage: ${err.message}`);
+        throw err
+    }
+}
+```
+
+---
+
+### Step 4: Start the Perspective WebSocket Server
+
+The backend server (`src/server.js`) performs the following tasks:
+1. Connects to the TDengine database.
+2. Starts a Perspective WebSocket server on `ws://localhost:8080/websocket`.
+3. Creates a Perspective table to store queried data.
+4. Periodically queries TDengine and updates the Perspective table.
+
+Run the server with:
+
+```bash
+node src/server.js
+```
+
+<br/>
+
+This script constrcuts a Perspective websocket server and a Perspective Table:
+
+```javascript
+const ws = new perspective.WebSocketServer({ port: 8080 });
+
+...
+
+async function prspCreatePerspectiveTable() {
+    // create an empty table with schema
+    const schema = {
+        ts: "datetime",
+        current: "float",
+        voltage: "float",
+        phase: "string",
+        location: "string",
+        groupid: "integer",
+    };
+    // create a table with schema and row limit
+    // other supported formats: "json", "columns", "csv" or "arrow", "ndjson"
+    const table = await perspective.table(schema, { name: PRSP_TABLE_NAME, limit: PRSP_TABLE_LIMIT, format: "json" });
+    return table;
+}
+```
+
+It then queries TDengine table and updates the Perspective Table on an interval:
+```javascript
+setInterval(async () => {
+    const data = await taosQuery(conn);
+    await table.update(data);
+}, 250); // Refreshes the Perspective table every 250ms
+```
+
+---
+
+### Step 5: Host the Frontend with Vite
+
+Use Vite to host the frontend `index.html`:
+
+```bash
+npm run dev
+```
+
+<br/>
+
+Vite will:
+- Transpile and bundle the Perspective libraries.
+- Serve the `index.html` file on a local development server.
+
+---
+
+### Step 6: Visualize Data in the Browser
+
+Open the Vite development server URL (e.g., `http://localhost:3000`) in your browser. The `index.html` file uses `<perspective-viewer>` to display the data.
+
+<br/>
+
+#### How `index.html` Works:
+1. Imports Perspective libraries from CDNs:
+   ```html
+   <script type="module">
+       import "https://cdn.jsdelivr.net/npm/@finos/perspective@3.4.3/dist/cdn/perspective.js";
+   </script>
+   ```
+2. Connects to the Perspective WebSocket server:
+   ```javascript
+   const websocket = await perspective.websocket("ws://localhost:8080/websocket");
+   const table = await websocket.open_table("meters");
+   viewer.load(table);
+   ```
+3. Configures the viewer with a default view:
+   ```javascript
+   viewer.restore({
+       plugin: "Datagrid",
+       group_by: ["location"],
+       columns: ["ts", "current", "voltage", "phase", "location", "groupid"],
+       aggregates: { current: "mean", voltage: "mean" },
+   });
+   ```
+
+---
+
+### Step 7: Tear Down
+
+To stop all running processes with `CTRL+C`. Stop:
+1. `producer.cjs`
+2. `server.js`
+3. Vite dev server
+4. Docker container: `docker rm -vf prsp-tdengine`
+
+---
+
+### Notes
+
+- Always use the latest version of Perspective libraries. Check the [Perspective releases](https://github.com/finos/perspective/releases) for updates.
+- Ensure all ports (e.g., `8080` for the WebSocket server, `3000` for Vite) are available before running the demo.
 
