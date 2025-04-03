@@ -21,9 +21,11 @@ This guide demonstrates how to visualize records from [NATS.io](https://nats.io/
 The goal of this guide is to stream records into NATS.io and visualize them in real-time using the Prospective NATS.io adapter. The steps include:
 
 1. Starting a NATS.io server with WebSocket support.
-2. Running the `producer.js` script to publish records to NATS.io.
-3. Using the Prospective NATS.io adapter to connect to the NATS server and visualize the data.
-4. Interacting with the Prospective dashboards to analyze the data.
+2. Installing Node.js packages.
+3. Running the `producer.js` script to publish records to NATS.io.
+4. Using the Prospective NATS.io adapter to connect to the NATS server and visualize the data.
+5. Interacting with the Prospective dashboards to analyze the data.
+6. Tearing down the demo.
 
 <br/>
 
@@ -60,7 +62,22 @@ docker run -d --name nats -p 4222:4222 -p 8080:8080 -v $(pwd)/nats.conf:/nats.co
 
 ---
 
-### Step 2: Run the Producer Script
+### Step 2: Install Node.js Packages
+
+Before running the producer script, install the required Node.js packages. These include the `@nats-io/transport-node` library, which provides the NATS client for Node.js. Refer to the [NATS.io documentation](https://docs.nats.io/) for more details.
+
+Run the following command in the `node` directory:
+
+```bash
+cd examples/nats.io/node
+npm install
+```
+
+This will install all dependencies listed in the `package.json` file.
+
+---
+
+### Step 3: Run the Producer Script
 
 Run the `producer.js` script to generate and publish records to the NATS subject `meters`:
 
@@ -96,13 +113,13 @@ console.log(`Published to subject: "${NATS_SUBJECT}", num rows: ${num_rows}`);
 ---
 
 
-### Step 3: Log in to Prospective.co
+### Step 4: Log in to Prospective.co
 
 To visualize the data, log in to [Prospective.co](https://prospective.co/). If you don't have an account, create one by navigating to **LOGIN > CREATE AN ACCOUNT** or email `hello@prospective.co` for a trial license.
 
 ---
 
-### Step 4: Configure the NATS.io Adapter
+### Step 5: Configure the NATS.io Adapter
 
 1. Open the SOURCE tab on the top right.
 1. Click on the NATS.io adapter.
@@ -114,17 +131,18 @@ You should see records pouring into the dashboard in real-time.
 
 ---
 
-### Step 5: Interact with the Dashboard
+### Step 6: Tear Down the Demo
 
-Once connected, you can interact with the Prospective dashboard to analyze the data:
+To stop the demo:
 
-- **Group by**: Group records by `location`.
-- **Split by**: Split records by `phase`.
-- **Sort by**: Sort records by `ts` in descending order.
-- **Aggregate functions**:
-  - Use `mean` for `voltage` and `current`.
-  - Use `last` for `ts`.
-  - Use `dominant` for `location`.
+1. Press `CTRL+C` in the terminal running the `producer.js` script to stop it.
+2. Stop the NATS.io Docker container by running:
+
+   ```bash
+   docker stop nats && docker rm nats
+   ```
+
+This will stop and remove the NATS.io container.
 
 ---
 
