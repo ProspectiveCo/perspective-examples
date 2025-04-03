@@ -44,6 +44,8 @@ cd examples/nats.io/
 
 <br/>
 
+How it works...
+
 This script starts a NATS.io docker container with a `nats.conf` configuration file with the following content:
 
 ```conf
