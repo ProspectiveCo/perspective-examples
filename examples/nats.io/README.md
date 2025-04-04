@@ -158,4 +158,8 @@ This will stop and remove the NATS.io container.
 
 ### Conclusion
 
+![NATS.io dashboard](./imgs/nats_pro_dashabord.gif)
+
+<br/>
+
 By integrating NATS.io with Perspective, you can build a robust, real-time data visualization platform. This guide demonstrated how to stream data into NATS.io and visualize it using the Prospective NATS.io adapter. Explore further customization options to adapt this setup for your specific use case.
