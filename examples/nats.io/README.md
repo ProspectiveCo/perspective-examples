@@ -2,6 +2,8 @@
 
 This guide demonstrates how to visualize records from [NATS.io](https://nats.io/) in real-time using [Perspective](https://perspective.finos.org/) (commercial version: Prospective). By combining these technologies, you can stream data from NATS.io and interactively analyze it in real-time dashboards.
 
+![NATS.io Adapter GIF](./imgs/nats_pro_adaptor.gif)
+
 ---
 
 ## Introduction
