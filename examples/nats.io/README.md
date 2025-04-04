@@ -29,6 +29,10 @@ The goal of this guide is to stream records into NATS.io and visualize them in r
 
 <br/>
 
+![NATS.io Dashboard](./imgs/nats_dash_01.png)
+
+<br/>
+
 ---
 
 ## Getting Started
@@ -130,6 +134,8 @@ To visualize the data, log in to [Prospective.co](https://prospective.co/). If y
 1. Press **Connect** to start streaming data.
 
 You should see records pouring into the dashboard in real-time.
+
+![NATS.io data adaptor](./imgs/nats_adaptor_01.png)
 
 ---
 
