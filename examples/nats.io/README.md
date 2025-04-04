@@ -2,6 +2,8 @@
 
 This guide demonstrates how to visualize records from [NATS.io](https://nats.io/) in real-time using [Perspective](https://perspective.finos.org/) (commercial version: Prospective). By combining these technologies, you can stream data from NATS.io and interactively analyze it in real-time dashboards.
 
+![NATS.io Adapter GIF](./imgs/nats_pro_adaptor.gif)
+
 ---
 
 ## Introduction
@@ -26,6 +28,10 @@ The goal of this guide is to stream records into NATS.io and visualize them in r
 4. Using the Prospective NATS.io adapter to connect to the NATS server and visualize the data.
 5. Interacting with the Prospective dashboards to analyze the data.
 6. Tearing down the demo.
+
+<br/>
+
+![NATS.io Dashboard](./imgs/nats_dash_01.png)
 
 <br/>
 
@@ -131,6 +137,8 @@ To visualize the data, log in to [Prospective.co](https://prospective.co/). If y
 
 You should see records pouring into the dashboard in real-time.
 
+![NATS.io data adaptor](./imgs/nats_adaptor_01.png)
+
 ---
 
 ### Step 6: Tear Down the Demo
@@ -149,5 +157,9 @@ This will stop and remove the NATS.io container.
 ---
 
 ### Conclusion
+
+![NATS.io dashboard](./imgs/nats_pro_dashabord.gif)
+
+<br/>
 
 By integrating NATS.io with Perspective, you can build a robust, real-time data visualization platform. This guide demonstrated how to stream data into NATS.io and visualize it using the Prospective NATS.io adapter. Explore further customization options to adapt this setup for your specific use case.
