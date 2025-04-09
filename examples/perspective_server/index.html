@@ -1,83 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perspective Viewer</title>
-    <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/css/pro.css" />
-</head>
-<body>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer/dist/cdn/perspective-viewer.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid/dist/cdn/perspective-viewer-datagrid.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc/dist/cdn/perspective-viewer-d3fc.js"></script>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-        #viewer-container {
-            height: 95vh;
-            width: 95vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective@3.4.3/dist/wasm/perspective-server.wasm" as="fetch" type="application/wasm" crossorigin="anonymous" />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.4.3/dist/wasm/perspective-viewer.wasm" as="fetch" type="application/wasm" crossorigin="anonymous" />
+        <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.4.3/dist/css/themes.css" />
 
-        perspective-viewer {
-            height: 100%;
-            width: 100%;
-        }
-    </style>
+        <title>Perspective Python Server</title>
 
-    <script type="module">
-        import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective/dist/cdn/perspective.js";
-
-        document.addEventListener("DOMContentLoaded", function() {
-            async function load_viewer() {
-
-                const prsp_view_config = {
-                    "plugin": "Datagrid",
-                    "plugin_config": {
-                        "columns": {},
-                        "edit_mode": "READ_ONLY",
-                        "scroll_lock": false
-                    },
-                    "columns_config": {},
-                    "settings": true,
-                    "theme": "Pro Dark",
-                    "group_by": ["ticker"],
-                    "split_by": [],
-                    // "columns": ["open", "client"],
-                    "filter": [],
-                    "sort": [],
-                    "expressions": {},
-                    "aggregates": {
-                        "open": "mean",
-                        "client": "dominant",
-                        "high": "avg",
-                        "low": "avg",
-                        "close": "avg",
-                        "lastUpdate": "last",
-                        "date": "dominant",
-                    }
-                };
-                const table_name = "stock_values";
-                const viewer = document.getElementById("prsp-viewer");
-                // Connect to the perspective websocket server
-                const websocket = await perspective.websocket("ws://localhost:8080/websocket");
-
-                // Bind the viewer to the perspective table on the server.
-                // Data transfer between the server and the viewer is optimized via apache arrow; 
-                // exchanging delta changes only.
-                const server_table = await websocket.open_table(table_name);
-                await viewer.load(server_table);
-                await viewer.restore(prsp_view_config);
+        <style>
+            perspective-viewer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
             }
+        </style>
+    </head>
+    <body>
+        
+        <perspective-viewer id="viewer" theme="Pro Dark"></perspective-viewer>
+        
+        <script type="module">
+            import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.4.3/dist/cdn/perspective-viewer.js";
+            import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-datagrid@3.4.3/dist/cdn/perspective-viewer-datagrid.js";
+            import "https://cdn.jsdelivr.net/npm/@finos/perspective-viewer-d3fc@3.4.3/dist/cdn/perspective-viewer-d3fc.js";
 
-            load_viewer();
-        });
-    </script>
+            import perspective from "https://cdn.jsdelivr.net/npm/@finos/perspective@3.4.3/dist/cdn/perspective.js";
 
-    <div id="viewer-container">
-        <perspective-viewer id="prsp-viewer" theme="Pro Dark"></perspective-viewer>
-    </div>
-</body>
+            // get perspective-viewer element
+            const viewer = document.getElementById("viewer");
+
+            // connect to pserpective server websocket and retrieve table
+            const tableName = "stock_values";
+            const websocket = await perspective.websocket("ws://localhost:8080/websocket");
+            const table = await websocket.open_table(tableName)
+            viewer.load(table);
+
+            // pre-configure the perspective viewer
+            const viewer_config = {
+                version: "3.4.3",
+                plugin: "Datagrid",
+                plugin_config: {
+                    columns: {},
+                    edit_mode: "READ_ONLY",
+                    scroll_lock: false
+                },
+                columns_config: {},
+                settings: true,
+                theme: "Pro Dark",
+                title: null,
+                group_by: ["ticker"],
+                split_by: ["client"],
+                columns: ["client", "open", "high", "low", "close", "lastUpdate"],
+                filter: [],
+                sort: [],
+                expressions: {},
+                aggregates: { high: "max", lastUpdate: "last", low: "min", open: "mean", ticker: "dominant", close: "mean" }
+            };
+            viewer.restore(viewer_config);
+        </script>
+        
+    </body>
 </html>
