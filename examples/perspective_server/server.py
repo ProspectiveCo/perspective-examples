@@ -81,7 +81,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 json.JSONEncoder.default = CustomJSONEncoder().default
 
 
-def data_source():
+def generate_data(nrows: int = 100) -> list:
     """
     Generate random data for the Perspective table
     """
@@ -95,8 +95,7 @@ def data_source():
         "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
         "lastUpdate": datetime.now(),
         "date": date.today(),
-    # } for _ in range(random.randint(4500, 5500))]
-    } for _ in range(100)]
+    } for _ in range(nrows)]
 
 
 def perspective_thread(perspective_server):
@@ -124,7 +123,7 @@ def perspective_thread(perspective_server):
 
     # update with new data every 50ms
     def updater():
-        table.update(data_source())
+        table.update(generate_data())
 
     logger.info("Starting tornado ioloop update loop every 50ms")
     # start the periodic callback to update the table data

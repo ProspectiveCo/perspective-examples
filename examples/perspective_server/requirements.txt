@@ -1,0 +1,4 @@
+pandas
+perspective-python
+pyarrow
+tornado
