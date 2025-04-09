@@ -12,7 +12,6 @@
 
 import random
 import logging
-import tornado.websocket
 import tornado.web
 import tornado.ioloop
 from datetime import date, datetime
@@ -24,7 +23,12 @@ import json
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('main')
 
+# --- Demo constants ---
+NUMBER_OF_ROWS = 100        # number of rows to generate per interval
+INTERVAL = 250              # milliseconds
 
+# --- data generation ---
+PERSPECTIVE_TABLE_NAME = "stock_values"  # name of the perspective table
 SECURITIES = [
     "AAPL.N",
     "AMZN.N",
@@ -62,7 +66,6 @@ SECURITIES = [
     "BA.N",
     "GE.N",
 ]
-
 CLIENTS = ["Homer", "Marge", "Bart", "Lisa", "Maggie", "Moe", "Lenny", "Carl", "Krusty"]
 
 
@@ -81,7 +84,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 json.JSONEncoder.default = CustomJSONEncoder().default
 
 
-def generate_data(nrows: int = 100) -> list:
+def generate_data(nrows: int = NUMBER_OF_ROWS) -> list:
     """
     Generate random data for the Perspective table
     """
@@ -98,9 +101,9 @@ def generate_data(nrows: int = 100) -> list:
     } for _ in range(nrows)]
 
 
-def perspective_thread(perspective_server):
+def create_perspective_table(perspective_server):
     """
-    Create a new Perspective table and update it with new data every 50ms
+    Create a new Perspective table.
     """
     # create a new Perspective table
     client = perspective_server.new_local_client()
@@ -116,19 +119,21 @@ def perspective_thread(perspective_server):
             "lastUpdate": "datetime",
             "date": "date",
         },
-        limit=2500,                 # maximum number of rows in the table
-        name="stock_values",        # table name. Use this with perspective-viewer on the client side
+        limit=2500,                     # maximum number of rows in the table
+        name=PERSPECTIVE_TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
+        format="json",                  # table format. possible values: "json", "arrow", "ndjson"
     )
     logger.info("Created new Perspective table")
+    return table
 
-    # update with new data every 50ms
-    def updater():
-        table.update(generate_data())
 
-    logger.info("Starting tornado ioloop update loop every 50ms")
-    # start the periodic callback to update the table data
-    callback = tornado.ioloop.PeriodicCallback(callback=updater, callback_time=50)
-    callback.start()
+def update_perspective_table(perspective_table):
+    """
+    Update the Perspective table with new data 
+    """
+    # generate new data and update the table
+    data = generate_data()
+    perspective_table.update(data)
 
 
 def make_app(perspective_server):
@@ -154,13 +159,27 @@ if __name__ == "__main__":
     app = make_app(perspective_server)
     app.listen(8080)
     logger.info("Listening on http://localhost:8080")
+
+    # create the perspective table
+    logger.info("Creating Perspective table")
+    table = create_perspective_table(perspective_server)
+
+    # start the websocket server
     try:
+        # strat a new perspective table update loop
+        logger.info("Starting perspective table update loop")
+        perspective_loop = tornado.ioloop.PeriodicCallback(
+            callback=lambda: update_perspective_table(table),
+            callback_time=INTERVAL,
+        )
+        perspective_loop.start()
         # start the io loop
         loop = tornado.ioloop.IOLoop.current()
-        loop.call_later(0, perspective_thread, perspective_server)
         loop.start()
     except KeyboardInterrupt:
         logger.warning("Keyboard interrupt detected. Shutting down tornado server...")
+        # stop the update loop and io loop
+        perspective_loop.stop()
         loop.stop()
         loop.close()
         logging.info("Shut down")
