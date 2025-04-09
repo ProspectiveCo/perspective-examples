@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective@3.4.3/dist/wasm/perspective-server.wasm" as="fetch" type="application/wasm" crossorigin="anonymous" />
+        <link rel="preload" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.4.3/dist/wasm/perspective-viewer.wasm" as="fetch" type="application/wasm" crossorigin="anonymous" />
+        <link rel="stylesheet" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@finos/perspective-viewer@3.4.3/dist/css/themes.css" />
+
+        <title>Perspective Viewer</title>
+
+        <link rel="stylesheet" href="index.css" />
+    </head>
+    <body>
+        
+        <perspective-viewer id="viewer" theme="Pro Dark"></perspective-viewer>
+        
+        <script type="module" src="index.js"></script>
+    </body>
+</html>
