@@ -1,0 +1,16 @@
+body {
+    font-family: monospace;
+    background-color: #121212;
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+perspective-viewer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+}
