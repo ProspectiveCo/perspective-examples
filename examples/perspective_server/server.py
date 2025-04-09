@@ -12,16 +12,14 @@
 
 import random
 import logging
-import tornado.web
-import tornado.ioloop
+import tornado
 from datetime import date, datetime
 import perspective
 import perspective.handlers.tornado
-import json
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger('main')
+logger = logging.getLogger(__file__)
 
 # --- Demo constants ---
 NUMBER_OF_ROWS = 100        # number of rows to generate per interval
@@ -69,35 +67,21 @@ SECURITIES = [
 CLIENTS = ["Homer", "Marge", "Bart", "Lisa", "Maggie", "Moe", "Lenny", "Carl", "Krusty"]
 
 
-class CustomJSONEncoder(json.JSONEncoder):
-    """
-    Custom JSON encoder that serializes datetime and date objects
-    """
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, date):
-            return obj.isoformat()
-        return super().default(obj)
-
-
-json.JSONEncoder.default = CustomJSONEncoder().default
-
 
 def generate_data(nrows: int = NUMBER_OF_ROWS) -> list:
     """
     Generate random data for the Perspective table
     """
-    modifier = random.random() * random.randint(1, 50)
+    base_modifier = random.uniform(1, 50)
     return [{
         "ticker": random.choice(SECURITIES),
         "client": random.choice(CLIENTS),
-        "open": random.uniform(0, 75) + random.randint(0, 9) * modifier,
-        "high": random.uniform(0, 105) + random.randint(1, 3) * modifier,
-        "low": random.uniform(0, 85) + random.randint(1, 3) * modifier,
-        "close": random.uniform(0, 90) + random.randint(1, 3) * modifier,
-        "lastUpdate": datetime.now(),
-        "date": date.today(),
+        "open": base_modifier * random.uniform(0.8, 1.2),
+        "high": base_modifier * random.uniform(1.0, 1.5),
+        "low": base_modifier * random.uniform(0.7, 1.0),
+        "close": base_modifier * random.uniform(0.8, 1.3),
+        "lastUpdate": datetime.now().isoformat(),               # NOTE: must format dates as ISO since json does not support datetime
+        "date": date.today().isoformat(),                       # NOTE: must format dates as ISO since json does not support datetime
     } for _ in range(nrows)]
 
 
@@ -123,7 +107,7 @@ def create_perspective_table(perspective_server):
         name=PERSPECTIVE_TABLE_NAME,    # table name. Use this with perspective-viewer on the client side
         format="json",                  # table format. possible values: "json", "arrow", "ndjson"
     )
-    logger.info("Created new Perspective table")
+    logger.info(f"Created Perspective table: '{PERSPECTIVE_TABLE_NAME}'")
     return table
 
 
@@ -152,26 +136,35 @@ def make_app(perspective_server):
     ])
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Main function to initialize and run the Perspective server.
+    Steps:
+        1. Create a new Perspective server instance.
+        2. Set up and start a Tornado web application to listen on port 8080.
+        3. Create a Perspective table and associate it with the server.
+        4. Start a periodic update loop for the Perspective table.
+        - Uses Tornado's `PeriodicCallback` to periodically update the table.
+        5. Start the Tornado I/O loop to handle server requests and updates.
+    """
     # create a new Perspective server
     perspective_server = perspective.Server()
     # setup and start the Tornado app
     app = make_app(perspective_server)
-    app.listen(8080)
-    logger.info("Listening on http://localhost:8080")
+    app.listen(port=8080, address='0.0.0.0')
+    logger.info("App Started - Listening on ws://localhost:8080/websocket")
 
     # create the perspective table
-    logger.info("Creating Perspective table")
     table = create_perspective_table(perspective_server)
 
     # start the websocket server
     try:
         # strat a new perspective table update loop
-        logger.info("Starting perspective table update loop")
         perspective_loop = tornado.ioloop.PeriodicCallback(
             callback=lambda: update_perspective_table(table),
             callback_time=INTERVAL,
         )
+        logger.info("Started perspective table update loop")
         perspective_loop.start()
         # start the io loop
         loop = tornado.ioloop.IOLoop.current()
@@ -183,3 +176,7 @@ if __name__ == "__main__":
         loop.stop()
         loop.close()
         logging.info("Shut down")
+
+
+if __name__ == "__main__":
+    main()    
