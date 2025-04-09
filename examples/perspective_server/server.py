@@ -12,8 +12,8 @@
 
 import random
 import logging
-import tornado
 from datetime import date, datetime
+import tornado
 import perspective
 import perspective.handlers.tornado
 
