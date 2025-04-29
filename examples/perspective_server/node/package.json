@@ -2,8 +2,13 @@
   "name": "node",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "prsp-server": "node server.js"
   },
   "keywords": [],
   "author": "",
@@ -11,5 +16,8 @@
   "description": "",
   "devDependencies": {
     "vite": "^6.3.3"
+  },
+  "dependencies": {
+    "@finos/perspective": "^3.4.3"
   }
 }
