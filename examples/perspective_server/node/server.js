@@ -67,6 +67,8 @@ async function main() {
     let counter = 0;
 
     // Set up a timer to periodically generate data and update the table
+    // !!! NOTE: It's important to use async/await here to ensure Node main event loop is not blocked
+    //           and to handle any potential errors in the async function.
     const interval = setInterval(async () => {
         try {
             const data = generateData();
