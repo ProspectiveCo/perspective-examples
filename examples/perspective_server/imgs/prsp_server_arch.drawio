@@ -1,0 +1,124 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:137.0) Gecko/20100101 Firefox/137.0" version="26.2.14">
+  <diagram name="Page-1" id="EElfmCalcvx3qdUcIjTE">
+    <mxGraphModel dx="2470" dy="1488" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="230" y="90" width="210" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-2" value="Perspective Server" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="240" y="350" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-3" value="&lt;div&gt;Perspective Viewer&lt;/div&gt;&lt;div&gt;-&lt;/div&gt;&lt;div&gt;WASM&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="560" y="90" width="210" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-4" value="Client Web Browser - Chrome" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="560" y="350" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-7" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="100" y="230" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-9" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="100" y="100" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-10" value="&lt;div&gt;Streaming&lt;/div&gt;&lt;div&gt;Kafka, NATS, IoT...&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="76.25" y="185" width="107.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-11" value="&lt;div&gt;Python&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="105" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-12" value="&lt;div&gt;Node&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="185" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-14" value="&lt;div&gt;Rust, ...&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="265" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-15" value="Websocket" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;horizontal=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="105" width="60" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-19" value="&lt;div&gt;Static&lt;/div&gt;&lt;div&gt;DBs, S3, Spark&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="76.25" y="320" width="107.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-20" value="" style="endArrow=block;startArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endFill=1;startFill=1;" edge="1" parent="1" source="I8OtCcCZJm7EOJRBDr7S-1" target="I8OtCcCZJm7EOJRBDr7S-3">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="790" as="sourcePoint" />
+            <mxPoint x="450" y="740" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-21" value="" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;endFill=1;" edge="1" parent="1" source="I8OtCcCZJm7EOJRBDr7S-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="790" as="sourcePoint" />
+            <mxPoint x="230" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-22" value="" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.692;entryDx=0;entryDy=0;entryPerimeter=0;endFill=1;" edge="1" parent="1" source="I8OtCcCZJm7EOJRBDr7S-7" target="I8OtCcCZJm7EOJRBDr7S-1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="210" y="450" as="sourcePoint" />
+            <mxPoint x="260" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-23" value="&lt;div&gt;arrow&lt;/div&gt;&lt;div&gt;∆ delta&lt;/div&gt;&lt;div&gt;changes&lt;/div&gt;&lt;div&gt;only&lt;/div&gt;" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="460" y="240" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-24" value="" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="230" y="480" width="210" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-25" value="Perspective Server" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="240" y="740" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-26" value="&lt;div&gt;HTTPS://PROSPECTIVE.CO&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;---&lt;/div&gt;&lt;div&gt;Share Dashboard&amp;nbsp;&lt;/div&gt;&lt;div&gt;and more!&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;align=left;spacingLeft=19;" vertex="1" parent="1">
+          <mxGeometry x="560" y="480" width="210" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-27" value="Web Browser - Chrome" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="560" y="740" width="200" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-28" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="100" y="620" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-29" value="" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="100" y="490" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-30" value="&lt;div&gt;Streaming&lt;/div&gt;&lt;div&gt;Kafka, NATS, IoT...&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="76.25" y="575" width="107.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-31" value="&lt;div&gt;Python&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="495" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-32" value="&lt;div&gt;Node&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="575" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-33" value="&lt;div&gt;Rust, ...&lt;/div&gt;&lt;div&gt;APIs&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="250" y="655" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-34" value="Websocket" style="rounded=0;whiteSpace=wrap;html=1;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;horizontal=0;" vertex="1" parent="1">
+          <mxGeometry x="360" y="495" width="60" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-35" value="&lt;div&gt;Static&lt;/div&gt;&lt;div&gt;DBs, S3, Spark&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="76.25" y="710" width="107.5" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-36" value="" style="endArrow=block;startArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endFill=1;startFill=1;" edge="1" source="I8OtCcCZJm7EOJRBDr7S-24" target="I8OtCcCZJm7EOJRBDr7S-26" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="1180" as="sourcePoint" />
+            <mxPoint x="450" y="1130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-37" value="" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;endFill=1;" edge="1" source="I8OtCcCZJm7EOJRBDr7S-29" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="1180" as="sourcePoint" />
+            <mxPoint x="230" y="530" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-38" value="" style="endArrow=block;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.692;entryDx=0;entryDy=0;entryPerimeter=0;endFill=1;" edge="1" source="I8OtCcCZJm7EOJRBDr7S-28" target="I8OtCcCZJm7EOJRBDr7S-24" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="210" y="840" as="sourcePoint" />
+            <mxPoint x="260" y="790" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="I8OtCcCZJm7EOJRBDr7S-39" value="&lt;div&gt;arrow&lt;/div&gt;&lt;div&gt;∆ delta&lt;/div&gt;&lt;div&gt;changes&lt;/div&gt;&lt;div&gt;only&lt;/div&gt;" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Ubuntu;fontSource=https%3A%2F%2Ffonts.googleapis.com%2Fcss%3Ffamily%3DUbuntu;" vertex="1" parent="1">
+          <mxGeometry x="460" y="630" width="90" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
