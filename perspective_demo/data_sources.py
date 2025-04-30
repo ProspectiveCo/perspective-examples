@@ -29,7 +29,7 @@ class SupportedFileTypes(Enum):
 _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
-_unnamed_source_counter = 0
+_unnamed_source_counter = 0         # used to assign unique names to unnamed sources
 
 
 class PerspectiveDemoDataSource(BaseModel):
@@ -42,7 +42,7 @@ class PerspectiveDemoDataSource(BaseModel):
     df_read_options: Optional[dict] = Field({}, description="Additional options to pass to the pandas read function.")
 
     # private fields
-    _df: pd.DataFrame = PrivateAttr(None)
+    _df: pd.DataFrame = PrivateAttr(default=None)
 
     # model_config = ConfigDict(arbitrary_types_allowed=True)
 
@@ -51,17 +51,14 @@ class PerspectiveDemoDataSource(BaseModel):
     def validate_source(cls, v):
         if not isinstance(v, (str, pd.DataFrame)):
             raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
+        # validate the file extension in supported file types
         if isinstance(v, str):
-            # check to see if the file exists
             if not os.path.exists(v):
                 raise ValueError(f"File {v} does not exist.")
             else:
-                # check for valid file extension
                 _, ext = os.path.splitext(v)
                 if ext not in _SUPPORTED_FILE_TYPES:
                     raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(_SUPPORTED_FILE_TYPES)}")
-        elif isinstance(v, pd.DataFrame):
-            raise NotImplementedError("Pandas DataFrame source is not yet supported.")
         return v
 
     def model_post_init(self, __context):
@@ -73,6 +70,7 @@ class PerspectiveDemoDataSource(BaseModel):
             if isinstance(self.source, str):
                 self.name = os.path.basename(self.source)
             else:
+                # assign a unique name to the data source for dataframes and unnamed sources
                 global _unnamed_source_counter
                 _unnamed_source_counter += 1
                 self.name = f"ds_{_unnamed_source_counter:03d}"
@@ -115,7 +113,7 @@ class PerspectiveDemoDataSource(BaseModel):
             filetype = self.filetype
             if filetype == SupportedFileTypes.CSV:
                 self._df = pd.read_csv(self.source, **self.df_read_options)
-            elif filetype == SupportedFileTypes.PARQUET or filetype == SupportedFileTypes.ARROW:
+            elif filetype in {SupportedFileTypes.PARQUET, SupportedFileTypes.ARROW}:
                 # set the engine to 'pyarrow' to avoid the warning message
                 if 'engine' not in self.df_read_options: self.df_read_options['engine'] = 'pyarrow'
                 try: self._df = pd.read_parquet(self.source, **self.df_read_options)
@@ -125,10 +123,7 @@ class PerspectiveDemoDataSource(BaseModel):
             else:
                 raise ValueError(f"Invalid file type: {filetype}")
         elif isinstance(self.source, pd.DataFrame):
-            raise NotImplementedError("Pandas DataFrame source is not yet supported.")
-        else:
-            raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
-        # return the dataframe
+            self._df = self.source
         return self._df
     
     def get_df(self) -> pd.DataFrame:
