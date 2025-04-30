@@ -31,7 +31,7 @@ _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 _unnamed_source_counter = 0         # used to assign unique names to unnamed sources
 
 
-def fetch_url_to_dataframe(url: str) -> pd.DataFrame:
+def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame:
     """
     Fetch the data from the given URL and return it as a pandas DataFrame.
 
@@ -49,6 +49,11 @@ def fetch_url_to_dataframe(url: str) -> pd.DataFrame:
         raise ValueError("URL must be a string.")
     if not any(url.startswith(protocol) for protocol in SUPPORTED_PROTOCOLS):
         raise ValueError(f"URL must start with one of the following protocols: {', '.join(SUPPORTED_PROTOCOLS)}")
+    
+    # Get the file extension from the URL and check if it is supported
+    _, ext = os.path.splitext(url)
+    if ext not in _SUPPORTED_FILE_TYPES:
+        raise ValueError(f"Invalid file type: {ext}. Supported file types are: {', '.join(_SUPPORTED_FILE_TYPES)}")
 
     # Convert S3 URL to HTTPS URL if necessary
     if url.startswith("s3://"):
@@ -65,7 +70,22 @@ def fetch_url_to_dataframe(url: str) -> pd.DataFrame:
 
     # Read the data into a pandas DataFrame
     try:
-        df = pd.read_csv(pd.compat.StringIO(response.text))
+        if ext == ".csv":
+            df = pd.read_csv(pd.compat.StringIO(response.text), **df_read_options)
+        elif ext in {".parquet", ".arrow"}:
+            # Use pyarrow to read the data from the response content
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+            import pyarrow.feather as feather
+
+            # Convert the response content to a pyarrow table
+            table = pa.Table.from_pandas(pd.read_csv(pd.compat.StringIO(response.text)))
+            if ext == ".parquet":
+                df = pq.read_table(table, **df_read_options).to_pandas()
+            else:
+                df = feather.read_table(table, **df_read_options).to_pandas()
+        else:
+            raise ValueError(f"Unsupported file type: {ext}")
     except Exception as e:
         raise ValueError(f"Failed to read data into DataFrame. Error: {e}")
 
