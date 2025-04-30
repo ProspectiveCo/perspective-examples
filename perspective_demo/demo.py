@@ -19,7 +19,7 @@ class StreamDemo(BaseModel):
     name: str = Field(..., description='Name of the Perspective demo.')
     description: Optional[str] = Field(None, description='Description of the Perspective demo.')
     interval: float = Field(1.0, description='Interval in seconds to refresh the data.')
-    sources: list[pds.PerspectiveDemoStreamDataSource] = Field(..., description='List of data sources for the Perspective demo.')
+    sources: list[pds.ProspectiveDemoStreamDataSource] = Field(..., description='List of data sources for the Perspective demo.')
 
     @field_validator('sources')
     def validate_sources(cls, v):

@@ -77,7 +77,7 @@ def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame
     return df
 
 
-class PerspectiveDemoDataSource(BaseModel):
+class ProspectiveDemoDataSource(BaseModel):
     name: Optional[str] = Field(None, description="The name of the data source.")
     # -- TODO: change the source to be able to also take a http, s3 link and download the file first
     source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
@@ -185,7 +185,7 @@ class PerspectiveDemoDataSource(BaseModel):
         self._df = df
 
 
-class PerspectiveDemoStreamDataSource(PerspectiveDemoDataSource):
+class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
     frame_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_interval must be provided.")
     frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_interval must be provided.")
     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
@@ -278,7 +278,7 @@ class PerspectiveDemoStreamDataSource(PerspectiveDemoDataSource):
 
 
 
-class PerspectiveDemoBatchDataSource(PerspectiveDemoDataSource):
+class ProspectiveDemoBatchDataSource(ProspectiveDemoDataSource):
     """
     A data source that reads and returns the entire data in a single batch.
 
@@ -292,20 +292,6 @@ class PerspectiveDemoBatchDataSource(PerspectiveDemoDataSource):
         if self._df is None:
             self.read()
         return self._df
-
-
-class PerspectiveDemoStreamDataSourceBundle(PerspectiveDemoDataSource):
-    name: Optional[str] = Field(None, description="The name of the data source bundle.")
-    description: Optional[str] = Field(None, description="The description of the data source bundle.")
-    sources: list[PerspectiveDemoStreamDataSource] = Field([], description="The list of stream data sources to bundle together.")
-
-    @field_validator("sources")
-    @classmethod
-    def validate_sources(cls, v):
-        if not v:
-            raise ValueError("Sources must contain at least one item.")
-        return v
-
 
 
 
@@ -333,7 +319,7 @@ def test():
     
     # ---- testing frame_interval ----
     ts_col = 'report_date'
-    ds = PerspectiveDemoStreamDataSource(source=data_filepath, frame_interval='1d', ts_col=ts_col, loopback=True)
+    ds = ProspectiveDemoStreamDataSource(source=data_filepath, frame_interval='1d', ts_col=ts_col, loopback=True)
     # let's look at the dataframe
     df = ds.read()
     print(f"Dataframe shape: {df.shape}, len={len(df)}")
