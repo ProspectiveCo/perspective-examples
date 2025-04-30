@@ -17,9 +17,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, Any
 
-from .utils import logger, settings
-
-
 class SupportedFileTypes(Enum):
     CSV = ".csv"
     PARQUET = ".parquet"
@@ -184,7 +181,6 @@ class PerspectiveDemoStreamDataSource(PerspectiveDemoDataSource):
         return super().model_post_init(__context)
     
     def _validate_ts_col(self):
-        logger.debug(f"PerspectiveDemoStreamDataSrouce: Advancing by frame timestamp... Validating timestamp column: {self.ts_col}")
         if self.ts_col is None:
             raise ValueError("Timestamp column must be provided.")
         if self.ts_col not in self._df.columns:
