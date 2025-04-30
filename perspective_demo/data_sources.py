@@ -11,6 +11,7 @@
 #  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 import os
+import io
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 from datetime import datetime, timedelta
@@ -34,15 +35,6 @@ _unnamed_source_counter = 0         # used to assign unique names to unnamed sou
 def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame:
     """
     Fetch the data from the given URL and return it as a pandas DataFrame.
-
-    Args:
-        url (str): The URL to fetch the data from. Supported protocols are http, https, and s3.
-
-    Returns:
-        pd.DataFrame: The fetched data as a pandas DataFrame.
-
-    Raises:
-        ValueError: If the URL is invalid or the data cannot be fetched or read.
     """
     SUPPORTED_PROTOCOLS = ["http://", "https://", "s3://"]
     if not isinstance(url, str):
@@ -71,24 +63,17 @@ def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame
     # Read the data into a pandas DataFrame
     try:
         if ext == ".csv":
-            df = pd.read_csv(pd.compat.StringIO(response.text), **df_read_options)
+            df = pd.read_csv(io.StringIO(response.text), **df_read_options)
         elif ext in {".parquet", ".arrow"}:
-            # Use pyarrow to read the data from the response content
-            import pyarrow as pa
-            import pyarrow.parquet as pq
-            import pyarrow.feather as feather
-
-            # Convert the response content to a pyarrow table
-            table = pa.Table.from_pandas(pd.read_csv(pd.compat.StringIO(response.text)))
-            if ext == ".parquet":
-                df = pq.read_table(table, **df_read_options).to_pandas()
-            else:
-                df = feather.read_table(table, **df_read_options).to_pandas()
+            if 'engine' not in df_read_options: df_read_options['engine'] = 'pyarrow'
+            try: df = pd.read_parquet(io.StringIO(response.text), **df_read_options)
+            except Exception as e:
+                del df_read_options['engine']
+                df = pd.read_feather(io.StringIO(response.text), df_read_options)
         else:
             raise ValueError(f"Unsupported file type: {ext}")
     except Exception as e:
         raise ValueError(f"Failed to read data into DataFrame. Error: {e}")
-
     return df
 
 
