@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, Any
+import requests
+
 
 class SupportedFileTypes(Enum):
     CSV = ".csv"
@@ -27,6 +29,47 @@ _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
 _unnamed_source_counter = 0         # used to assign unique names to unnamed sources
+
+
+def fetch_url_to_dataframe(url: str) -> pd.DataFrame:
+    """
+    Fetch the data from the given URL and return it as a pandas DataFrame.
+
+    Args:
+        url (str): The URL to fetch the data from. Supported protocols are http, https, and s3.
+
+    Returns:
+        pd.DataFrame: The fetched data as a pandas DataFrame.
+
+    Raises:
+        ValueError: If the URL is invalid or the data cannot be fetched or read.
+    """
+    SUPPORTED_PROTOCOLS = ["http://", "https://", "s3://"]
+    if not isinstance(url, str):
+        raise ValueError("URL must be a string.")
+    if not any(url.startswith(protocol) for protocol in SUPPORTED_PROTOCOLS):
+        raise ValueError(f"URL must start with one of the following protocols: {', '.join(SUPPORTED_PROTOCOLS)}")
+
+    # Convert S3 URL to HTTPS URL if necessary
+    if url.startswith("s3://"):
+        bucket_and_key = url[5:]  # Remove "s3://"
+        bucket, _, key = bucket_and_key.partition("/")
+        url = f"https://{bucket}.s3.amazonaws.com/{key}"
+
+    # Fetch the data from the URL
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Failed to fetch data from URL: {url}. Error: {e}")
+
+    # Read the data into a pandas DataFrame
+    try:
+        df = pd.read_csv(pd.compat.StringIO(response.text))
+    except Exception as e:
+        raise ValueError(f"Failed to read data into DataFrame. Error: {e}")
+
+    return df
 
 
 class PerspectiveDemoDataSource(BaseModel):
