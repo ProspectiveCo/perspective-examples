@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Any
 import yaml
 
-from perspective_demo.utils import settings, logger
-import perspective_demo.data_sources as pds
+from prospective_demo_dataset.utils import settings, logger
+import prospective_demo_dataset.data_sources as pds
 
 
 import tornado.websocket

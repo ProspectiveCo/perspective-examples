@@ -1,0 +1,9 @@
+pandas
+pyarrow
+httpx
+pydantic
+pydantic-settings
+perspective-python
+tornado
+pytest
+

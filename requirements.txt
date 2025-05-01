@@ -27,4 +27,3 @@ influxdb-client     # influxdb
 taospy              # tdengine
 taos-ws-py          # tdengine
 clickhouse-connect  # clickhouse
-
