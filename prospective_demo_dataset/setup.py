@@ -16,6 +16,14 @@ setup(
     install_requires=install_requires,
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
+    keywords='prospective, perspective, demo, dataset',
+    license='MIT',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
+    # extras_require={
+    #     'dev': ['httpx',],  # Optional packages for development
+    #     'docs': ['sphinx', 'sphinx-rtd-theme'],  # Optional packages for documentation
+    # },
     author='xdatanomad',
     author_email='parham@prospective.co',
     description='A utility for simulating streaming data to Prospective and Perspective.',

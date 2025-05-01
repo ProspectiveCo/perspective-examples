@@ -8,3 +8,4 @@ tornado
 pytest
 pytest-asyncio
 pytest-order
+setuptools
