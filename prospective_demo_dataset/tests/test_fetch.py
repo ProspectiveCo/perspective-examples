@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import io
 import os
-from prospective_demo_dataset.fetch import fetch_text, fetch_bytes
+from prospective_demo_dataset.fetch import fetch_text, fetch_bytes, s3_to_https
 
 # URLs to test
 urls = [
@@ -54,3 +54,14 @@ async def test_fetch_bytes(url):
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
     assert df.shape[0] > 0
+
+
+@pytest.mark.asyncio
+async def test_s3_to_https():
+    """
+    Test that s3_to_https correctly converts an S3 URL to an HTTPS URL.
+    """
+    s3_url = "s3://perspective-demo-dataset/pudl/generators_monthly_2022-2023.parquet"
+    expected_https_url = "https://perspective-demo-dataset.s3.us-east-1.amazonaws.com/pudl/generators_monthly_2022-2023.parquet"
+    https_url = await s3_to_https(s3_url)
+    assert https_url == expected_https_url

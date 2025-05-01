@@ -32,43 +32,6 @@ _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 _unnamed_source_counter = 0         # used to assign unique names to unnamed sources
 
 
-async def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame:
-    """
-    Fetch the data from the given URL and return it as a pandas DataFrame.
-    """
-    # Check if the URL is valid and starts with a supported protocol
-    SUPPORTED_PROTOCOLS = ["http://", "https://", "s3://"]
-    if not isinstance(url, str):
-        raise ValueError("URL must be a string.")
-    if not any(url.startswith(protocol) for protocol in SUPPORTED_PROTOCOLS):
-        raise ValueError(f"URL must start with one of the following protocols: {', '.join(SUPPORTED_PROTOCOLS)}")
-    # Get the file extension from the URL and check if it is supported
-    _, ext = os.path.splitext(url)
-    if ext not in _SUPPORTED_FILE_TYPES:
-        raise ValueError(f"Invalid file type: {ext}. Supported file types are: {', '.join(_SUPPORTED_FILE_TYPES)}")
-    # Convert S3 URL to HTTPS URL if necessary
-    if url.startswith("s3://"):
-        bucket_and_key = url[5:]  # Remove "s3://"
-        bucket, _, key = bucket_and_key.partition("/")
-        url = f"https://{bucket}.s3.amazonaws.com/{key}"
-    # Read the data into a pandas DataFrame
-    try:
-        buffer = io.BytesIO(await fetch_bytes(url))
-        if ext == ".csv":
-            df = pd.read_csv(io.StringIO(buffer), **df_read_options)
-        elif ext in {".parquet", ".arrow"}:
-            if 'engine' not in df_read_options: df_read_options['engine'] = 'pyarrow'
-            try: df = pd.read_parquet(io.StringIO(buffer), **df_read_options)
-            except Exception as e:
-                del df_read_options['engine']
-                df = pd.read_feather(io.StringIO(buffer), df_read_options)
-        else:
-            raise ValueError(f"Unsupported file type: {ext}")
-    except Exception as e:
-        raise ValueError(f"Failed to read data into DataFrame. Error: {e}")
-    return df
-
-
 class ProspectiveDemoDataSource(BaseModel):
     name: Optional[str] = Field(None, description="The name of the data source.")
     # -- TODO: change the source to be able to also take a http, s3 link and download the file first
