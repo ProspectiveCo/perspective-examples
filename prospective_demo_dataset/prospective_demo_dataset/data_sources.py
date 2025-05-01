@@ -54,11 +54,6 @@ class ProspectiveDemoDataSource(BaseModel):
             raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
         # validate the file extension in supported file types
         if isinstance(v, str) and not is_url(v):
-            # check if the source is a URL
-            # if is_url(v):
-            #     if not (await is_url_valid(v)):
-            #         raise ValueError(f"Invalid URL: {v}.")
-            # else:
             if not os.path.exists(v):
                 raise ValueError(f"File {v} does not exist.")
             _, ext = os.path.splitext(v)
@@ -66,7 +61,7 @@ class ProspectiveDemoDataSource(BaseModel):
                 raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(SUPPORTED_FILE_TYPES)}")
         return v
 
-    def model_post_init(self, __context):
+    def model_post_init(self, context):
         if isinstance(self.source, pd.DataFrame):
             self._df = self.source
         # --- validating the data source name:
@@ -80,7 +75,7 @@ class ProspectiveDemoDataSource(BaseModel):
                 _unnamed_source_counter += 1
                 self.name = f"ds_{_unnamed_source_counter:03d}"
         # return the context
-        return super().model_post_init(__context)
+        return super().model_post_init(context)
 
     def _get_file_extension(self):
         if isinstance(self.source, str):
@@ -135,9 +130,7 @@ class ProspectiveDemoDataSource(BaseModel):
         return self._df
     
     async def get_df(self) -> pd.DataFrame:
-        if self._df is None:
-            await self.read()
-        return self._df
+        return await self.read()
     
     def set_df(self, df: pd.DataFrame):
         """
@@ -157,6 +150,7 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
     ts_col: str = Field(None, description="The timestamp column of the source data.")
 
     # private fields
+    _initialized: bool = PrivateAttr(False)
     _cur_index: int = PrivateAttr(0)
 
     @field_validator("frame_nrows")
@@ -175,22 +169,28 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
             raise ValueError(f"Invalid time interval: {v}.") from e
         return v
 
-    async def model_post_init(self, __context):
+    def model_post_init(self, context):
         # make sure either frame_batch_size or frame_interval is provided
         if not self.frame_nrows and not self.frame_interval:
             raise ValueError("Either frame_batch_size or frame_interval must be provided.")
         elif self.frame_nrows and self.frame_interval:
             raise ValueError("Only one of frame_batch_size or frame_interval must be provided.")
-        # read the dataframe
+        # return the context
+        return super().model_post_init(context)
+
+    async def __init_read(self):
+        """
+        Initialize the data source. This is called when the data source is created.
+        """
+        if self._initialized:
+            return
         await self.read()
         # validate the timestamp column and prepare for advancing frames by ts_interval
         if self.frame_interval is not None:
             self._validate_ts_col()
             self._prepare_for_ts_interval()
+        self._initialized = True
 
-        # return the context
-        return super().model_post_init(__context)
-    
     def _validate_ts_col(self):
         if self.ts_col is None:
             raise ValueError("Timestamp column must be provided.")
@@ -205,12 +205,12 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
         self._df.sort_values(by=self.ts_col, inplace=True)
         self._df.reset_index(drop=True, inplace=True)
     
-    def next(self) -> pd.DataFrame:
+    async def next(self) -> pd.DataFrame:
         """
         Get the next frame of the stream.
         """
-        if self._df is None:
-            self.read()
+        if not self._initialized:
+            await self.__init_read()
         # ---- advance the stream by frame_nrows ----
         if self.frame_nrows:
             # loopback logic -- loop back to the beginning of the stream
@@ -248,61 +248,8 @@ class ProspectiveDemoBatchDataSource(ProspectiveDemoDataSource):
     This class is nearly identical to PerspectiveDemoDataSource, but it is provided for clarity and to avoid confusion.
     """
 
-    def next(self) -> pd.DataFrame:
+    async def next(self) -> pd.DataFrame:
         """
         Get the next frame of the stream.
         """
-        if self._df is None:
-            self.read()
-        return self._df
-
-
-
-def test():
-    data_filepath = r"data/generators_monthly_2023_md.parquet"
-    # ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
-    # df = ds.read()
-    # assert isinstance(df, pd.DataFrame)
-    # print(df.head())
-
-    # ---- testing frame_nrows ----
-    # ds = PerspectiveDemoStreamDataSrouce(source=data_filepath, frame_nrows=10_000, loopback=True)
-    # df = ds.read()
-    # print(df.head())
-    # print(f"Dataframe shape: {df.shape}, len={len(df)}")
-    # counter = 0
-    # while (frame := ds.next()) is not None:
-    #     print('.', end='', flush=True)
-    #     # print(f"Frame: len={len(frame)}")
-    #     counter += 1
-    #     if counter > 100:
-    #         print("\nBreaking...")
-    #         break
-    # print("\nDone")
-    
-    # ---- testing frame_interval ----
-    ts_col = 'report_date'
-    ds = ProspectiveDemoStreamDataSource(source=data_filepath, frame_interval='1d', ts_col=ts_col, loopback=True)
-    # let's look at the dataframe
-    df = ds.read()
-    print(f"Dataframe shape: {df.shape}, len={len(df)}")
-    # print the min/max boundaries of the ts_col in the dataframe
-    min_ts = df[ts_col].min()
-    max_ts = df[ts_col].max()
-    print(f"Timestamp column '{ts_col}' min: {min_ts}, max: {max_ts}")
-    # show df records with report_date == 2023-01-02
-    # print(df[df[ts_col] >= datetime(2023, 1, 2)].head())
-    # play the stream
-    counter = 0
-    while (frame := ds.next()) is not None:
-        print('.', end='', flush=True)
-        # print(f"Frame: len={len(frame)}")
-        counter += 1
-        if counter > 100:
-            print("\nBreaking...")
-            break
-    print("\nDone")
-
-
-if __name__ == "__main__":
-    test()
+        return await self.read()
