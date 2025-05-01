@@ -2,7 +2,7 @@ import pytest
 import pandas as pd
 import io
 import os
-from prospective_demo_dataset.data_sources import fetch_text, fetch_bytes
+from prospective_demo_dataset.fetch import fetch_text, fetch_bytes
 
 # URLs to test
 urls = [
