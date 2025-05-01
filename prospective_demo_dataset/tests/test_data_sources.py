@@ -9,7 +9,8 @@ import prospective_demo_dataset.data_sources as pdds
 logger = logging.getLogger(__name__)
 
 
-def test_ds_from_url():
+@pytest.mark.asyncio
+async def test_ds_from_url():
     url = "https://perspective-demo-dataset.s3.us-east-1.amazonaws.com/pudl/generators_monthly_2022-2023.parquet"
     # ds = PerspectiveDemoDataSource(source=data_filepath, loopback=False)
     # df = ds.read()
@@ -35,8 +36,9 @@ def test_ds_from_url():
     ts_col = 'report_date'
     ds = pdds.ProspectiveDemoStreamDataSource(source=url, frame_interval='1d', ts_col=ts_col, loopback=True)
     # let's look at the dataframe
-    df = ds.read()
+    df = await ds.read()
     logger.info(f"Dataframe shape: {df.shape}, len={len(df)}")
+    logger.debug(df.head())
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
     assert df.shape[0] > 0

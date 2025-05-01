@@ -49,19 +49,18 @@ class ProspectiveDemoDataSource(BaseModel):
     )
 
     @field_validator("source")
-    @classmethod
     def validate_source(cls, v):
         if not isinstance(v, (str, pd.DataFrame)):
             raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
         # validate the file extension in supported file types
-        if isinstance(v, str):
+        if isinstance(v, str) and not is_url(v):
             # check if the source is a URL
-            if is_url(v):
-                if not is_url_valid(v):
-                    raise ValueError(f"Invalid URL: {v}.")
-            else:
-                if not os.path.exists(v):
-                    raise ValueError(f"File {v} does not exist.")
+            # if is_url(v):
+            #     if not (await is_url_valid(v)):
+            #         raise ValueError(f"Invalid URL: {v}.")
+            # else:
+            if not os.path.exists(v):
+                raise ValueError(f"File {v} does not exist.")
             _, ext = os.path.splitext(v)
             if ext not in SUPPORTED_FILE_TYPES:
                 raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(SUPPORTED_FILE_TYPES)}")
@@ -107,7 +106,7 @@ class ProspectiveDemoDataSource(BaseModel):
             else:
                 raise ValueError(f"Invalid file type: {ext}")
         else:
-            raise ValueError("Unsupported source type.")
+            raise ValueError(f"Unsupported source type. {type(self.source)} - {self.source}")
 
     async def read(self) -> pd.DataFrame:
         # if we have previously read the dataframe, return it
