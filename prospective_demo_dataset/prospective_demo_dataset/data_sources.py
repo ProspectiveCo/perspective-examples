@@ -238,18 +238,3 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
             return next_frame
         else:
             raise ValueError("Invalid frame advancement method.")
-
-
-
-class ProspectiveDemoBatchDataSource(ProspectiveDemoDataSource):
-    """
-    A data source that reads and returns the entire data in a single batch.
-
-    This class is nearly identical to PerspectiveDemoDataSource, but it is provided for clarity and to avoid confusion.
-    """
-
-    async def next(self) -> pd.DataFrame:
-        """
-        Get the next frame of the stream.
-        """
-        return await self.read()
