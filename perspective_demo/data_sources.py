@@ -14,10 +14,48 @@ import os
 import io
 import pandas as pd
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
-from datetime import datetime, timedelta
+import datetime as dt
 from enum import Enum
 from typing import Optional, Any
-import requests
+
+
+# Fetch content from a URL using pyfetch (in Pyodide) or httpx (in standard Python).
+try:
+    # support for running inside Prospective notebooks within the Chrome browser
+    from pyodide.http import pyfetch
+    IN_PYODIDE = True
+except ImportError:
+    # support for running in standard Python environment
+    IN_PYODIDE = False
+    import httpx
+
+
+async def fetch_text(url, **kwargs):
+    """
+    Fetch text content from a URL using pyfetch (in Pyodide) or httpx (in standard Python).
+    """
+    if IN_PYODIDE:
+        response = await pyfetch(url, **kwargs)
+        return await response.string()
+    else:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, **kwargs)
+            response.raise_for_status()
+            return response.text
+
+async def fetch_bytes(url, **kwargs):
+    """
+    Fetch binary content from a URL using pyfetch (in Pyodide) or httpx (in standard Python).
+    """
+    if IN_PYODIDE:
+        response = await pyfetch(url, **kwargs)
+        return await response.bytes()
+    else:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, **kwargs)
+            response.raise_for_status()
+            return response.content
+
 
 
 class SupportedFileTypes(Enum):
@@ -32,44 +70,36 @@ _SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 _unnamed_source_counter = 0         # used to assign unique names to unnamed sources
 
 
-def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame:
+async def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame:
     """
     Fetch the data from the given URL and return it as a pandas DataFrame.
     """
+    # Check if the URL is valid and starts with a supported protocol
     SUPPORTED_PROTOCOLS = ["http://", "https://", "s3://"]
     if not isinstance(url, str):
         raise ValueError("URL must be a string.")
     if not any(url.startswith(protocol) for protocol in SUPPORTED_PROTOCOLS):
         raise ValueError(f"URL must start with one of the following protocols: {', '.join(SUPPORTED_PROTOCOLS)}")
-    
     # Get the file extension from the URL and check if it is supported
     _, ext = os.path.splitext(url)
     if ext not in _SUPPORTED_FILE_TYPES:
         raise ValueError(f"Invalid file type: {ext}. Supported file types are: {', '.join(_SUPPORTED_FILE_TYPES)}")
-
     # Convert S3 URL to HTTPS URL if necessary
     if url.startswith("s3://"):
         bucket_and_key = url[5:]  # Remove "s3://"
         bucket, _, key = bucket_and_key.partition("/")
         url = f"https://{bucket}.s3.amazonaws.com/{key}"
-
-    # Fetch the data from the URL
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        raise ValueError(f"Failed to fetch data from URL: {url}. Error: {e}")
-
     # Read the data into a pandas DataFrame
     try:
+        buffer = io.BytesIO(await fetch_bytes(url))
         if ext == ".csv":
-            df = pd.read_csv(io.StringIO(response.text), **df_read_options)
+            df = pd.read_csv(io.StringIO(buffer), **df_read_options)
         elif ext in {".parquet", ".arrow"}:
             if 'engine' not in df_read_options: df_read_options['engine'] = 'pyarrow'
-            try: df = pd.read_parquet(io.StringIO(response.text), **df_read_options)
+            try: df = pd.read_parquet(io.StringIO(buffer), **df_read_options)
             except Exception as e:
                 del df_read_options['engine']
-                df = pd.read_feather(io.StringIO(response.text), df_read_options)
+                df = pd.read_feather(io.StringIO(buffer), df_read_options)
         else:
             raise ValueError(f"Unsupported file type: {ext}")
     except Exception as e:
@@ -80,7 +110,7 @@ def fetch_url_to_dataframe(url: str, df_read_options: dict = {}) -> pd.DataFrame
 class ProspectiveDemoDataSource(BaseModel):
     name: Optional[str] = Field(None, description="The name of the data source.")
     # -- TODO: change the source to be able to also take a http, s3 link and download the file first
-    source: str | Any = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
+    source: str | pd.DataFrame = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
     # dataframe options
@@ -89,7 +119,10 @@ class ProspectiveDemoDataSource(BaseModel):
     # private fields
     _df: pd.DataFrame = PrivateAttr(default=None)
 
-    # model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = ConfigDict(
+        extra="forbid",  # forbid extra fields
+        arbitrary_types_allowed=True,  # allow arbitrary types
+    )
 
     @field_validator("source")
     @classmethod
@@ -186,7 +219,7 @@ class ProspectiveDemoDataSource(BaseModel):
 
 
 class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
-    frame_interval: str | float | timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_interval must be provided.")
+    frame_interval: str | float | dt.timedelta = Field(None, description="The time interval to advance the stream by the values in ts_col in each frame. ts_col must be provided. Either frame_nrows or frame_interval must be provided.")
     frame_nrows: int = Field(None, description="The number of rows to play in each frame. Either frame_nrows or frame_interval must be provided.")
     loopback: bool = Field(True, description="Whether to loop back to the beginning of the stream when the end is reached.")
 
