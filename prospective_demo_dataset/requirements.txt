@@ -6,4 +6,5 @@ pydantic-settings
 perspective-python
 tornado
 pytest
-
+pytest-asyncio
+pytest-order

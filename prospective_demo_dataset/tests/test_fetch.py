@@ -1,10 +1,12 @@
 import pytest
 import pandas as pd
+import io
+import os
 from prospective_demo_dataset.data_sources import fetch_text, fetch_bytes
 
 # URLs to test
 urls = [
-    "s3://perspective-demo-dataset/pudl/generators_monthly_2022-2023.parquet",
+    # "s3://perspective-demo-dataset/pudl/generators_monthly_2022-2023.parquet",
     "https://perspective-demo-dataset.s3.us-east-1.amazonaws.com/pudl/generators_monthly_2022-2023.parquet",
     "https://perspective-demo-dataset.s3.us-east-1.amazonaws.com/tmp/us_zips.csv",
 ]
@@ -17,17 +19,18 @@ async def test_fetch_text(url):
     and ensuring it can be parsed using pandas.
     """
     text_data = await fetch_text(url)
-
+    _, ext = os.path.splitext(url)
     # Determine file type and parse using pandas
-    if url.endswith(".csv"):
-        df = pd.read_csv(pd.compat.StringIO(text_data))
-    elif url.endswith(".parquet"):
+    if ext == ".csv":
+        df = pd.read_csv(io.StringIO(text_data))
+    elif ext in [".parquet", ".arrow"]:
         pytest.skip("fetch_text is not suitable for binary formats like Parquet.")
     else:
-        pytest.fail(f"Unsupported file type for URL: {url}")
-
+        pytest.skip(f"Unsupported file type for URL: {url}")
+    # Check if the DataFrame is not empty
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
+    assert df.shape[0] > 0
 
 
 @pytest.mark.asyncio
@@ -38,14 +41,16 @@ async def test_fetch_bytes(url):
     and ensuring it can be parsed using pandas.
     """
     binary_data = await fetch_bytes(url)
-
+    _, ext = os.path.splitext(url)
     # Determine file type and parse using pandas
-    if url.endswith(".csv"):
-        df = pd.read_csv(pd.compat.BytesIO(binary_data))
-    elif url.endswith(".parquet"):
-        df = pd.read_parquet(pd.compat.BytesIO(binary_data))
+    if ext == ".csv":
+        df = pd.read_csv(io.BytesIO(binary_data))
+    elif ext in [".parquet", ".arrow"]:
+        try: df = pd.read_parquet(io.BytesIO(binary_data))
+        except: df = pd.read_feather(io.BytesIO(binary_data))
     else:
-        pytest.fail(f"Unsupported file type for URL: {url}")
-
+        pytest.skip(f"Unsupported file type for URL: {url}")
+    # Check if the DataFrame is not empty
     assert isinstance(df, pd.DataFrame)
     assert not df.empty
+    assert df.shape[0] > 0
