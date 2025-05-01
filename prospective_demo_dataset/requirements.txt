@@ -8,4 +8,5 @@ tornado
 pytest
 pytest-asyncio
 pytest-order
+pytest-dependency
 setuptools
