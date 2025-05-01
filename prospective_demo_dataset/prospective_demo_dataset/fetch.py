@@ -10,6 +10,7 @@
 #  ┃ of the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). ┃
 #  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
+SUPPORTED_PROTOCOLS = ["http://", "https://", "s3://"]
 
 # Fetch content from a URL using pyfetch (in Pyodide) or httpx (in standard Python).
 try:
@@ -49,25 +50,37 @@ async def fetch_bytes(url, **kwargs):
             return response.content
         
 
+def is_url(url: str) -> bool:
+    """
+    Check if the given URL is valid.
+    """
+    if not isinstance(url, str):
+        return False
+    if any(url.startswith(protocol) for protocol in SUPPORTED_PROTOCOLS):
+        return True
+    return False
+
+
+async def is_url_valid(url: str) -> bool:
+    """
+    Check if a URL is valid (does not return a 404 error) using httpx.
+    """
+    if IN_PYODIDE:
+        response = await pyfetch(url, method="HEAD")
+        return response.ok
+    else:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.head(url, timeout=5)
+                return response.status_code == 200
+            except httpx.RequestError:
+                return False
+
+
 async def s3_to_https(url: str) -> str:
     """
     Convert an S3 URL to an HTTPS URL.
     """
-    async def is_url_valid(url: str) -> bool:
-        """
-        Check if a URL is valid (does not return a 404 error) using httpx.
-        """
-        if IN_PYODIDE:
-            response = await pyfetch(url, method="HEAD")
-            return response.ok
-        else:
-            async with httpx.AsyncClient() as client:
-                try:
-                    response = await client.head(url, timeout=5)
-                    return response.status_code == 200
-                except httpx.RequestError:
-                    return False
-
     AWS_REGIONS = [
         "us-east-1", "us-east-2", "us-west-1", "us-west-2",
         "af-south-1", "ap-east-1", "ap-south-1", "ap-south-2",

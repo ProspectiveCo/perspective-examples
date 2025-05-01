@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 import datetime as dt
 from enum import Enum
 from typing import Optional, Any
-from prospective_demo_dataset.fetch import fetch_bytes, fetch_text
+from prospective_demo_dataset.fetch import fetch_bytes, is_url, is_url_valid
 
 
 class SupportedFileTypes(Enum):
@@ -26,7 +26,7 @@ class SupportedFileTypes(Enum):
     ARROW = ".arrow"
     DATAFRAME = "dataframe"
 
-_SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
+SUPPORTED_FILE_TYPES = [file_type.value for file_type in SupportedFileTypes]
 
 
 _unnamed_source_counter = 0         # used to assign unique names to unnamed sources
@@ -34,7 +34,6 @@ _unnamed_source_counter = 0         # used to assign unique names to unnamed sou
 
 class ProspectiveDemoDataSource(BaseModel):
     name: Optional[str] = Field(None, description="The name of the data source.")
-    # -- TODO: change the source to be able to also take a http, s3 link and download the file first
     source: str | pd.DataFrame = Field(..., description="The source data to play. You can also pass a pandas DataFrame.")
     description: Optional[str] = Field(None, description="The description of the source data.")
     cols_description: Optional[dict[str, str]] = Field(None, description="The description of the columns of the source data.")
@@ -56,12 +55,16 @@ class ProspectiveDemoDataSource(BaseModel):
             raise ValueError("Source must be a pandas DataFrame or a path to a data file.")
         # validate the file extension in supported file types
         if isinstance(v, str):
-            if not os.path.exists(v):
-                raise ValueError(f"File {v} does not exist.")
+            # check if the source is a URL
+            if is_url(v):
+                if not is_url_valid(v):
+                    raise ValueError(f"Invalid URL: {v}.")
             else:
-                _, ext = os.path.splitext(v)
-                if ext not in _SUPPORTED_FILE_TYPES:
-                    raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(_SUPPORTED_FILE_TYPES)}")
+                if not os.path.exists(v):
+                    raise ValueError(f"File {v} does not exist.")
+            _, ext = os.path.splitext(v)
+            if ext not in SUPPORTED_FILE_TYPES:
+                raise ValueError(f"Invalid file type: {ext}. At this point only following file formats are supported: {', '.join(SUPPORTED_FILE_TYPES)}")
         return v
 
     def model_post_init(self, __context):
@@ -106,32 +109,35 @@ class ProspectiveDemoDataSource(BaseModel):
         else:
             raise ValueError("Unsupported source type.")
 
-    def read(self) -> pd.DataFrame:
+    async def read(self) -> pd.DataFrame:
         # if we have previously read the dataframe, return it
         if self._df is not None:
-            # logger.debug("PerspectiveDemoDataSource: Dataframe already read. Returning previously read dataframe.")
             return self._df
-        # read the dataframe
-        if isinstance(self.source, str):
-            filetype = self.filetype
-            if filetype == SupportedFileTypes.CSV:
-                self._df = pd.read_csv(self.source, **self.df_read_options)
-            elif filetype in {SupportedFileTypes.PARQUET, SupportedFileTypes.ARROW}:
-                # set the engine to 'pyarrow' to avoid the warning message
-                if 'engine' not in self.df_read_options: self.df_read_options['engine'] = 'pyarrow'
-                try: self._df = pd.read_parquet(self.source, **self.df_read_options)
-                except Exception as e:
-                    del self.df_read_options['engine']
-                    self._df = pd.read_feather(self.source, **self.df_read_options)
-            else:
-                raise ValueError(f"Invalid file type: {filetype}")
-        elif isinstance(self.source, pd.DataFrame):
-            self._df = self.source
+        filetype = self.filetype
+        # check to see if the source is a URL
+        if is_url(self.source):
+            source = io.BytesIO(await fetch_bytes(self.source))
+        else:
+            source = self.source
+        # read the dataframe based on the file type
+        if filetype == SupportedFileTypes.CSV:
+            self._df = pd.read_csv(source, **self.df_read_options)
+        elif filetype in {SupportedFileTypes.PARQUET, SupportedFileTypes.ARROW}:
+            # set the engine to 'pyarrow' to avoid the warning message
+            if 'engine' not in self.df_read_options: self.df_read_options['engine'] = 'pyarrow'
+            try: self._df = pd.read_parquet(source, **self.df_read_options)
+            except Exception as e:
+                del self.df_read_options['engine']
+                self._df = pd.read_feather(source, **self.df_read_options)
+        elif filetype == SupportedFileTypes.DATAFRAME:
+            self._df = pd.DataFrame(self.source)
+        else:
+            raise ValueError(f"Invalid file type: {filetype}")
         return self._df
     
-    def get_df(self) -> pd.DataFrame:
+    async def get_df(self) -> pd.DataFrame:
         if self._df is None:
-            self.read()
+            await self.read()
         return self._df
     
     def set_df(self, df: pd.DataFrame):
@@ -170,14 +176,14 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
             raise ValueError(f"Invalid time interval: {v}.") from e
         return v
 
-    def model_post_init(self, __context):
+    async def model_post_init(self, __context):
         # make sure either frame_batch_size or frame_interval is provided
         if not self.frame_nrows and not self.frame_interval:
             raise ValueError("Either frame_batch_size or frame_interval must be provided.")
         elif self.frame_nrows and self.frame_interval:
             raise ValueError("Only one of frame_batch_size or frame_interval must be provided.")
         # read the dataframe
-        self.read()
+        await self.read()
         # validate the timestamp column and prepare for advancing frames by ts_interval
         if self.frame_interval is not None:
             self._validate_ts_col()
@@ -224,7 +230,7 @@ class ProspectiveDemoStreamDataSource(ProspectiveDemoDataSource):
             current_index = 0 if current_index >= len(self._df) else current_index
             # next frame logic
             current_ts = self._df[self.ts_col].iloc[current_index]                      # get the current timestamp
-            next_ts = current_ts + pd.Timedelta(self.frame_interval)                 # calculate the next timestamp
+            next_ts = current_ts + pd.Timedelta(self.frame_interval)                    # calculate the next timestamp
             tmp = self._df[self._df[self.ts_col] >= next_ts]                            # find the next batch of rows
             next_index = tmp.index[0] if len(tmp) > 0 else len(self._df)                # get the next index
             next_frame = self._df.iloc[self._cur_index:next_index]                      # get the next frame
