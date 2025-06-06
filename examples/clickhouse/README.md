@@ -49,8 +49,8 @@ This demo includes the following components:
 
 - `docker.sh`: Starts a Clickhouse Docker container.
 - `producer.py`: Generates a random stream of data and inserts it into Clickhouse every _250ms_.
-- `perspective_server.py`: Reads the data stream from Clickhouse and sets up a _Perspective Server_. Multiple Perspective viewers (HTML clients) can then connect and provide interactive dashboards to users.
-- `prsp-viewer.html`: Demonstrates how to embed an interactive `<perspective-viewer>` custom component in a web application.
+- `server.py`: Reads the data stream from Clickhouse and sets up a _Perspective Server_. Multiple Perspective viewers (HTML clients) can then connect and provide interactive dashboards to users.
+- `index.html`: Demonstrates how to embed an interactive `<perspective-viewer>` custom component in a web application.
 
 <br/>
 
@@ -105,12 +105,12 @@ This script performs the following actions:
 ### 4. Run the Perspective Server
 
 
-The `perspective_server.py` script is responsible for consuming data from Clickhouse, standing up a Perspective server, and refreshing data every _250ms_. It publishes changes to Perspective clients via a Tornado WebSocket.
+The `server.py` script is responsible for consuming data from Clickhouse, standing up a Perspective server, and refreshing data every _250ms_. It publishes changes to Perspective clients via a Tornado WebSocket.
 
 Open a new terminal and activate your virtualenv. To run the Perspective server, execute the following command:
 
 ```bash
-python perspective_server.py
+python server.py
 ```
 
 This script performs the following actions:
@@ -121,15 +121,22 @@ This script performs the following actions:
 
 ### 5. Open the Perspective Viewer
 
-The final step is to open the `prsp-viewer.html` file in your web browser _(Chrome recommended)_. This file contains an embedded `<perspective-viewer>` component, which will enable interactive data visualization and automatically render data in real-time as new values are captured from the server.
+The final step is to open the `index.html` file in your web browser _(Chrome recommended)_. This file contains an embedded `<perspective-viewer>` component, which will enable interactive data visualization and automatically render data in real-time as new values are captured from the server.
 
+Alternatively, you can use [https://perspective.co](https://perspective.co) (no login needed) to connect to your running Perspective server instead of using the local `index.html` file:
+
+1. Go to [https://perspective.co](https://perspective.co) and create a new Project.
+2. Open the **SOURCES** tab and create a new `Perspective://` data source.
+3. The default connection parameters should work (it will connect to your local Perspective server WebSocket running via `server.py`).
+
+This allows you to visualize your real-time data directly in the browser without any local setup.
 <br/>
 
 ## Code Explained
 
 ### Perspective Server
 
-The [`perspective_server.py`](./perspective_server.py) script is the backbone of the integration, responsible for setting up the Perspective server and managing real-time data updates. Here are the key components:
+The [`server.py`](./server.py) script is the backbone of the integration, responsible for setting up the Perspective server and managing real-time data updates. Here are the key components:
 
 #### 1. Setting Up the Perspective Server
 
@@ -207,7 +214,7 @@ These components work together to create a robust system for real-time data visu
 
 ### Perspective Viewer (client)
 
-The [`prsp-viewer.html`](./prsp-viewer.html) file is responsible for embedding the Perspective Viewer component in a web application and connecting it to the Perspective server to visualize real-time data. Here are the key components:
+The [`index.html`](./index.html) file is responsible for embedding the Perspective Viewer component in a web application and connecting it to the Perspective server to visualize real-time data. Here are the key components:
 
 #### 1. HTML Structure
 
@@ -251,17 +258,27 @@ A script is included to connect the Perspective Viewer to the Perspective server
 </script>
 ```
 
+<br/>
+
+## Prospective.co
+
+![Prospective](./imgs/prospective_clickhouse.png)
+
+Alternatively, you can use [https://perspective.co](https://perspective.co) (no login needed) to connect to your running Perspective server instead of using the local `index.html` file:
+
+1. Go to [https://perspective.co](https://perspective.co) and create a new Project.
+2. Open the **SOURCES** tab and create a new `perspective://` data source.
+3. The default connection parameters should work (it will connect to your local Perspective server WebSocket running via `server.py`).
+
+This allows you to visualize your real-time data directly in the browser without any local setup.
+
 These components work together to create an interactive and real-time data visualization experience using Perspective and Clickhouse.
 
 <br/>
 
-## Prospective Commercial Product
-
 [Prospective.co](https://prospective.co), the commercial version of Perspective, offers additional functionality and capabilities, including a built-in _Perspective Server_ data connector. This allows users to build, customize, and share dashboards based on Clickhouse data seamlessly.
 
-![Prospective](./imgs/prospective_clickhouse.png)
-
-To get a trial license of Prospective, send an email to _hello@prospective.co_ with the subject: _"Clickhouse trial"_.
+Prospective.co is free to use with limited data connectors; to get a trial license of Prospective, send an email to _hello@prospective.co_ with the subject: _"Clickhouse trial"_.
 
 <br/>
 

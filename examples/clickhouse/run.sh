@@ -7,7 +7,7 @@ echo "Actions:"
 echo "  1. Run ClickHouse in Docker container."
 echo "  2. Start a new python virtualenv and install the required packages."
 echo "  3. Run ``producer.py`` (in background) to create a table in Clickhouse and insert data into it."
-echo "  4. Run ``perspective_server.py`` to read data from Clickhouse and display it in Perspective."
+echo "  4. Run ``server.py`` to read data from Clickhouse and display it in Perspective."
 echo "  5. Embed a Perspective Viewer on a HTML page to display an interactive dashboard."
 echo -e "\nProceeding..."
 
@@ -34,14 +34,14 @@ python producer.py > /dev/null &
 PRODUCER_PID=$!
 echo "Producer is running in the background with PID=$PRODUCER_PID"
 
-# Run perspective_server.py to read data from Clickhouse and display it in Perspective.
-python perspective_server.py > /dev/null &
+# Run server.py to read data from Clickhouse and display it in Perspective.
+python server.py > /dev/null &
 PERSPECTIVE_PID=$!
 echo "Perspective server is running in the background with PID=$PERSPECTIVE_PID"
 
 # Embed a Perspective Viewer on a HTML page to display an interactive dashboard.
-echo "Attempting to open ``prsp-viewer.html``... alternatively, you can open it manually."
-xdg-open prsp-viewer.html > /dev/null 2>&1 || open prsp-viewer.html > /dev/null 2>&1 || true
+echo "Attempting to open ``index.html``... alternatively, you can open it manually."
+xdg-open index.html > /dev/null 2>&1 || open index.html > /dev/null 2>&1 || true
 
 # check if producer and perspective server pids are running
 sleep 2     # wait for the producer and perspective server to start
@@ -54,7 +54,7 @@ fi
 
 # Wait for the user to press Ctrl+C to stop the Perspective server and the producer.
 echo -e "\nPress Ctrl+C to stop the Perspective server and the producer."
-trap "kill $PRODUCER_PID $PERSPECTIVE_PID" INT
+trap "kill $PRODUCER_PID $PERSPECTIVE_PID; docker rm -vf prsp-clickhouse;" INT
 wait
 echo "Stopped the Perspective server and the producer."
 echo "Exiting..."
