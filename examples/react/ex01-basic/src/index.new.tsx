@@ -48,17 +48,32 @@ const client: psp.Client = await psp.worker();
  * ============================================================================
  */
 
-async function createNewSuperstoreTable(): Promise<psp.Table> {
+const createNewSuperstorePerspectiveTable = async (): Promise<psp.Table> => {
     console.warn("Creating new superstore perscpective table!");
     const resp = await fetch(SUPERSTORE_ARROW);
     return client.table(await resp.arrayBuffer());
 };
 
-const CONFIG: pspViewer.ViewerConfigUpdate = {
-    group_by: ["State"],
+
+const CONFIG_DEFAULT: pspViewer.ViewerConfigUpdate = {
     theme: "Pro Dark",
 };
 
+
+const CONFIG_UPDATE: pspViewer.ViewerConfigUpdate = {
+    plugin: "X Bar",
+    settings: true,
+    theme: "Pro Dark",
+    title: null,
+    group_by: ["Category", "Sub-Category"],
+    split_by: ["Region"],
+    columns: ["Sales"],
+    aggregates: {
+        Sales: "sum",
+        Profit: "mean",
+        Quantity: "sum",
+    },
+};
 
 /* ============================================================================
  * React Application
@@ -69,71 +84,78 @@ const CONFIG: pspViewer.ViewerConfigUpdate = {
  * ============================================================================
  */
 
-
-interface ToolbarState {
-    mounted: boolean;
-    table?: Promise<psp.Table>;
+interface AppState {
+    table: Promise<psp.Table> | undefined;
     config: pspViewer.ViewerConfigUpdate;
 }
 
 const App: React.FC = () => {
-    const [state, setState] = React.useState<ToolbarState>(() => ({
-        mounted: true,
-        table: createNewSuperstoreTable(),
-        config: { ...CONFIG },
-    }));
+    const [state, setState] = React.useState<AppState>({
+        table: createNewSuperstorePerspectiveTable(),
+        config: CONFIG_DEFAULT,
+    });
 
     React.useEffect(() => {
         return () => {
-            state.table?.then((table) => table?.delete({ lazy: true }));
+            state.table?.then((t) => t?.delete({ lazy: true }));
         };
-    }, []);
+    }, [state.table]);
 
-    const onClickOverwrite = () => {
-        state.table?.then((table) => table?.delete({ lazy: true }));
-        const table = createNewSuperstoreTable();
-        setState({ ...state, table });
-    };
+    function applyConfig() {
+        console.log("Applying config", CONFIG_UPDATE);
+        setState((prev) => ({
+            ...prev,
+            config: { ...CONFIG_UPDATE },
+        }));
+    }
 
-    const onClickDelete = () => {
-        state.table?.then((table) => table?.delete({ lazy: true }));
-        setState({ ...state, table: undefined });
-    };
+    function resetTable() {
+        state.table?.then((t) => t?.delete({ lazy: true }));
+        setState((prev) => ({
+            ...prev,
+            table: createNewSuperstorePerspectiveTable(),
+        }));
+    }
 
-    const onClickToggleMount = () =>
-        setState((old) => ({ ...old, mounted: !state.mounted }));
+    function deleteTable() {
+        state.table?.then((t) => t?.delete({ lazy: true }));
+        setState((prev) => ({
+            ...prev,
+            table: undefined,
+        }));
+    }
 
-    const onConfigUpdate = (config: pspViewer.ViewerConfigUpdate) => {
-        console.log("Config Update Event", config);
-        setState({ ...state, config });
-    };
+    function handleConfigUpdate(newConfig: pspViewer.ViewerConfigUpdate) {
+        console.log("Config Update Event", newConfig);
+        // setState((prev) => ({
+        //     ...prev,
+        //     config: newConfig,
+        // }));
+    }
 
-    const onClick = (detail: pspViewer.PerspectiveClickEventDetail) => {
+    function handleClick(detail: pspViewer.PerspectiveClickEventDetail) {
         console.log("Click Event,", detail);
-    };
+    }
 
-    const onSelect = (detail: pspViewer.PerspectiveSelectEventDetail) => {
+    function handleRowSelect(detail: pspViewer.PerspectiveSelectEventDetail) {
         console.log("Select Event", detail);
-    };
+    }
 
     return (
         <div className="container">
             <div className="toolbar">
-                <button onClick={onClickToggleMount}>Toggle Mount</button>
-                <button onClick={onClickOverwrite}>Overwrite Superstore</button>
-                <button onClick={onClickDelete}>Delete Table</button>
+                <button onClick={applyConfig}>Set Config</button>
+                {/* <button onClick={resetConfig}>Reset Config</button> */}
+                <button onClick={resetTable}>Reset Table</button>
+                <button onClick={deleteTable}>Delete Table</button>
             </div>
-            {state.mounted && (
-                <>
-                    <PerspectiveViewer
-                        table={state.table}
-                        config={state.config}
-                        onClick={onClick}
-                        onSelect={onSelect}
-                        onConfigUpdate={onConfigUpdate}
-                    />
-                </>
-            )}
+            <PerspectiveViewer
+                table={state.table}
+                config={state.config}
+                onClick={handleClick}
+                onSelect={handleRowSelect}
+                onConfigUpdate={handleConfigUpdate}
+            />
         </div>
     );
 };

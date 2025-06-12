@@ -13,9 +13,8 @@
 
 body {
     margin: 0;
-    background-color: #f0f0f0;
-    font-family: "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo",
-        "Consolas", "Liberation Mono", monospace;
+    background-color: #000;
+    font-family: system-ui, sans-serif;
 }
 
 .container {
@@ -27,28 +26,30 @@ body {
 
     display: grid;
     gap: 8px;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     grid-template-rows: 45px 1fr;
 }
 
 perspective-viewer {
-    grid-row: 2;
+    grid-row: 2 / span 1;
+    grid-column: 1 / -1;
+    width: 100vw;
+    height: 100%;
 }
 
 .toolbar {
     grid-row: 1;
-    grid-column-start: 1;
-    grid-column-end: 3;
+    grid-column: 1 / -1;
 
     display: flex;
     flex-direction: row;
     gap: 10px;
     padding: 10px;
     justify-content: stretch;
-    border-bottom: 1px solid #666;
+    border-bottom: 1px solid #222;
+    background: #0a1626;
 }
 
 button {
-    font-family: "ui-monospace", "SFMono-Regular", "SF Mono", "Menlo",
-        "Consolas", "Liberation Mono", monospace;
+    font-family: inherit;
 }
