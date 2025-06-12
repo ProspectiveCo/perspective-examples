@@ -10,26 +10,31 @@
 // ┃ of the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). ┃
 // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-// # [Perspective bootstrapping](https://perspective.finos.org/guide/how_to/javascript/importing.html)
 
-// Here we're initializing the WASM interpreter that powers the perspective API
-// and viewer, as covered in the [user guide section on bundling](https://perspective.finos.org/guide/how_to/javascript/importing.html).
-// This example is written assuming that the bundler is configured
-// to treat these files as a "file" and returns a path as the default export.
-// Use ./build.js as an example. The type stubs are in ./globals.d.ts
-
-import perspective from "@finos/perspective";
-import perspective_viewer from "@finos/perspective-viewer";
+// Imports
+import * as React from "react";
+import { createRoot } from "react-dom/client";
+import psp from "@finos/perspective";
+import pspViewer from "@finos/perspective-viewer";
+import { PerspectiveViewer } from "@finos/perspective-react";
 import "@finos/perspective-viewer-datagrid";
 import "@finos/perspective-viewer-d3fc";
+import "@finos/perspective-viewer/dist/css/themes.css";
+import "./index.css";
 
 import SERVER_WASM from "@finos/perspective/dist/wasm/perspective-server.wasm";
 import CLIENT_WASM from "@finos/perspective-viewer/dist/wasm/perspective-viewer.wasm";
+import SUPERSTORE_ARROW from "superstore-arrow/superstore.lz4.arrow";
+
+// # [Perspective bootstrapping](https://perspective.finos.org/guide/how_to/javascript/importing.html)
+// Here we're initializing the WASM interpreter that powers the perspective API
+// This example is written assuming that the bundler is configured
 
 await Promise.all([
-    perspective.init_server(fetch(SERVER_WASM)),
-    perspective_viewer.init_client(fetch(CLIENT_WASM)),
+    psp.init_server(fetch(SERVER_WASM)),
+    pspViewer.init_client(fetch(CLIENT_WASM)),
 ]);
+
 
 // # Data Source
 
@@ -37,12 +42,7 @@ await Promise.all([
 // table creation function which both downloads data and loads it into the
 // engine.
 
-import type * as psp from "@finos/perspective";
-import type * as pspViewer from "@finos/perspective-viewer";
-
-import SUPERSTORE_ARROW from "superstore-arrow/superstore.lz4.arrow";
-
-const WORKER = await perspective.worker();
+const WORKER = await psp.worker();
 
 async function createNewSuperstoreTable(): Promise<psp.Table> {
     console.warn("Creating new table!");
@@ -59,13 +59,6 @@ const CONFIG: pspViewer.ViewerConfigUpdate = {
 // # React application
 
 // The React application itself
-
-import * as React from "react";
-import { createRoot } from "react-dom/client";
-import { PerspectiveViewer } from "@finos/perspective-react";
-
-import "@finos/perspective-viewer/dist/css/themes.css";
-import "./index.css";
 
 interface ToolbarState {
     mounted: boolean;

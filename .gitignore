@@ -6,8 +6,9 @@
 data/
 !data/README.md
 !data/get_data.sh
-examples/react/.npmrc
-examples/react/package-lock.json
+.npmrc
+examples/react/*/.npmrc
+examples/react/*/package-lock.json
 *.csv
 *.arrow
 *.parquet

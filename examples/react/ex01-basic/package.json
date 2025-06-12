@@ -11,6 +11,11 @@
     "keywords": [],
     "license": "Apache-2.0",
     "dependencies": {
+        "@finos/perspective": "latest",
+        "@finos/perspective-viewer": "latest",
+        "@finos/perspective-viewer-d3fc": "latest",
+        "@finos/perspective-viewer-datagrid": "latest",
+        "@finos/perspective-react": "latest",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
         "superstore-arrow": "^3.0.0"
