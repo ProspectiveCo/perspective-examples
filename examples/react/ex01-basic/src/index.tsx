@@ -71,14 +71,14 @@ const CONFIG: pspViewer.ViewerConfigUpdate = {
 
 
 interface ToolbarState {
-    mounted: boolean;
+    visible: boolean;
     table?: Promise<psp.Table>;
     config: pspViewer.ViewerConfigUpdate;
 }
 
 const App: React.FC = () => {
     const [state, setState] = React.useState<ToolbarState>(() => ({
-        mounted: true,
+        visible: true,
         table: createSuperstoreTable(),
         config: { ...CONFIG },
     }));
@@ -101,7 +101,7 @@ const App: React.FC = () => {
     };
 
     const onViewToggle = () =>
-        setState((old) => ({ ...old, mounted: !state.mounted }));
+        setState((old) => ({ ...old, visible: !state.visible }));
 
     const onConfigUpdate = (config: pspViewer.ViewerConfigUpdate) => {
         console.log("Config Update Event", config);
@@ -123,16 +123,14 @@ const App: React.FC = () => {
                 <button onClick={onTableReset}>Reset Table</button>
                 <button onClick={onTableDelete}>Delete Table</button>
             </div>
-            {state.mounted && (
-                <>
-                    <PerspectiveViewer
-                        table={state.table}
-                        config={state.config}
-                        onClick={onViewClick}
-                        onSelect={onViewRowSelect}
-                        onConfigUpdate={onConfigUpdate}
-                    />
-                </>
+            {state.visible && (
+                <PerspectiveViewer
+                    table={state.table}
+                    config={state.config}
+                    onClick={onViewClick}
+                    onSelect={onViewRowSelect}
+                    onConfigUpdate={onConfigUpdate}
+                />
             )}
         </div>
     );
