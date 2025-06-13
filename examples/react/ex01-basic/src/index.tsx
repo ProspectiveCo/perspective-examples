@@ -48,7 +48,7 @@ const client: psp.Client = await psp.worker();
  * ============================================================================
  */
 
-async function createNewSuperstoreTable(): Promise<psp.Table> {
+async function createSuperstoreTable(): Promise<psp.Table> {
     console.warn("Creating new superstore perscpective table!");
     const resp = await fetch(SUPERSTORE_ARROW);
     return client.table(await resp.arrayBuffer());
@@ -79,7 +79,7 @@ interface ToolbarState {
 const App: React.FC = () => {
     const [state, setState] = React.useState<ToolbarState>(() => ({
         mounted: true,
-        table: createNewSuperstoreTable(),
+        table: createSuperstoreTable(),
         config: { ...CONFIG },
     }));
 
@@ -89,18 +89,18 @@ const App: React.FC = () => {
         };
     }, []);
 
-    const onClickOverwrite = () => {
+    const onTableReset = () => {
         state.table?.then((table) => table?.delete({ lazy: true }));
-        const table = createNewSuperstoreTable();
+        const table = createSuperstoreTable();
         setState({ ...state, table });
     };
 
-    const onClickDelete = () => {
+    const onTableDelete = () => {
         state.table?.then((table) => table?.delete({ lazy: true }));
         setState({ ...state, table: undefined });
     };
 
-    const onClickToggleMount = () =>
+    const onViewToggle = () =>
         setState((old) => ({ ...old, mounted: !state.mounted }));
 
     const onConfigUpdate = (config: pspViewer.ViewerConfigUpdate) => {
@@ -108,28 +108,28 @@ const App: React.FC = () => {
         setState({ ...state, config });
     };
 
-    const onClick = (detail: pspViewer.PerspectiveClickEventDetail) => {
+    const onViewClick = (detail: pspViewer.PerspectiveClickEventDetail) => {
         console.log("Click Event,", detail);
     };
 
-    const onSelect = (detail: pspViewer.PerspectiveSelectEventDetail) => {
+    const onViewRowSelect = (detail: pspViewer.PerspectiveSelectEventDetail) => {
         console.log("Select Event", detail);
     };
 
     return (
         <div className="container">
             <div className="toolbar">
-                <button onClick={onClickToggleMount}>Toggle Mount</button>
-                <button onClick={onClickOverwrite}>Overwrite Superstore</button>
-                <button onClick={onClickDelete}>Delete Table</button>
+                <button onClick={onViewToggle}>Toggle Mount</button>
+                <button onClick={onTableReset}>Reset Table</button>
+                <button onClick={onTableDelete}>Delete Table</button>
             </div>
             {state.mounted && (
                 <>
                     <PerspectiveViewer
                         table={state.table}
                         config={state.config}
-                        onClick={onClick}
-                        onSelect={onSelect}
+                        onClick={onViewClick}
+                        onSelect={onViewRowSelect}
                         onConfigUpdate={onConfigUpdate}
                     />
                 </>
