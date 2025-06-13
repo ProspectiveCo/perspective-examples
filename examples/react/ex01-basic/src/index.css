@@ -30,7 +30,6 @@ body {
     margin: 0;
 }
 
-/* Container for the entire page content */
 .container {
     padding: 20px;
     box-sizing: border-box;
@@ -39,9 +38,7 @@ body {
     height: 100vh;
 }
 
-/* Toolbar occupies 20vh */
 header.toolbar {
-    /* height: 20vh; */
     padding: 20px;
     color: #fff;
     box-sizing: border-box;
@@ -58,14 +55,12 @@ header.toolbar p {
     opacity: 0.8;
 }
 
-/* Viewer container takes up the remaining height */
 .perspective-container {
     flex: 1;
     min-height: 0;
     display: flex;
 }
 
-/* Force perspective-viewer to fill its container */
 .perspective-container perspective-viewer {
     flex: 1;
     display: block;
