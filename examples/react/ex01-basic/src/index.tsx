@@ -53,7 +53,7 @@ const client: psp.Client = await psp.worker();
  */
 
 async function createSuperstoreTable(): Promise<psp.Table> {
-    console.warn("Creating new superstore perscpective table!");
+    console.warn("Creating new superstore perspective table!");
     const resp = await fetch(SUPERSTORE_ARROW);
     return client.table(await resp.arrayBuffer());
 };
@@ -122,7 +122,7 @@ const App: React.FC = () => {
         <div className="container">
             <header className="toolbar">
                 <h1>Perspective React Example</h1>
-                <p>Demonstrates basic perspective-react functionality</p>
+                <p>Demonstrates basic functionality of perspective-react</p>
                 <SlButtonGroup>
                     <SlButton variant="primary" onClick={onViewToggle}>Toggle Mount</SlButton>
                     <SlButton variant="success" onClick={onTableReset}>Reset Table</SlButton>
