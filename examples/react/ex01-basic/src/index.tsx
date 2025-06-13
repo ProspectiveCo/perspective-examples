@@ -5,7 +5,7 @@
 // ┃ █      ██████ █  ▀█▄       █ ██████      █      ███▌▐███ ███████▄ █       ┃
 // ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 // ┃ Copyright (c) 2017, the Perspective Authors.                              ┃
-// ┃ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌ ┃
+// ┃ ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌ ┃
 // ┃ This file is part of the Perspective library, distributed under the terms ┃
 // ┃ of the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). ┃
 // ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -21,6 +21,10 @@ import "@finos/perspective-viewer-datagrid";
 import "@finos/perspective-viewer-d3fc";
 import "@finos/perspective-viewer/dist/css/themes.css";
 import "./index.css";
+
+import SlButton from '@shoelace-style/shoelace/dist/react/button/index.js';
+import SlButtonGroup from '@shoelace-style/shoelace/dist/react/button-group/index.js';
+import "@shoelace-style/shoelace/dist/themes/light.css";
 
 import SERVER_WASM from "@finos/perspective/dist/wasm/perspective-server.wasm";
 import CLIENT_WASM from "@finos/perspective-viewer/dist/wasm/perspective-viewer.wasm";
@@ -59,16 +63,14 @@ const CONFIG: pspViewer.ViewerConfigUpdate = {
     theme: "Pro Dark",
 };
 
-
 /* ============================================================================
  * React Application
  * 
  * This is the main React component that renders:
  * 1) Main Perspective Viewer React component
- * 2) Toolbar with buttons to demostate component's basic functionality
+ * 2) Toolbar with a Shoelace ButtonGroup demonstrating basic functionality
  * ============================================================================
  */
-
 
 interface ToolbarState {
     visible: boolean;
@@ -101,7 +103,7 @@ const App: React.FC = () => {
     };
 
     const onViewToggle = () =>
-        setState((old) => ({ ...old, visible: !state.visible }));
+        setState((old) => ({ ...old, visible: !old.visible }));
 
     const onConfigUpdate = (config: pspViewer.ViewerConfigUpdate) => {
         console.log("Config Update Event", config);
@@ -118,20 +120,26 @@ const App: React.FC = () => {
 
     return (
         <div className="container">
-            <div className="toolbar">
-                <button onClick={onViewToggle}>Toggle Mount</button>
-                <button onClick={onTableReset}>Reset Table</button>
-                <button onClick={onTableDelete}>Delete Table</button>
+            <header className="toolbar">
+                <h1>Perspective React Example</h1>
+                <p>Demonstrates basic perspective-react functionality</p>
+                <SlButtonGroup>
+                    <SlButton variant="primary" onClick={onViewToggle}>Toggle Mount</SlButton>
+                    <SlButton variant="success" onClick={onTableReset}>Reset Table</SlButton>
+                    <SlButton variant="danger" onClick={onTableDelete}>Delete Table</SlButton>
+                </SlButtonGroup>
+            </header>
+            <div className="perspective-container">
+                {state.visible && (
+                    <PerspectiveViewer
+                        table={state.table}
+                        config={state.config}
+                        onClick={onViewClick}
+                        onSelect={onViewRowSelect}
+                        onConfigUpdate={onConfigUpdate}
+                    />
+                )}
             </div>
-            {state.visible && (
-                <PerspectiveViewer
-                    table={state.table}
-                    config={state.config}
-                    onClick={onViewClick}
-                    onSelect={onViewRowSelect}
-                    onConfigUpdate={onConfigUpdate}
-                />
-            )}
         </div>
     );
 };
