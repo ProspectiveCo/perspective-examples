@@ -3,9 +3,9 @@ import { connect, deferred, nanos } from "nats.ws";
 // NATS configuration
 const NATS_SERVER_URL = "ws://localhost:8080";
 // Data configuration
-const RUN_DURATION = 3 * 60 * 1000;    // 1 hour in milliseconds
-const INTERVAL = 250;                       // interval in milliseconds
-const ROWS_PER_INTERVAL = 100;          // rows generated per interval
+const RUN_DURATION = 30 * 60 * 1000;
+const INTERVAL = 250;                   // interval in milliseconds
+const ROWS_PER_INTERVAL = 100;          // max rows generated per interval
 
 
 /* -------------------------------------------------------------
