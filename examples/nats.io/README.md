@@ -20,11 +20,19 @@ This guide demonstrates how to visualize records from [NATS.io](https://nats.io/
 
 ## Goal and Steps
 
-The goal of this guide is to stream records into NATS.io and visualize them in real-time using the Prospective NATS.io adapter. The steps include:
+The goal of this guide is to stream records into NATS.io and visualize them in real-time using the Prospective NATS.io adapter. 
+
+Prospective NATS adapter supports subscribing to NATS **core subjects** and **JetStream subjects**. 
+
+This allows you to visualize both historical and realt-time data from NATS.io in a Prospective dashboard. This demo includes a `producer.js` and a `jetstream_producer.js` to demonstrate both core subjects and JetStream subjects, respectively.
+
+The steps include:
 
 1. Starting a NATS.io server with WebSocket support.
 2. Installing Node.js packages.
-3. Running the `producer.js` script to publish records to NATS.io.
+3. Running the producer scripts:
+  - `producer.js`: core NATS subject.
+  - `jetstream_producer.js`: JetStream subject.
 4. Using the Prospective NATS.io adapter to connect to the NATS server and visualize the data.
 5. Interacting with the Prospective dashboards to analyze the data.
 6. Tearing down the demo.
@@ -34,8 +42,6 @@ The goal of this guide is to stream records into NATS.io and visualize them in r
 ![NATS.io Dashboard](./imgs/nats_dash_01.png)
 
 <br/>
-
----
 
 ## Getting Started
 
@@ -48,17 +54,21 @@ cd examples/nats.io/
 ./docker.sh
 ``` 
 
-<br/>
-
-How it works...
-
-This script starts a NATS.io docker container with a `nats.conf` configuration file with the following content:
+How it works... This script starts a NATS.io docker container with a `nats.conf` configuration file with the following content:
 
 ```conf
-# nats.conf
-websocket {
-  listen: "0.0.0.0:8080"
-  no_tls: true
+# nats configuration file
+websocket
+{
+     port: 8080
+     no_tls: true
+}
+jetstream: enabled
+jetstream {
+    store_dir: /data/jetstream
+    max_mem: 100M
+    max_file: 1G
+    domain: markets
 }
 ```
 
@@ -68,7 +78,6 @@ This starts the NATS server on the default port `4222` for NATS clients and `808
 docker run -d --name nats -p 4222:4222 -p 8080:8080 -v $(pwd)/nats.conf:/nats.conf nats:latest -c /nats.conf
 ```
 
----
 
 ### Step 2: Install Node.js Packages
 
@@ -83,56 +92,33 @@ npm install
 
 This will install all dependencies listed in the `package.json` file.
 
----
-
 ### Step 3: Run the Producer Script
 
-Run the `producer.js` script to generate and publish records to the NATS subject `meters`:
+Run either the core NATS subject producer or the JetStream subject producer script to start publishing data to NATS.io:
 
 ```bash
 cd examples/nats.io/node
+
+# nats core subject
 node producer.js
+
+# nats jetstream subject
+node jetstream_producer.js
+
 ```
-
-<br/>
-
-The script connects to the NATS server and publishes random power-line data at regular intervals. Here's a snippet of how the data is generated:
-
-```javascript
-function generateData(num_rows = NUM_ROWS_PER_INTERVAL) {
-    const modifier = Math.random() * (Math.random() * 50 + 1);
-    return Array.from({ length: num_rows }, (_, i) => ({
-        ts: new Date().toISOString(),
-        current: Math.random() * 75 + Math.random() * 10 * modifier,
-        voltage: Math.floor(Math.random() * 26) + 200,
-        phase: PHASE[Math.floor(Math.random() * PHASE.length)],
-        location: LOCATIONS[Math.floor(Math.random() * LOCATIONS.length)],
-    }));
-}
-```
-
-The script publishes this data to the NATS subject `meters`:
-
-```javascript
-await nc.publish(NATS_SUBJECT, payload);
-console.log(`Published to subject: "${NATS_SUBJECT}", num rows: ${num_rows}`);
-```
-
----
-
 
 ### Step 4: Log in to Prospective.co
 
 To visualize the data, log in to [Prospective.co](https://prospective.co/). If you don't have an account, create one by navigating to **LOGIN > CREATE AN ACCOUNT** or email `hello@prospective.co` for a trial license.
-
----
 
 ### Step 5: Configure the NATS.io Adapter
 
 1. Open the SOURCE tab on the top right.
 1. Click on the NATS.io adapter.
 1. Set the **Server URL** to `ws://localhost:8080`.
-1. Set the **Subject Name** to `meters`.
+1. Under _Connection Type_, select **NATS Core** or **NATS JetStream** depending on which producer script you ran.
+   - For **NATS Core**, set the **Subject Name** to `meters`.
+   - For **NATS JetStream**, set the **Stream Name** to `markets` and leave the **Subject Name** empty.
 1. Press **Connect** to start streaming data.
 
 You should see records pouring into the dashboard in real-time.
@@ -145,7 +131,7 @@ You should see records pouring into the dashboard in real-time.
 
 To stop the demo:
 
-1. Press `CTRL+C` in the terminal running the `producer.js` script to stop it.
+1. Press `CTRL+C` in the terminal to stop the `producer.js` or `jetstream_producer.js` script.
 2. Stop the NATS.io Docker container by running:
 
    ```bash
