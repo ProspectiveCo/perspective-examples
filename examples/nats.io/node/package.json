@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@nats-io/transport-node": "^3.0.0"
+    "@nats-io/transport-node": "^3.0.0",
+    "nats": "^2.29.3",
+    "nats.ws": "^1.30.3"
   }
 }
