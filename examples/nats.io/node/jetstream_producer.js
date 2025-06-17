@@ -2,19 +2,16 @@ import { connect, deferred, nanos } from "nats.ws";
 
 // NATS configuration
 const NATS_SERVER_URL = "ws://localhost:8080";
-
-
-
-/* -------------------------------------------------------------
-    * Data generation information
- ----------------------------------------------------------------
- */
-
-// Data generation constants
+// Data configuration
 const RUN_DURATION = 3 * 60 * 1000;    // 1 hour in milliseconds
 const INTERVAL = 250;                       // interval in milliseconds
 const ROWS_PER_INTERVAL = 100;          // rows generated per interval
 
+
+/* -------------------------------------------------------------
+    * Data generation functions
+ ----------------------------------------------------------------
+ */
 
 const COMPANY_METADATA = [
     { ticker: "AAPL.N", sector: "Information Technology", state: "CA", index_fund: ["S&P 500","NASDAQ 100","DJIA","Russell 1000","S&P 400 MidCap","Wilshire 5000"], price_range: [169.21, 260.10], avg_volume: 594500 },
@@ -113,7 +110,7 @@ async function main() {
 
     // create a jetstream
     const jsm = await nc.jetstreamManager();
-    const jsName = "meters";
+    const jsName = "markets";
     const jsSubName = `${jsName}_sub`;
     const jsc = {
         name: jsName,
