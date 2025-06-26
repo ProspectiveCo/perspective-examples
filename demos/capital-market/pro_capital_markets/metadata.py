@@ -327,12 +327,14 @@ EVENTS = [
 
 # Traders: mix of human dealers and algorithmic books
 TRADERS = [
-    "Sarah Kim", "Michael Johnson", "Priya Shah", "Carlos Garcia", "Wei Zhang",
-    "Alex Ivanov", "Emma Davies", "James O'Connor", "Noah Williams", "Olivia Brown",
-    "Daniel Müller", "Isabella Rossi", "Liam Wilson", "Sofia Hernandez", "Ethan Thompson",
-    "Charlotte Lee", "Jack Nguyen", "Anna Petrova", "Lucas Silva", "Maya Patel",
-    # “Robot” smart-order routers / execution algos
-    "ALGO_VWAP", "ALGO_IS", "ALGO_Momentum", "ALGO_LiquiditySweep", "ALGO_SmartRouter"
+    # Human traders
+    "Sarah Kim",        "Michael Johnson",   "Priya Shah",       "Carlos Garcia",
+    "Wei Zhang",        "Alex Ivanov",       "Emma Davies",      "Isabella Rossi",
+    "Liam Wilson",      "Sofia Hernandez",   "Jack Nguyen",      "Anna Petrova",
+    "Lucas Silva",      "Maya Patel",
+    # Algorithmic traders / smart-order routers
+    "ALGO_VWAP",        "ALGO_IS",           "ALGO_Momentum",    "ALGO_LiquiditySweep",
+    "ALGO_SmartRouter"
 ]
 
 # Desks / books (keep it small for demo filters)
