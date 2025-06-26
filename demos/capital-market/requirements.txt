@@ -1,0 +1,5 @@
+pandas
+pyarrow
+perspective-python
+httpx
+backoff

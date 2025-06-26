@@ -1,0 +1,118 @@
+"""
+Reads actual historical stock performance data from the historical data file
+and generates a daily blotter of stock trades. Each trade represents a stock
+transaction (sale or purchase) for a specific stock symbol on a given date and 
+contains a portion of the actual daily volume traded for that stock in the 
+historical data file.
+
+
+# Bloter Schema
+
+| Column            | pandas dtype     | Short description                        |
+| ----------------- | ---------------- | ---------------------------------------- |
+| `trade_id`        | `int32`          | Unique execution ID (FIX Tag 1003).      |
+| `trader`          | `category`       | Human or algo responsible for the order. |
+| `desk`            | `category`       | Trading desk or book that owns the risk. |
+| `event_ts`        | `datetime64[ns]` | Event timestamp in UTC nanoseconds.      |
+| `symbol`          | `category`       | Exchange ticker symbol.                  |
+| `security_name`   | `category`       | Full security name.                      |
+| `sector_gics`     | `category`       | GICS sector / industry path.             |
+| `side`            | `category`       | BUY or SELL.                             |
+| `order_type`      | `category`       | LIMIT, MARKET, etc.                      |
+| `order_qty`       | `int32`          | Requested share quantity.                |
+| `order_status`    | `category`       | NEW, FILLED, etc.                        |
+| `limit_price`     | `float32`        | Price cap / floor for the order.         |
+| `fill_qty`        | `int32`          | Executed quantity in this fill.          |
+| `fill_price`      | `float32`        | Execution price reported by the venue.   |
+| `trade_value`     | `float32`        | Notional value of the fill.              |
+| `commission`      | `float32`        | Broker commission paid.                  |
+| `exec_venue`      | `category`       | Executing broker or trading venue.       |
+| `venue_fee`       | `float32`        | Exchange or regulatory fee.              |
+| `bid_price`       | `float32`        | Best bid at event time.                  |
+| `ask_price`       | `float32`        | Best ask at event time.                  |
+| `mid_price`       | `float32`        | Midpoint of bid and ask.                 |
+| `spread_price`    | `float32`        | Bid-ask spread in price terms.           |
+| `high_day`        | `float32`        | Session high when trade occurred.        |
+| `low_day`         | `float32`        | Session low when trade occurred.         |
+| `fund`            | `category`       | Investment fund receiving the trade.     |
+| `benchmark_index` | `category`       | Performance benchmark index.             |
+
+"""
+
+
+import datetime as dt
+from pathlib import Path
+import pandas as pd
+import pro_capital_markets.metadata as metadata
+
+
+
+# Compact capital-markets blotter schema
+SCHEMA = {
+    "trade_id":        {"dtype": "int32",            "description": "Unique execution ID (FIX Tag 1003)."},
+    "trader":          {"dtype": "category",         "description": "Human or algo responsible for the order."},
+    "desk":            {"dtype": "category",         "description": "Trading desk or book that owns the risk."},
+    "event_ts":        {"dtype": "datetime64[ns]",   "description": "Event timestamp in UTC nanoseconds."},
+    "symbol":          {"dtype": "category",         "description": "Exchange ticker symbol."},
+    "security_name":   {"dtype": "category",         "description": "Full security name."},
+    "sector_gics":     {"dtype": "category",         "description": "GICS sector / industry path."},
+    "side":            {"dtype": "category",         "description": "BUY or SELL."},
+    "order_type":      {"dtype": "category",         "description": "Order style (LIMIT, MARKET, etc.)."},
+    "order_qty":       {"dtype": "int32",            "description": "Requested share quantity."},
+    "order_status":    {"dtype": "category",         "description": "Lifecycle state (NEW, FILLED, ...)."},
+    "limit_price":     {"dtype": "float32",          "description": "User-specified price cap/floor."},
+    "fill_qty":        {"dtype": "int32",            "description": "Executed quantity in this fill."},
+    "fill_price":      {"dtype": "float32",          "description": "Price at which the shares were filled."},
+    "trade_value":     {"dtype": "float32",          "description": "Notional value of the fill."},
+    "commission":      {"dtype": "float32",          "description": "Broker commission paid."},
+    "exec_venue":      {"dtype": "category",         "description": "Executing broker or trading venue."},
+    "venue_fee":       {"dtype": "float32",          "description": "Exchange/regulatory fee."},
+    "bid_price":       {"dtype": "float32",          "description": "Best bid at event time."},
+    "ask_price":       {"dtype": "float32",          "description": "Best ask at event time."},
+    "mid_price":       {"dtype": "float32",          "description": "Midpoint of bid and ask."},
+    "spread_price":    {"dtype": "float32",          "description": "Bid-ask spread in price terms."},
+    "high_day":        {"dtype": "float32",          "description": "Session high when trade occurred."},
+    "low_day":         {"dtype": "float32",          "description": "Session low when trade occurred."},
+    "fund":            {"dtype": "category",         "description": "Investment fund receiving the trade."},
+    "benchmark_index": {"dtype": "category",         "description": "Performance benchmark index."},
+}
+
+
+# Build an empty DataFrame with compact dtypes
+df_blotter = pd.DataFrame({
+    col: pd.Series(dtype=spec["dtype"])
+    for col, spec in SCHEMA.items()
+})
+
+# df_blotter is now fully typed and ready for streaming rows
+
+
+async def _generate_blotter_daily(historical_df: pd.Dataframe, for_date: dt.date) -> pd.DataFrame:
+    """
+    Generate a daily blotter of stock trades for a specific date.
+    
+    :param historical_df: DataFrame containing historical stock data.
+    :param for_date: The date for which to generate the blotter.
+    :return: DataFrame containing the daily blotter.
+    """
+    df = historical_df[historical_df['date'] == for_date]
+
+
+
+def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file: Path = metadata.HISTORICAL_FILE):
+    """
+    Generate a daily blotter of stock trades from historical data.
+    """
+    assert historical_file.exists(), f"Historical data file {historical_file} does not exist."
+
+    # Read the historical data
+    df = metadata.read_historical_data(historical_file)
+
+    # Generate the blotter
+    df_blotter = df[['date', 'symbol', 'volume']].copy()
+    df_blotter['trade_type'] = 'buy'  # Assuming all trades are buys for simplicity
+    df_blotter['trade_price'] = df['close']  # Using close price as trade price
+
+    # Save the blotter to a file
+    df_blotter.to_csv(output_file, index=False)
+    print(f"Blotter generated and saved to {output_file}.")
