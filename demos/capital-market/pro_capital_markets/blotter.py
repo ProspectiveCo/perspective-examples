@@ -5,17 +5,11 @@ transaction (sale or purchase) for a specific stock symbol on a given date and
 contains a portion of the actual daily volume traded for that stock in the 
 historical data file.
 """
-
-
 import datetime as dt
 from pathlib import Path
 import pandas as pd
 import pro_capital_markets.constants as constants
 import random
-
-
-random.seed(42)  # for reproducibility
-
 
 # Compact capital-markets blotter schema
 SCHEMA = {
@@ -46,15 +40,15 @@ SCHEMA = {
     "fund":            {"dtype": "category",         "description": "Investment fund receiving the trade."},
     "benchmark_index": {"dtype": "category",         "description": "Performance benchmark index."},
 }
-
-
-# Build an empty DataFrame with compact dtypes
+# Blotter DataFrame schema
 df_blotter = pd.DataFrame({
     col: pd.Series(dtype=spec["dtype"])
     for col, spec in SCHEMA.items()
 })
 
-# df_blotter is now fully typed and ready for streaming rows
+
+def seed(value: int = 42):
+    random.seed(value)
 
 
 async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date, symbol_preferences: dict) -> pd.DataFrame:
@@ -110,21 +104,20 @@ def generate_preferences() -> dict[str, list]:
             'exec_venue_choices': exec_venue_choices,
             'benchmark_choices': benchmark_choices,
         }
-
     # for sym, prefs in symbol_preferences.items():
     #     print(f"{sym}: {prefs['fund_choices']}")
     #     print(f"{sym}: {prefs['exec_venue_choices']}")
     #     print(f"{sym}: {prefs['benchmark_choices']}")
     #     print()
-    for sym, prefs in symbol_preferences.items():
-        sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
-        print(f"Symbol: {sym}")
-        print("  Trader Weights (sorted by value):")
-        for trader, prob in sorted_traders:
-            print(f"    {prob:.4f}\t{trader}")
-        print()
-
+    # for sym, prefs in symbol_preferences.items():
+    #     sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
+    #     print(f"Symbol: {sym}")
+    #     print("  Trader Weights (sorted by value):")
+    #     for trader, prob in sorted_traders:
+    #         print(f"    {prob:.4f}\t{trader}")
+    #     print()
     # print(symbol_preferences['AAPL']['trader_choices'])
+
 
 def generate_commissions() -> dict[str, float]:
     """
@@ -169,6 +162,7 @@ def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file
 
 
 if __name__ == "__main__":
+    seed(42)  # Seed for reproducibility
     # Example usage
     # generate_blotter()
     generate_preferences()
