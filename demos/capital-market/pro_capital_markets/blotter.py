@@ -22,8 +22,8 @@ historical data file.
 | `order_qty`       | `int32`          | Requested share quantity.                |
 | `order_status`    | `category`       | NEW, FILLED, etc.                        |
 | `limit_price`     | `float32`        | Price cap / floor for the order.         |
-| `fill_qty`        | `int32`          | Executed quantity in this fill.          |
-| `fill_price`      | `float32`        | Execution price reported by the venue.   |
+| `qty`             | `int32`          | Executed quantity in this fill.          |
+| `price`           | `float32`        | Execution price reported by the venue.   |
 | `trade_value`     | `float32`        | Notional value of the fill.              |
 | `commission`      | `float32`        | Broker commission paid.                  |
 | `exec_venue`      | `category`       | Executing broker or trading venue.       |
@@ -62,8 +62,8 @@ SCHEMA = {
     "order_qty":       {"dtype": "int32",            "description": "Requested share quantity."},
     "order_status":    {"dtype": "category",         "description": "Lifecycle state (NEW, FILLED, ...)."},
     "limit_price":     {"dtype": "float32",          "description": "User-specified price cap/floor."},
-    "fill_qty":        {"dtype": "int32",            "description": "Executed quantity in this fill."},
-    "fill_price":      {"dtype": "float32",          "description": "Price at which the shares were filled."},
+    "qty":             {"dtype": "int32",            "description": "Executed quantity in this fill."},
+    "price":           {"dtype": "float32",          "description": "Price at which the shares were filled."},
     "trade_value":     {"dtype": "float32",          "description": "Notional value of the fill."},
     "commission":      {"dtype": "float32",          "description": "Broker commission paid."},
     "exec_venue":      {"dtype": "category",         "description": "Executing broker or trading venue."},
@@ -99,6 +99,64 @@ async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date
     df = historical_df[historical_df['date'] == for_date]
 
 
+def generate_preferences() -> dict[str, list]:
+    # Generate preferences for traders, desks, and benchmarks per symbol
+    symbol_preferences = {}
+    for sym in constants.STOCK_STORIES.keys():
+        shuffled_traders = list(constants.TRADERS)
+        random.shuffle(shuffled_traders)                                                                # shuffle traders for randomness each time
+        weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_traders)]                                          # pick first N weights for N traders (ie: first 40%, 30%, 20%, 10% for 4 traders)
+        weights += [1.0 / len(shuffled_traders)] * (len(shuffled_traders) - len(weights))               # fill remaining weights with equal distribution
+        weights = [w / sum(weights) for w in weights]                                                   # normalize weights to sum to 1
+        raw_p = random.choices(shuffled_traders, weights=weights, k=10 * len(shuffled_traders))         # generate 10x the number of traders to ensure enough variety
+        count_d = {t: raw_p.count(t) for t in constants.TRADERS}                                        # count occurrences of each trader
+        total_d = sum(count_d.values())                                                                 # total count of traders
+        trader_probs = {t: round(c * 100 / total_d, 4) for t, c in count_d.items()}                     # compute and round trader probabilities
+        trader_choices = [trader for trader, prob in trader_probs.items() for _ in range(int(round(prob)) )][:100]
+
+        # random normalized weights for desks
+        shuffled_desks = list(constants.DESKS)
+        random.shuffle(shuffled_desks)
+        weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_desks)]
+        weights += [1.0 / len(shuffled_desks)] * (len(shuffled_desks) - len(weights))
+        weights = [w / sum(weights) for w in weights]
+        raw_p = random.choices(shuffled_desks, weights=weights, k=10 * len(shuffled_desks))
+        count_d = {d: raw_p.count(d) for d in constants.DESKS}
+        total_d = sum(count_d.values())
+        desk_probs = {d: round(c * 100 / total_d, 4) for d, c in count_d.items()}
+        desk_choices = [desk for desk, prob in desk_probs.items() for _ in range(int(round(prob)) )][:100]
+
+        # list of funds, exec_venues, and benchmark choices for each symbol
+        fund_choices       = {symbol: random.sample(constants.FUNDS, k=random.randint(1, 3))             for symbol in constants.STOCK_STORIES.keys()}
+        exec_venue_choices = {symbol: random.sample(constants.EXEC_VENUES, k=random.randint(1, 2))       for symbol in constants.STOCK_STORIES.keys()}
+        benchmark_choices  = {symbol: random.sample(constants.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
+        
+        # preferences for each symbol
+        symbol_preferences[sym] = {
+            'trader_weights': trader_probs,
+            'desk_weights': desk_probs,
+            'trader_choices': trader_choices,
+            'desk_choices': desk_choices,
+            'fund_choices': fund_choices,
+            'exec_venue_choices': exec_venue_choices,
+            'benchmark_choices': benchmark_choices,
+        }
+
+    # for sym, prefs in symbol_preferences.items():
+    #     print(f"{sym}: {prefs['fund_choices']}")
+    #     print(f"{sym}: {prefs['exec_venue_choices']}")
+    #     print(f"{sym}: {prefs['benchmark_choices']}")
+    #     print()
+    for sym, prefs in symbol_preferences.items():
+        sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
+        print(f"Symbol: {sym}")
+        print("  Trader Weights (sorted by value):")
+        for trader, prob in sorted_traders:
+            print(f"    {prob:.4f}\t{trader}")
+        print()
+
+    # print(symbol_preferences['AAPL']['trader_choices'])
+
 
 def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
     """
@@ -123,60 +181,12 @@ def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file
     
     # print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
 
-    # Genrate preferences for traders, desks, and benchmarks per symbol
-    symbol_preferences = {}
-    for sym in historical_df['symbol'].unique():
-        shuffled_traders = list(constants.TRADERS)
-        random.shuffle(shuffled_traders)                                                                # shuffle traders for randomness each time
-        weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_traders)]                                          # pick first N weights for N traders (ie: first 40%, 30%, 20%, 10% for 4 traders)
-        weights += [1.0 / len(shuffled_traders)] * (len(shuffled_traders) - len(weights))               # fill remaining weights with equal distribution
-        weights = [w / sum(weights) for w in weights]                                                   # normalize weights to sum to 1
-        raw_p = random.choices(shuffled_traders, weights=weights, k=10 * len(shuffled_traders))         # generate 10x the number of traders to ensure enough variety
-        count_d = {t: raw_p.count(t) for t in constants.TRADERS}                                         # count occurrences of each trader
-        total_d = sum(count_d.values())                                                                 # total count of traders
-        trader_probs = {t: round(c * 100 / total_d, 4) for t, c in count_d.items()}                     # compute and round trader probabilities
-
-        # random normalized weights for desks
-        shuffled_desks = list(constants.DESKS)
-        random.shuffle(shuffled_desks)
-        weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_desks)]
-        weights += [1.0 / len(shuffled_desks)] * (len(shuffled_desks) - len(weights))
-        weights = [w / sum(weights) for w in weights]
-        raw_p = random.choices(shuffled_desks, weights=weights, k=10 * len(shuffled_desks))
-        count_d = {d: raw_p.count(d) for d in constants.DESKS}
-        total_d = sum(count_d.values())
-        desk_probs = {d: round(c * 100 / total_d, 4) for d, c in count_d.items()}
-
-        # list of funds, exec_venues, and benchmark choices for each symbol
-        fund_choices       = {symbol: random.sample(constants.FUNDS, k=random.randint(1, 3))             for symbol in constants.STOCK_STORIES.keys()}
-        exec_venue_choices = {symbol: random.sample(constants.EXEC_VENUES, k=random.randint(1, 2))       for symbol in constants.STOCK_STORIES.keys()}
-        benchmark_choices  = {symbol: random.sample(constants.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
-        
-        # preferences for each symbol
-        symbol_preferences[sym] = {
-            'trader_weights': trader_probs,
-            'desk_weights': desk_probs,
-            'fund_choices': fund_choices,
-            'exec_venue_choices': exec_venue_choices,
-            'benchmark_choices': benchmark_choices,
-        }
-
-    # for sym, prefs in symbol_preferences.items():
-    #     print(f"{sym}: {prefs['fund_choices']}")
-    #     print(f"{sym}: {prefs['exec_venue_choices']}")
-    #     print(f"{sym}: {prefs['benchmark_choices']}")
-    #     print()
-    for sym, prefs in symbol_preferences.items():
-        sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
-        print(f"Symbol: {sym}")
-        print("  Trader Weights (sorted by value):")
-        for trader, prob in sorted_traders:
-            print(f"    {prob:.4f}\t{trader}")
-        print()
+    
 
 
 
 
 if __name__ == "__main__":
     # Example usage
-    generate_blotter()
+    # generate_blotter()
+    generate_preferences()
