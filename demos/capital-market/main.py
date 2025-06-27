@@ -1,7 +1,7 @@
 from pprint import pprint
 import pathlib
 import pandas as pd
-import pro_capital_markets.metadata as metadata
+import pro_capital_markets.constants as constants
 import pro_capital_markets.fetch_historical as fetch_historical
 
 

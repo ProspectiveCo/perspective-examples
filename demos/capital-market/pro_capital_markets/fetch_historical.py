@@ -5,7 +5,7 @@ import httpx
 import backoff
 from pathlib import Path
 import random
-import pro_capital_markets.metadata as metadata
+import pro_capital_markets.constants as constants
 
 
 API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", None)
@@ -46,12 +46,12 @@ async def fetch_symbol(client: httpx.AsyncClient, symbol: str) -> pd.DataFrame:
         "5. volume": "volume"
     })
     df["symbol"] = symbol
-    df["sector"] = metadata.STOCK_STORIES.get(symbol, {}).get("sector", "Unknown")
-    df["industry"] = metadata.STOCK_STORIES.get(symbol, {}).get("industry", "Unknown")
+    df["sector"] = constants.STOCK_STORIES.get(symbol, {}).get("sector", "Unknown")
+    df["industry"] = constants.STOCK_STORIES.get(symbol, {}).get("industry", "Unknown")
     for col in ["open", "high", "low", "close"]:
         df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
     df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
-    df["index"] = df["symbol"].apply(lambda x: random.choice(metadata.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
+    df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
     # reset index and convert date to datetime.date
     df = df.reset_index().rename(columns={"index": "date"})
     df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
@@ -61,7 +61,7 @@ async def fetch_symbol(client: httpx.AsyncClient, symbol: str) -> pd.DataFrame:
     return df
 
 
-async def _fetch_all_symbols_async(output_file: Path = metadata.HISTORICAL_FILE):
+async def _fetch_all_symbols_async(output_file: Path = constants.HISTORICAL_FILE):
     # If file exists, read it and determine already fetched symbols
     if os.path.exists(output_file):
         existing_data = pd.read_parquet(output_file)
@@ -73,7 +73,7 @@ async def _fetch_all_symbols_async(output_file: Path = metadata.HISTORICAL_FILE)
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Iterate over all unique symbols
-        for sym in metadata.UNIQUE_SYMBOLS:
+        for sym in constants.UNIQUE_SYMBOLS:
             if sym in already_fetched:
                 print(f"Skipping {sym} (already fetched)")
                 continue
@@ -82,7 +82,7 @@ async def _fetch_all_symbols_async(output_file: Path = metadata.HISTORICAL_FILE)
             if df.empty:
                 continue
             # Save individual symbol data
-            df.to_parquet(metadata.DATA_DIR / "symbols" / f"SMBL-{sym}.parquet", index=False)
+            df.to_parquet(constants.DATA_DIR / "symbols" / f"SMBL-{sym}.parquet", index=False)
             # Immediately append new data by merging with existing and writing out
             if existing_data.empty:
                 existing_data = df
@@ -106,7 +106,7 @@ def _convert_full_historical_to_csv():
     """
     Convert the full historical data to CSV format.
     """
-    data_file = metadata.HISTORICAL_FILE
+    data_file = constants.HISTORICAL_FILE
     if not data_file.exists():
         print("No historical data found. Please fetch data first.")
         return
@@ -121,7 +121,7 @@ def _refactor_parquet_files():
     """
     Refactor the parquet files to ensure they are in the correct format.
     """
-    output_file = metadata.HISTORICAL_FILE
+    output_file = constants.HISTORICAL_FILE
     if not os.path.exists(output_file):
         print("No historical data found. Please fetch data first.")
     else:
@@ -131,16 +131,16 @@ def _refactor_parquet_files():
             df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
         df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
         # add metadata columns
-        df["sector"] = df["symbol"].apply(lambda x: metadata.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
-        df["industry"] = df["symbol"].apply(lambda x: metadata.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
-        df["index"] = df["symbol"].apply(lambda x: random.choice(metadata.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
+        df["sector"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
+        df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
+        df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
         # convert date column to datetime.date
         df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
         df.sort_values(by=["date", "symbol"], inplace=True)
         df.to_parquet(output_file, index=False)
         print(f"Converted historical data to parquet format: {output_file}")
 
-    data_dir = metadata.DATA_DIR / "symbols"
+    data_dir = constants.DATA_DIR / "symbols"
     for file in data_dir.glob("*.parquet"):
         if file.name.startswith("historical_"):
             continue
@@ -151,9 +151,9 @@ def _refactor_parquet_files():
             df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
         df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
         # add metadata columns
-        df["sector"] = df["symbol"].apply(lambda x: metadata.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
-        df["industry"] = df["symbol"].apply(lambda x: metadata.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
-        df["index"] = df["symbol"].apply(lambda x: random.choice(metadata.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
+        df["sector"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
+        df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
+        df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
         # convert date column to datetime.date
         df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
         df.sort_values(by=["date", "symbol"], inplace=True)
@@ -169,7 +169,7 @@ def fetch_one_symbol(symbol: str = "MSFT"):
         async with httpx.AsyncClient(timeout=30.0) as client:
             return await fetch_symbol(client, symbol)
     df = asyncio.run(_fetch())
-    df.to_parquet(metadata.DATA_DIR / "symbols" / f"test-{symbol}.parquet", index=False)
+    df.to_parquet(constants.DATA_DIR / "symbols" / f"test-{symbol}.parquet", index=False)
     print(df.head())
 
 
@@ -177,9 +177,9 @@ def dump_events():
     """
     Dump EVENTS table to a CSV file.
     """
-    df = pd.DataFrame(metadata.EVENTS)
+    df = pd.DataFrame(constants.EVENTS)
     df.sort_values(by=["date", "symbol"], inplace=True)
-    df.to_csv(metadata.DATA_DIR / "events.csv", index=False)
+    df.to_csv(constants.DATA_DIR / "events.csv", index=False)
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ historical data file.
 import datetime as dt
 from pathlib import Path
 import pandas as pd
-import pro_capital_markets.metadata as metadata
+import pro_capital_markets.constants as constants
 import random
 
 
@@ -100,7 +100,7 @@ async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date
 
 
 
-def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file: Path = metadata.HISTORICAL_FILE):
+def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
     """
     Generate a daily blotter of stock trades from historical data.
     """
@@ -126,31 +126,31 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
     # Genrate preferences for traders, desks, and benchmarks per symbol
     symbol_preferences = {}
     for sym in historical_df['symbol'].unique():
-        shuffled_traders = list(metadata.TRADERS)
+        shuffled_traders = list(constants.TRADERS)
         random.shuffle(shuffled_traders)                                                                # shuffle traders for randomness each time
         weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_traders)]                                          # pick first N weights for N traders (ie: first 40%, 30%, 20%, 10% for 4 traders)
         weights += [1.0 / len(shuffled_traders)] * (len(shuffled_traders) - len(weights))               # fill remaining weights with equal distribution
         weights = [w / sum(weights) for w in weights]                                                   # normalize weights to sum to 1
         raw_p = random.choices(shuffled_traders, weights=weights, k=10 * len(shuffled_traders))         # generate 10x the number of traders to ensure enough variety
-        count_d = {t: raw_p.count(t) for t in metadata.TRADERS}                                         # count occurrences of each trader
+        count_d = {t: raw_p.count(t) for t in constants.TRADERS}                                         # count occurrences of each trader
         total_d = sum(count_d.values())                                                                 # total count of traders
         trader_probs = {t: round(c * 100 / total_d, 4) for t, c in count_d.items()}                     # compute and round trader probabilities
 
         # random normalized weights for desks
-        shuffled_desks = list(metadata.DESKS)
+        shuffled_desks = list(constants.DESKS)
         random.shuffle(shuffled_desks)
         weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_desks)]
         weights += [1.0 / len(shuffled_desks)] * (len(shuffled_desks) - len(weights))
         weights = [w / sum(weights) for w in weights]
         raw_p = random.choices(shuffled_desks, weights=weights, k=10 * len(shuffled_desks))
-        count_d = {d: raw_p.count(d) for d in metadata.DESKS}
+        count_d = {d: raw_p.count(d) for d in constants.DESKS}
         total_d = sum(count_d.values())
         desk_probs = {d: round(c * 100 / total_d, 4) for d, c in count_d.items()}
 
         # list of funds, exec_venues, and benchmark choices for each symbol
-        fund_choices       = {symbol: random.sample(metadata.FUNDS, k=random.randint(1, 3))             for symbol in metadata.STOCK_STORIES.keys()}
-        exec_venue_choices = {symbol: random.sample(metadata.EXEC_VENUES, k=random.randint(1, 2))       for symbol in metadata.STOCK_STORIES.keys()}
-        benchmark_choices  = {symbol: random.sample(metadata.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in metadata.STOCK_STORIES.keys()}
+        fund_choices       = {symbol: random.sample(constants.FUNDS, k=random.randint(1, 3))             for symbol in constants.STOCK_STORIES.keys()}
+        exec_venue_choices = {symbol: random.sample(constants.EXEC_VENUES, k=random.randint(1, 2))       for symbol in constants.STOCK_STORIES.keys()}
+        benchmark_choices  = {symbol: random.sample(constants.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
         
         # preferences for each symbol
         symbol_preferences[sym] = {
