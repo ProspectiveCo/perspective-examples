@@ -382,3 +382,18 @@ BENCHMARK_INDICES = [
     "FTSE 100",
 ]
 
+ORDER_TYPES = [
+    "LIMIT",        # Limit order: price cap/floor
+    "MARKET",       # Market order: execute at best available
+    "ICEBERG",      # Partial display, hidden size
+    "FOK",          # Fill or Kill
+    "IOC",          # Immediate or Cancel
+]
+
+ORDER_STATUSES = [
+    "NEW",          # Order accepted, not yet filled
+    "PARTIALLY_FILLED", # Some shares filled, order remains open
+    "FILLED",       # Order fully filled
+    "CANCELLED",    # Cancelled by trader or system
+]
+

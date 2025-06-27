@@ -4,39 +4,6 @@ and generates a daily blotter of stock trades. Each trade represents a stock
 transaction (sale or purchase) for a specific stock symbol on a given date and 
 contains a portion of the actual daily volume traded for that stock in the 
 historical data file.
-
-
-# Bloter Schema
-
-| Column            | pandas dtype     | Short description                        |
-| ----------------- | ---------------- | ---------------------------------------- |
-| `trade_id`        | `int32`          | Unique execution ID (FIX Tag 1003).      |
-| `trader`          | `category`       | Human or algo responsible for the order. |
-| `desk`            | `category`       | Trading desk or book that owns the risk. |
-| `event_ts`        | `datetime64[ns]` | Event timestamp in UTC nanoseconds.      |
-| `symbol`          | `category`       | Exchange ticker symbol.                  |
-| `security_name`   | `category`       | Full security name.                      |
-| `sector_gics`     | `category`       | GICS sector / industry path.             |
-| `side`            | `category`       | BUY or SELL.                             |
-| `order_type`      | `category`       | LIMIT, MARKET, etc.                      |
-| `order_qty`       | `int32`          | Requested share quantity.                |
-| `order_status`    | `category`       | NEW, FILLED, etc.                        |
-| `limit_price`     | `float32`        | Price cap / floor for the order.         |
-| `qty`             | `int32`          | Executed quantity in this fill.          |
-| `price`           | `float32`        | Execution price reported by the venue.   |
-| `trade_value`     | `float32`        | Notional value of the fill.              |
-| `commission`      | `float32`        | Broker commission paid.                  |
-| `exec_venue`      | `category`       | Executing broker or trading venue.       |
-| `venue_fee`       | `float32`        | Exchange or regulatory fee.              |
-| `bid_price`       | `float32`        | Best bid at event time.                  |
-| `ask_price`       | `float32`        | Best ask at event time.                  |
-| `mid_price`       | `float32`        | Midpoint of bid and ask.                 |
-| `spread_price`    | `float32`        | Bid-ask spread in price terms.           |
-| `high_day`        | `float32`        | Session high when trade occurred.        |
-| `low_day`         | `float32`        | Session low when trade occurred.         |
-| `fund`            | `category`       | Investment fund receiving the trade.     |
-| `benchmark_index` | `category`       | Performance benchmark index.             |
-
 """
 
 
@@ -46,6 +13,8 @@ import pandas as pd
 import pro_capital_markets.constants as constants
 import random
 
+
+random.seed(42)  # for reproducibility
 
 
 # Compact capital-markets blotter schema
@@ -156,6 +125,19 @@ def generate_preferences() -> dict[str, list]:
         print()
 
     # print(symbol_preferences['AAPL']['trader_choices'])
+
+def generate_commissions() -> dict[str, float]:
+    """
+    Generate a random commission structure for trades.
+    """
+    return {trader: round(random.uniform(0.0001, 0.005), 4) for trader in constants.TRADERS}
+
+
+def generate_venue_fees() -> dict[str, float]:
+    """
+    Generate a random venue fee structure for trades.
+    """
+    return {venue: round(random.uniform(0.0001, 0.001), 4) for venue in constants.EXEC_VENUES}
 
 
 def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
