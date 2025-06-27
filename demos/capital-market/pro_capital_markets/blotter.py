@@ -88,7 +88,7 @@ df_blotter = pd.DataFrame({
 # df_blotter is now fully typed and ready for streaming rows
 
 
-async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date) -> pd.DataFrame:
+async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date, symbol_preferences: dict) -> pd.DataFrame:
     """
     Generate a daily blotter of stock trades for a specific date.
     
@@ -111,7 +111,8 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
     # Read the historical data
     historical_df = pd.read_parquet(historical_file)
     
-    print(f"original:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume']].head(n=20)}\n")
+    # print(f"original:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume']].head(n=20)}\n")
+
     # Add an `order_qty` column to the historical DataFrame.
     # `order_qty` is the difference in volume between consecutive days per symbol scaled by 0.001 (0.1%).
     # Positive or negative values indicate buy or sell.
@@ -119,7 +120,8 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
     historical_df.sort_values(by=['symbol', 'date'], inplace=True)                  # sort by symbol and date
     qty = historical_df.groupby('symbol')['volume'].diff().fillna(0) * 0.01         # diff in volume scaled by 0.001
     historical_df['order_qty'] = qty.round().astype('int32')                        # round and convert to int32
-    print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
+    
+    # print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
 
     # Genrate preferences for traders, desks, and benchmarks per symbol
     symbol_preferences = {}
@@ -145,38 +147,33 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
         total_d = sum(count_d.values())
         desk_probs = {d: round(c * 100 / total_d, 4) for d, c in count_d.items()}
 
-        # benchmark index weights
-        shuffled_benchmarks = list(metadata.BENCHMARK_INDICES)
-        random.shuffle(shuffled_benchmarks)
-        weights = [0.4, 0.3, 0.2, 0.1][:len(shuffled_benchmarks)]
-        weights += [1.0 / len(shuffled_benchmarks)] * (len(shuffled_benchmarks) - len(weights))
-        weights = [w / sum(weights) for w in weights]
-        raw_p = random.choices(shuffled_benchmarks, weights=weights, k=10 * len(shuffled_benchmarks))
-        count_d = {b: raw_p.count(b) for b in metadata.BENCHMARK_INDICES}
-        total_d = sum(count_d.values())
-        benchmark_probs = {b: round(c * 100 / total_d, 4) for b, c in count_d.items()}
-
+        # list of funds, exec_venues, and benchmark choices for each symbol
+        fund_choices       = {symbol: random.sample(metadata.FUNDS, k=random.randint(1, 3))             for symbol in metadata.STOCK_STORIES.keys()}
+        exec_venue_choices = {symbol: random.sample(metadata.EXEC_VENUES, k=random.randint(1, 2))       for symbol in metadata.STOCK_STORIES.keys()}
+        benchmark_choices  = {symbol: random.sample(metadata.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in metadata.STOCK_STORIES.keys()}
+        
+        # preferences for each symbol
         symbol_preferences[sym] = {
             'trader_weights': trader_probs,
             'desk_weights': desk_probs,
-            'benchmark_weights': benchmark_probs,
+            'fund_choices': fund_choices,
+            'exec_venue_choices': exec_venue_choices,
+            'benchmark_choices': benchmark_choices,
         }
 
-    for sym, prefs in symbol_preferences.items():
-        sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
-        print(f"Symbol: {sym}")
-        print("  Trader Weights (sorted by value):")
-        for trader, prob in sorted_traders:
-            print(f"    {prob:.4f}\t{trader}")
-        print()
+    # for sym, prefs in symbol_preferences.items():
+    #     print(f"{sym}: {prefs['fund_choices']}")
+    #     print(f"{sym}: {prefs['exec_venue_choices']}")
+    #     print(f"{sym}: {prefs['benchmark_choices']}")
+    #     print()
+    # for sym, prefs in symbol_preferences.items():
+    #     sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
+    #     print(f"Symbol: {sym}")
+    #     print("  Trader Weights (sorted by value):")
+    #     for trader, prob in sorted_traders:
+    #         print(f"    {prob:.4f}\t{trader}")
+    #     print()
 
-    for sym, prefs in symbol_preferences.items():
-        sorted_benchmarks = sorted(prefs['benchmark_weights'].items(), key=lambda x: x[1])
-        print(f"Symbol: {sym}")
-        print("  Benchmark Weights (sorted by value):")
-        for benchmark, prob in sorted_benchmarks:
-            print(f"    {prob:.4f}\t{benchmark}")
-        print()
 
 
 

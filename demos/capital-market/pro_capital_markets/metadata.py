@@ -381,3 +381,4 @@ BENCHMARK_INDICES = [
     "MSCI EM",
     "FTSE 100",
 ]
+
