@@ -166,13 +166,13 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
     #     print(f"{sym}: {prefs['exec_venue_choices']}")
     #     print(f"{sym}: {prefs['benchmark_choices']}")
     #     print()
-    # for sym, prefs in symbol_preferences.items():
-    #     sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
-    #     print(f"Symbol: {sym}")
-    #     print("  Trader Weights (sorted by value):")
-    #     for trader, prob in sorted_traders:
-    #         print(f"    {prob:.4f}\t{trader}")
-    #     print()
+    for sym, prefs in symbol_preferences.items():
+        sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
+        print(f"Symbol: {sym}")
+        print("  Trader Weights (sorted by value):")
+        for trader, prob in sorted_traders:
+            print(f"    {prob:.4f}\t{trader}")
+        print()
 
 
 
