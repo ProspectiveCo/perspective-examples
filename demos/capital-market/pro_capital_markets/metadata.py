@@ -2,12 +2,13 @@
 from pathlib import Path
 
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data"
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 HISTORICAL_FILE = DATA_DIR / "historical_stock_daily.parquet"
+BLOTTER_FILE = DATA_DIR / "blotter_daily.parquet"
 
 
 # Metadata for major stocks, sectors, and industries

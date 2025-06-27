@@ -87,7 +87,7 @@ df_blotter = pd.DataFrame({
 # df_blotter is now fully typed and ready for streaming rows
 
 
-async def _generate_blotter_daily(historical_df: pd.Dataframe, for_date: dt.date) -> pd.DataFrame:
+async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date) -> pd.DataFrame:
     """
     Generate a daily blotter of stock trades for a specific date.
     
@@ -106,13 +106,22 @@ def generate_blotter(output_file: Path = metadata.BLOTTER_FILE, historical_file:
     assert historical_file.exists(), f"Historical data file {historical_file} does not exist."
 
     # Read the historical data
-    df = metadata.read_historical_data(historical_file)
+    historical_df = pd.read_parquet(historical_file)
+    
+    print(f"original:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume']].head(n=20)}\n")
+    # Add an `order_qty` column to the historical DataFrame.
+    # `order_qty` is the difference in volume between consecutive days per symbol scaled by 0.001 (0.1%).
+    # Positive or negative values indicate buy or sell.
+    # sorted by symbol and date
+    historical_df.sort_values(by=['symbol', 'date'], inplace=True)                  # sort by symbol and date
+    qty = historical_df.groupby('symbol')['volume'].diff().fillna(0) * 0.01         # diff in volume scaled by 0.001
+    historical_df['order_qty'] = qty.round().astype('int32')                        # round and convert to int32
+    print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
 
-    # Generate the blotter
-    df_blotter = df[['date', 'symbol', 'volume']].copy()
-    df_blotter['trade_type'] = 'buy'  # Assuming all trades are buys for simplicity
-    df_blotter['trade_price'] = df['close']  # Using close price as trade price
 
-    # Save the blotter to a file
-    df_blotter.to_csv(output_file, index=False)
-    print(f"Blotter generated and saved to {output_file}.")
+
+
+
+if __name__ == "__main__":
+    # Example usage
+    generate_blotter()
