@@ -1,8 +1,8 @@
-from pprint import pprint
-import pathlib
 import pandas as pd
 import pro_capital_markets.constants as constants
 import pro_capital_markets.fetch_historical as hist
+import pro_capital_markets.blotter as blotter
+
 
 
 def main():
@@ -14,13 +14,11 @@ def main():
     # hist.fetch_one_symbol("AAPL")
     # hist.fetch_all_symbols()
     historical_df = pd.read_parquet(constants.HISTORICAL_FILE)
-    print(historical_df.head())
+    print("Historical DataFrame:", historical_df.head())
 
-    # convert full historical data to CSV
-    # hist._convert_full_historical_to_csv()
-    # hist._refactor_parquet_files()
-    # hist.fetch_one_symbol()
-    # hist.dump_events()
+    blotter.run_generate_blotter()
+    blotter_df = pd.read_parquet(constants.BLOTTER_FILE)
+    print("Blotter DataFrame:", blotter_df.head())
     
 
 def print_info():
