@@ -52,10 +52,10 @@ async def fetch_symbol(client: httpx.AsyncClient, symbol: str) -> pd.DataFrame:
         df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
     df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
     df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
-    # reset index and convert date to datetime.date
-    df = df.reset_index().rename(columns={"index": "date"})
-    df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+    df["date"] = df.index.date
+    df = df.reset_index(drop=True)
     df = df.sort_values(by=["date", "symbol"])
+    # print(df.head(), flush=True)  # print first few rows for debugging
     # metadata print
     print(f"{len(df)} rows, Date Range: {df["date"].min()} to {df["date"].max()}, Average: {df["open"].mean():.2f}", flush=True)
     return df
@@ -135,7 +135,7 @@ def _refactor_parquet_files():
         df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
         df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
         # convert date column to datetime.date
-        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
         df.sort_values(by=["date", "symbol"], inplace=True)
         df.to_parquet(output_file, index=False)
         print(f"Converted historical data to parquet format: {output_file}")
@@ -155,7 +155,7 @@ def _refactor_parquet_files():
         df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
         df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
         # convert date column to datetime.date
-        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date
+        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
         df.sort_values(by=["date", "symbol"], inplace=True)
         df.to_parquet(file, index=False)
         print(" Done", flush=True)
@@ -170,6 +170,7 @@ def fetch_one_symbol(symbol: str = "MSFT"):
             return await fetch_symbol(client, symbol)
     df = asyncio.run(_fetch())
     df.to_parquet(constants.DATA_DIR / "symbols" / f"test-{symbol}.parquet", index=False)
+    df.to_csv(constants.DATA_DIR / "symbols" / f"test-{symbol}.csv", index=False)
     print(df.head())
 
 
@@ -183,5 +184,5 @@ def dump_events():
 
 
 if __name__ == "__main__":
-    assert API_KEY is not None, "Please set the ALPHAVANTAGE_API_KEY environment variable"
+    assert API_KEY is not None, "Please set the ALPHA_VANTAGE_API_KEY environment variable"
     fetch_all_symbols()

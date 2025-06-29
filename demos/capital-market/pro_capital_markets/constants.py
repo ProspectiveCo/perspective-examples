@@ -6,6 +6,10 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
+SYMBOLS_DIR = DATA_DIR / "symbols"
+if not SYMBOLS_DIR.exists():
+    SYMBOLS_DIR.mkdir(parents=True, exist_ok=True)
+
 
 HISTORICAL_FILE = DATA_DIR / "historical_stock_daily.parquet"
 BLOTTER_FILE = DATA_DIR / "blotter_daily.parquet"
