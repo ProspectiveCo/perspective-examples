@@ -11,7 +11,7 @@ import pro_capital_markets.constants as constants
 API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", None)
 BASE_URL = "https://www.alphavantage.co/query"
 
-assert API_KEY is not None, "Please set the ALPHAVANTAGE_API_KEY environment variable"
+assert API_KEY is not None, "Please set the ALPHA_VANTAGE_API_KEY environment variable"
 
 
 @backoff.on_exception(

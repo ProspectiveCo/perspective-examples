@@ -334,8 +334,6 @@ async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historica
     qty = historical_df.groupby('symbol')['volume'].diff().fillna(0) * 0.01         # diff in volume scaled by 0.001
     historical_df['order_qty'] = qty.round().astype('int32')                        # round and convert to int32
     
-    # print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
-
     # Generate preferences, commissions, and venue fees
     symbol_preferences = generate_preferences()
     commissions = generate_commissions()
@@ -355,7 +353,7 @@ async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historica
     if all_trades:
         df_blotter = pd.concat(all_trades, ignore_index=True)
         df_blotter.sort_values(by=['event_ts', 'symbol'], inplace=True, ignore_index=True)
-        # rest trade_ids sequentially based on df indicies
+        # rest trade_ids sequentially based on df indices
         df_blotter['trade_id'] = df_blotter.index + 10_001  # trade_id offset
     else:
         # Create empty DataFrame with proper schema
