@@ -98,69 +98,6 @@ async def _fetch_all_symbols_async(output_file: Path = constants.HISTORICAL_FILE
     print(f"Total unique symbols fetched: {len(already_fetched)}")
 
 
-def fetch_all_symbols():
-    asyncio.run(_fetch_all_symbols_async())
-
-
-def _convert_full_historical_to_csv():
-    """
-    Convert the full historical data to CSV format.
-    """
-    data_file = constants.HISTORICAL_FILE
-    if not data_file.exists():
-        print("No historical data found. Please fetch data first.")
-        return
-    df = pd.read_parquet(data_file)
-    df.rename(columns={"datetime": "date"}, inplace=True, errors="ignore")
-    df.sort_values(by=["date", "symbol"], inplace=True)
-    df.to_csv(data_file.with_suffix('.csv'), index=False)
-    print(f"Converted historical data to CSV format: {data_file.with_suffix('.csv')}")
-
-
-def _refactor_parquet_files():
-    """
-    Refactor the parquet files to ensure they are in the correct format.
-    """
-    output_file = constants.HISTORICAL_FILE
-    if not os.path.exists(output_file):
-        print("No historical data found. Please fetch data first.")
-    else:
-        df = pd.read_parquet(output_file)
-        df.rename(columns={"datetime": "date"}, inplace=True, errors="ignore")
-        for col in ["open", "high", "low", "close"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
-        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
-        # add metadata columns
-        df["sector"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
-        df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
-        df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
-        # convert date column to datetime.date
-        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
-        df.sort_values(by=["date", "symbol"], inplace=True)
-        df.to_parquet(output_file, index=False)
-        print(f"Converted historical data to parquet format: {output_file}")
-
-    data_dir = constants.DATA_DIR / "symbols"
-    for file in data_dir.glob("*.parquet"):
-        if file.name.startswith("historical_"):
-            continue
-        print(f"Converting: {file.name}...", end='', flush=True)
-        df = pd.read_parquet(file)
-        df.rename(columns={"datetime": "date"}, inplace=True, errors="ignore")
-        for col in ["open", "high", "low", "close"]:
-            df[col] = pd.to_numeric(df[col], errors="coerce").round(2)
-        df["volume"] = pd.to_numeric(df["volume"], errors="coerce").fillna(0).astype(int)
-        # add metadata columns
-        df["sector"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("sector", "Unknown"))
-        df["industry"] = df["symbol"].apply(lambda x: constants.STOCK_STORIES.get(x, {}).get("industry", "Unknown"))
-        df["index"] = df["symbol"].apply(lambda x: random.choice(constants.STOCK_STORIES.get(x, {}).get("index", ["Unknown"])))
-        # convert date column to datetime.date
-        df["date"] = pd.to_datetime(df["date"], format="%Y-%m-%d", errors="coerce").dt.date
-        df.sort_values(by=["date", "symbol"], inplace=True)
-        df.to_parquet(file, index=False)
-        print(" Done", flush=True)
-
-
 def fetch_one_symbol(symbol: str = "MSFT"):
     """
     Fetch historical data for a single symbol.
@@ -173,6 +110,10 @@ def fetch_one_symbol(symbol: str = "MSFT"):
     df.to_csv(constants.DATA_DIR / "symbols" / f"test-{symbol}.csv", index=False)
     print(df.head())
 
+
+def fetch_all_symbols():
+    asyncio.run(_fetch_all_symbols_async())
+    
 
 def dump_events():
     """
