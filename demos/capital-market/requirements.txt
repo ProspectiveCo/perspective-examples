@@ -3,3 +3,5 @@ pyarrow
 perspective-python
 httpx
 backoff
+pytest
+pytest-asyncio
