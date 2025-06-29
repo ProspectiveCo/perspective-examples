@@ -5,7 +5,9 @@ transaction (sale or purchase) for a specific stock symbol on a given date and
 contains a portion of the actual daily volume traded for that stock in the 
 historical data file.
 """
+import asyncio
 import datetime as dt
+import time
 from pathlib import Path
 import pandas as pd
 import pro_capital_markets.constants as constants
@@ -51,20 +53,214 @@ def seed(value: int = 42):
     random.seed(value)
 
 
-async def _generate_blotter_daily(historical_df: pd.DataFrame, for_date: dt.date, symbol_preferences: dict) -> pd.DataFrame:
+async def generate_blotter_for_symbol(
+    symbol: str, 
+    historical_df: pd.DataFrame,
+    symbol_preferences: dict[str, list],
+    commissions: dict[str, float],
+    venue_fees: dict[str, float],
+    ) -> pd.DataFrame:
     """
-    Generate a daily blotter of stock trades for a specific date.
+    Generate a daily blotter for a specific stock symbol based on historical data.
+
+    Generate daily blotter activity per symbol from historical data. Each symbol would generate 
+    an N number of traders per day, totalling near the volume of pre-computed daily order_qty 
+    column in the historical data file. Orders are randomly generated based on the symbol's
+    preferences, which include trader and desk weights, fund choices, execution venues, and 
+    benchmark indices. The blotter includes details such as order quantity, price, commission, execution venue fees and 
+    more. 
+
+    Args:
+        symbol (str): The stock symbol to generate the blotter for.
+        historical_df (pd.DataFrame): DataFrame containing historical stock data.
+        symbol_preferences (dict[str, list]): Weighted preferences for traders, desks, and benchmarks per symbol.
+        commissions (dict[str, float]): Commission structure for traders.
+        venue_fees (dict[str, float]): Venue fee structure for execution venues.
+    """
+    start_timer = time.time()  # Start timer for performance measurement
+    # Filter historical data for the specific symbol
+    symbol_data = historical_df[historical_df['symbol'] == symbol].copy()
+    if symbol_data.empty:
+        return pd.DataFrame()
     
-    :param historical_df: DataFrame containing historical stock data.
-    :param for_date: The date for which to generate the blotter.
-    :return: DataFrame containing the daily blotter.
-    """
-    df = historical_df[historical_df['date'] == for_date]
+    # Get symbol preferences
+    prefs = symbol_preferences.get(symbol, {})
+    trader_choices = prefs.get('trader_choices', random.sample(constants.TRADERS, k=5))
+    desk_choices = prefs.get('desk_choices', random.sample(constants.DESKS, k=3))
+    fund_choices = prefs.get('fund_choices', {}).get(symbol, random.sample(constants.FUNDS, k=2))
+    exec_venue_choices = prefs.get('exec_venue_choices', {}).get(symbol, random.sample(constants.EXEC_VENUES, k=2))
+    benchmark_choices = prefs.get('benchmark_choices', {}).get(symbol, random.sample(constants.BENCHMARK_INDICES, k=2))
+    
+    trades = []
+    trade_id_counter = random.randint(100000, 999999)
+    
+    # Get stock metadata
+    stock_info = constants.STOCK_STORIES.get(symbol, {})
+    security_name = stock_info.get('name', f'{symbol} Corp.')
+    sector = stock_info.get('sector', 'Unknown')
+    # industry = stock_info.get('industry', 'Unknown')
+    # sector_gics = f"{sector} / {industry}"
+    sector_gics = sector
+    
+    for _, row in symbol_data.iterrows():
+        date = row['date']
+        order_qty = abs(row['order_qty'])
+        
+        # Skip days with zero order quantity
+        if order_qty == 0:
+            continue
+            
+        # Generate 1-10 traders per day with a bell curve skewed towards higher values (mean ~7)
+        weights = [1, 2, 4, 7, 10, 14, 18, 20, 14, 10]  # Skewed bell curve, peak at 8
+        num_traders = random.choices(range(1, 11), weights=weights, k=1)[0]
+        
+        # Create random volumes that sum roughly to order_qty with jitter
+        base_qty = order_qty // num_traders
+        remaining_qty = order_qty
+        daily_volumes = []
+        
+        for i in range(num_traders):
+            if i == num_traders - 1:  # Last trader gets remaining quantity
+                qty = remaining_qty
+            else:
+                # Add jitter: ±30% of base quantity
+                jitter = random.randint(-int(base_qty * 0.3), int(base_qty * 0.3))
+                qty = max(1, base_qty + jitter)
+                qty = min(qty, remaining_qty - (num_traders - i - 1))  # Ensure we don't exceed remaining
+            
+            daily_volumes.append(qty)
+            remaining_qty -= qty
+            
+            if remaining_qty <= 0:
+                break
+        
+        # Generate trades for each volume
+        for i, qty in enumerate(daily_volumes):
+            if qty <= 0:
+                continue
+                
+            trade_id_counter += 1
+            
+            # Select trader and desk from weighted choices
+            trader = random.choice(trader_choices)
+            desk = random.choice(desk_choices)
+            
+            # Determine side (BUY/SELL) - positive order_qty indicates net buying
+            side = "BUY" if row['order_qty'] > 0 else "SELL"
+            if random.random() < 0.2:  # 20% chance to flip side for realism
+                side = "SELL" if side == "BUY" else "BUY"
+            
+            # Order type and status
+            order_type = random.choice(constants.ORDER_TYPES)
+            order_status = random.choices(constants.ORDER_STATUSES, weights=[0.1, 0.2, 0.65, 0.05], k=1)[0]
+            
+            # Price calculations
+            close_price = float(row['close'])
+            high_price = float(row['high'])
+            low_price = float(row['low'])
+            
+            # Generate realistic bid/ask spread (0.01-0.10% of price)
+            spread_pct = random.uniform(0.0001, 0.001)
+            spread_price = close_price * spread_pct
+            
+            mid_price = close_price + random.uniform(-spread_price, spread_price)
+            bid_price = mid_price - spread_price / 2
+            ask_price = mid_price + spread_price / 2
+            
+            # Execution price with some slippage
+            if side == "BUY":
+                price = ask_price + random.uniform(0, spread_price * 0.5)  # slight slippage
+                limit_price = price * random.uniform(1.001, 1.01)  # limit slightly above
+            else:
+                price = bid_price - random.uniform(0, spread_price * 0.5)  # slight slippage
+                limit_price = price * random.uniform(0.99, 0.999)  # limit slightly below
+            
+            price = round(price, 2)
+            limit_price = round(limit_price, 2)
+            
+            # Trade value and fees
+            trade_value = qty * price
+            commission = trade_value * commissions.get(trader, 0.001)
+            
+            exec_venue = random.choice(exec_venue_choices)
+            venue_fee = trade_value * venue_fees.get(exec_venue, 0.0005)
+            
+            # Other selections
+            fund = random.choice(fund_choices)
+            benchmark_index = random.choice(benchmark_choices)
+            
+            # Create timestamp (random time during trading day)
+            trading_start = dt.datetime.combine(date, dt.time(9, 30))  # 9:30 AM
+            trading_end = dt.datetime.combine(date, dt.time(16, 0))    # 4:00 PM
+            seconds_range = int((trading_end - trading_start).total_seconds())
+            random_seconds = random.randint(0, seconds_range)
+            event_ts = trading_start + dt.timedelta(seconds=random_seconds)
+            
+            # Create trade record
+            trade = {
+                "trade_id": trade_id_counter,
+                "trader": trader,
+                "desk": desk,
+                "event_ts": event_ts,
+                "symbol": symbol,
+                "security_name": security_name,
+                "sector_gics": sector_gics,
+                "side": side,
+                "order_type": order_type,
+                "order_qty": qty,
+                "order_status": order_status,
+                "limit_price": limit_price,
+                "qty": qty if order_status == "FILLED" else random.randint(0, qty),
+                "price": price,
+                "trade_value": trade_value,
+                "commission": round(commission, 4),
+                "exec_venue": exec_venue,
+                "venue_fee": round(venue_fee, 4),
+                "bid_price": round(bid_price, 2),
+                "ask_price": round(ask_price, 2),
+                "mid_price": round(mid_price, 2),
+                "spread_price": round(spread_price, 4),
+                "high_day": high_price,
+                "low_day": low_price,
+                "fund": fund,
+                "benchmark_index": benchmark_index,
+            }
+            trades.append(trade)
+    
+    # Convert to DataFrame with proper schema
+    if not trades:
+        return pd.DataFrame()
+        
+    trades_df = pd.DataFrame(trades)
+    
+    # Apply schema dtypes
+    for col, spec in SCHEMA.items():
+        if col in trades_df.columns:
+            if spec["dtype"] == "category":
+                trades_df[col] = trades_df[col].astype("category")
+            elif spec["dtype"] == "int32":
+                trades_df[col] = trades_df[col].astype("int32")
+            elif spec["dtype"] == "float32":
+                trades_df[col] = trades_df[col].astype("float32")
+            elif spec["dtype"] == "datetime64[ns]":
+                trades_df[col] = pd.to_datetime(trades_df[col])
+    
+    end_timer = time.time()  # End timer for performance measurement
+    elapsed_time = end_timer - start_timer
+    print(f"Generated {len(trades_df):,} trades for symbol {symbol} in {elapsed_time:,.2f} seconds", flush=True)
+    return trades_df
+    
 
 
-def generate_preferences() -> dict[str, list]:
+def generate_preferences() -> dict[str, dict]:
     # Generate preferences for traders, desks, and benchmarks per symbol
     symbol_preferences = {}
+    
+    # Generate fund, exec_venue, and benchmark choices for each symbol
+    fund_choices = {symbol: random.sample(constants.FUNDS, k=random.randint(1, 3)) for symbol in constants.STOCK_STORIES.keys()}
+    exec_venue_choices = {symbol: random.sample(constants.EXEC_VENUES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
+    benchmark_choices = {symbol: random.sample(constants.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
+    
     for sym in constants.STOCK_STORIES.keys():
         shuffled_traders = list(constants.TRADERS)
         random.shuffle(shuffled_traders)                                                                # shuffle traders for randomness each time
@@ -88,11 +284,6 @@ def generate_preferences() -> dict[str, list]:
         total_d = sum(count_d.values())
         desk_probs = {d: round(c * 100 / total_d, 4) for d, c in count_d.items()}
         desk_choices = [desk for desk, prob in desk_probs.items() for _ in range(int(round(prob)) )][:100]
-
-        # list of funds, exec_venues, and benchmark choices for each symbol
-        fund_choices       = {symbol: random.sample(constants.FUNDS, k=random.randint(1, 3))             for symbol in constants.STOCK_STORIES.keys()}
-        exec_venue_choices = {symbol: random.sample(constants.EXEC_VENUES, k=random.randint(1, 2))       for symbol in constants.STOCK_STORIES.keys()}
-        benchmark_choices  = {symbol: random.sample(constants.BENCHMARK_INDICES, k=random.randint(1, 2)) for symbol in constants.STOCK_STORIES.keys()}
         
         # preferences for each symbol
         symbol_preferences[sym] = {
@@ -104,19 +295,8 @@ def generate_preferences() -> dict[str, list]:
             'exec_venue_choices': exec_venue_choices,
             'benchmark_choices': benchmark_choices,
         }
-    # for sym, prefs in symbol_preferences.items():
-    #     print(f"{sym}: {prefs['fund_choices']}")
-    #     print(f"{sym}: {prefs['exec_venue_choices']}")
-    #     print(f"{sym}: {prefs['benchmark_choices']}")
-    #     print()
-    # for sym, prefs in symbol_preferences.items():
-    #     sorted_traders = sorted(prefs['trader_weights'].items(), key=lambda x: x[1])
-    #     print(f"Symbol: {sym}")
-    #     print("  Trader Weights (sorted by value):")
-    #     for trader, prob in sorted_traders:
-    #         print(f"    {prob:.4f}\t{trader}")
-    #     print()
-    # print(symbol_preferences['AAPL']['trader_choices'])
+
+    return symbol_preferences
 
 
 def generate_commissions() -> dict[str, float]:
@@ -133,7 +313,7 @@ def generate_venue_fees() -> dict[str, float]:
     return {venue: round(random.uniform(0.0001, 0.001), 4) for venue in constants.EXEC_VENUES}
 
 
-def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
+async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
     """
     Generate a daily blotter of stock trades from historical data.
     """
@@ -156,13 +336,46 @@ def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file
     
     # print(f"order_qty:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume', 'order_qty']].head(n=20)}\n")
 
+    # Generate preferences, commissions, and venue fees
+    symbol_preferences = generate_preferences()
+    commissions = generate_commissions()
+    venue_fees = generate_venue_fees()
+
+    # Generate blotter for each symbol in the historical data
+    # Run generate_blotter_for_symbol for all symbols in parallel using asyncio.gather
+    symbols = historical_df['symbol'].unique()
+    tasks = [
+        generate_blotter_for_symbol(symbol, historical_df, symbol_preferences, commissions, venue_fees)
+        for symbol in symbols
+    ]
+    results = await asyncio.gather(*tasks)
+    all_trades = [df for df in results if not df.empty]
     
+    # Concatenate all trades into a single DataFrame
+    if all_trades:
+        df_blotter = pd.concat(all_trades, ignore_index=True)
+        df_blotter.sort_values(by=['event_ts', 'symbol'], inplace=True, ignore_index=True)
+        # rest trade_ids sequentially based on df indicies
+        df_blotter['trade_id'] = df_blotter.index + 10_001  # trade_id offset
+    else:
+        # Create empty DataFrame with proper schema
+        df_blotter = pd.DataFrame({col: pd.Series(dtype=spec["dtype"]) for col, spec in SCHEMA.items()})
+    
+    # Write the blotter to the output file
+    df_blotter.to_parquet(output_file, index=False)
+    print(f"Generated blotter with {len(df_blotter):,} trades for {len(df_blotter['symbol'].unique()) if not df_blotter.empty else 0:,} symbols.", flush=True)
+    return df_blotter
 
 
+def run_generate_blotter():
+    """
+    Wrapper function to run the async generate_blotter function.
+    """
+    return asyncio.run(generate_blotter())
 
 
 if __name__ == "__main__":
     seed(42)  # Seed for reproducibility
     # Example usage
-    # generate_blotter()
-    generate_preferences()
+    run_generate_blotter()
+    # generate_preferences()
