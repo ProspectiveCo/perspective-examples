@@ -14,11 +14,12 @@ def main():
     # hist.fetch_one_symbol("AAPL")
     # hist.fetch_all_symbols()
     historical_df = pd.read_parquet(constants.HISTORICAL_FILE)
-    print("Historical DataFrame:", historical_df.head())
+    print("Historical DataFrame:\n", historical_df.head())
 
-    blotter.run_generate_blotter()
+    # blotter.run_generate_blotter()
     blotter_df = pd.read_parquet(constants.BLOTTER_FILE)
-    print("Blotter DataFrame:", blotter_df.head())
+    print("Blotter DataFrame:\n", blotter_df.head())
+    blotter_df.to_csv(constants.BLOTTER_FILE.with_suffix('.csv'), index=False)
     
 
 def print_info():

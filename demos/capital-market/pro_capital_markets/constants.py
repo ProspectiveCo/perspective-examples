@@ -73,9 +73,9 @@ STOCK_STORIES = {
         "sector": "Information Technology",
         "industry": "Semiconductors",
         "events": [
-            {"date": "2000-03-10", "description": "Dot-com peak then 80 % crash"},
+            {"date": "2000-03-10", "description": "Dot-com peak then 80% crash"},
             {"date": "2018-01-04", "description": "Spectre/Meltdown flaws revealed"},
-            {"date": "2020-07-23", "description": "7 nm delay triggers 15 % drop"}
+            {"date": "2020-07-23", "description": "7 nm delay triggers 15% drop"}
         ],
         "competitors": ["AMD", "NVDA", "QCOM", "TSM", "IBM"],
         "index": ["NASDAQ 100", "S&P 500"]
@@ -85,7 +85,7 @@ STOCK_STORIES = {
         "sector": "Information Technology",
         "industry": "Networking Hardware",
         "events": [
-            {"date": "2000-03-27", "description": "Loses ~90 % in dot-com bust"},
+            {"date": "2000-03-27", "description": "Loses ~90% in dot-com bust"},
             {"date": "2023-09-21", "description": "Announces $28 B Splunk acquisition"},
             {"date": "2025-06-20", "description": "Shares near 25-year high on AI demand"}
         ],
@@ -114,7 +114,7 @@ STOCK_STORIES = {
         "events": [
             {"date": "2010-06-29", "description": "IPO raises $226 M"},
             {"date": "2013-05-08", "description": "First quarterly profit; shares triple"},
-            {"date": "2018-08-07", "description": "\"Funding secured\" tweet → SEC case"},
+            {"date": "2018-08-07", "description": "'Funding secured' tweet → SEC case"},
             {"date": "2020-12-21", "description": "Joins S&P 500 after 5-for-1 split"}
         ],
         "competitors": ["GM", "F", "RIVN", "NIO", "BYDDY"],
@@ -126,7 +126,7 @@ STOCK_STORIES = {
         "industry": "Specialty Retail",
         "events": [
             {"date": "2021-01-28", "description": "Reddit short squeeze peaks at $483"},
-            {"date": "2024-05-14", "description": "‘Roaring Kitty’ livestream sparks rally 2.0"}
+            {"date": "2024-05-14", "description": "'Roaring Kitty' livestream sparks rally 2.0"}
         ],
         "competitors": ["BBY", "WMT", "AMZN", "COST", "EBAY"],
         "index": ["S&P 500", "Dow Jones Industrial Average"]
@@ -162,7 +162,7 @@ STOCK_STORIES = {
         "industry": "Athletic Apparel",
         "events": [
             {"date": "2012-01-19", "description": "Launches Nike+ FuelBand (digital pivot)"},
-            {"date": "2018-09-03", "description": "Kaepernick ‘Dream Crazy’ ad sparks volatility"},
+            {"date": "2018-09-03", "description": "Kaepernick 'Dream Crazy' ad sparks volatility"},
             {"date": "2020-06-26", "description": "E-commerce boom lifts pandemic quarter"}
         ],
         "competitors": ["ADDYY", "PUMSY", "LULU", "UA", "SKE"],
@@ -189,7 +189,7 @@ STOCK_STORIES = {
         "events": [
             {"date": "2012-05-18", "description": "Largest tech IPO of its time"},
             {"date": "2018-03-17", "description": "Cambridge Analytica scandal"},
-            {"date": "2023-02-02", "description": "‘Year of Efficiency’ adds $196 B in a day"}
+            {"date": "2023-02-02", "description": "'Year of Efficiency' adds $196 B in a day"}
         ],
         "competitors": ["GOOGL", "SNAP", "PINS", "TCEHY", "MSFT"],
         "index": ["S&P 500", "NASDAQ 100"]
@@ -368,7 +368,7 @@ EXEC_VENUES = [
 
 # Funds under management
 FUNDS = [
-    "Prospective Growth Fund – I USD",
+    "Prospective Growth Fund",
     "Prospective Global Alpha Fund",
     "Prospective ESG Equity Fund",
     "Prospective Systematic Strategies",
