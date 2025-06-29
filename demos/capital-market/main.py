@@ -16,11 +16,14 @@ def main():
     historical_df = pd.read_parquet(constants.HISTORICAL_FILE)
     print("Historical DataFrame:\n", historical_df.head())
 
-    # blotter.run_generate_blotter()
+    blotter.run_generate_blotter()
     blotter_df = pd.read_parquet(constants.BLOTTER_FILE)
     print("Blotter DataFrame:\n", blotter_df.head())
     blotter_df.to_csv(constants.BLOTTER_FILE.with_suffix('.csv'), index=False)
     
+    # dumping events to CSV
+    hist.dump_events()
+
 
 def print_info():
     data_file = constants.HISTORICAL_FILE
