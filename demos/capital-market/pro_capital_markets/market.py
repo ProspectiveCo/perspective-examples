@@ -61,7 +61,7 @@ async def fetch_symbol(client: httpx.AsyncClient, symbol: str) -> pd.DataFrame:
     return df
 
 
-async def _fetch_all_symbols_async(output_file: Path = constants.HISTORICAL_FILE):
+async def _fetch_all_symbols_async(output_file: Path = constants.MARKET_FILE):
     # If file exists, read it and determine already fetched symbols
     if os.path.exists(output_file):
         existing_data = pd.read_parquet(output_file)

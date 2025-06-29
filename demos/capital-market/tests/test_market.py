@@ -12,7 +12,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch, MagicMock
 from datetime import date, datetime
 
-from pro_capital_markets.fetch_historical import (
+from pro_capital_markets.market import (
     fetch_symbol,
     fetch_all_symbols,
     fetch_one_symbol,
@@ -431,11 +431,11 @@ class TestEnvironmentAndConfiguration:
         with patch.dict(os.environ, {'ALPHA_VANTAGE_API_KEY': 'test_key'}):
             # Import the module to test environment variable reading
             import importlib
-            import pro_capital_markets.fetch_historical
-            importlib.reload(pro_capital_markets.fetch_historical)
+            import pro_capital_markets.market
+            importlib.reload(pro_capital_markets.market)
             
             # The API_KEY should be set
-            assert pro_capital_markets.fetch_historical.API_KEY == 'test_key'
+            assert pro_capital_markets.market.API_KEY == 'test_key'
 
 
 class TestIntegration:

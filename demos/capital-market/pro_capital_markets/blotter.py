@@ -55,7 +55,7 @@ def seed(value: int = 42):
 
 async def generate_blotter_for_symbol(
     symbol: str, 
-    historical_df: pd.DataFrame,
+    market_df: pd.DataFrame,
     symbol_preferences: dict[str, list],
     commissions: dict[str, float],
     venue_fees: dict[str, float],
@@ -79,7 +79,7 @@ async def generate_blotter_for_symbol(
     """
     start_timer = time.time()  # Start timer for performance measurement
     # Filter historical data for the specific symbol
-    symbol_data = historical_df[historical_df['symbol'] == symbol].copy()
+    symbol_data = market_df[market_df['symbol'] == symbol].copy()
     if symbol_data.empty:
         return pd.DataFrame()
     
@@ -313,16 +313,16 @@ def generate_venue_fees() -> dict[str, float]:
     return {venue: round(random.uniform(0.0001, 0.001), 4) for venue in constants.EXEC_VENUES}
 
 
-async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historical_file: Path = constants.HISTORICAL_FILE):
+async def generate_blotter(blotter_file: Path = constants.BLOTTER_FILE, market_file: Path = constants.MARKET_FILE):
     """
     Generate a daily blotter of stock trades from historical data.
     """
-    assert historical_file.exists(), f"Historical data file {historical_file} does not exist."
+    assert market_file.exists(), f"Historical data file {market_file} does not exist."
 
     random.seed(42)  # for reproducibility
 
     # Read the historical data
-    historical_df = pd.read_parquet(historical_file)
+    market_df = pd.read_parquet(market_file)
     
     # print(f"original:\n{historical_df.sort_values(by=['symbol', 'date'])[['symbol', 'date', 'close', 'volume']].head(n=20)}\n")
 
@@ -330,9 +330,9 @@ async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historica
     # `order_qty` is the difference in volume between consecutive days per symbol scaled by 0.001 (0.1%).
     # Positive or negative values indicate buy or sell.
     # sorted by symbol and date
-    historical_df.sort_values(by=['symbol', 'date'], inplace=True)                  # sort by symbol and date
-    qty = historical_df.groupby('symbol')['volume'].diff().fillna(0) * 0.01         # diff in volume scaled by 0.001
-    historical_df['order_qty'] = qty.round().astype('int32')                        # round and convert to int32
+    market_df.sort_values(by=['symbol', 'date'], inplace=True)                  # sort by symbol and date
+    qty = market_df.groupby('symbol')['volume'].diff().fillna(0) * 0.01         # diff in volume scaled by 0.001
+    market_df['order_qty'] = qty.round().astype('int32')                        # round and convert to int32
     
     # Generate preferences, commissions, and venue fees
     symbol_preferences = generate_preferences()
@@ -341,9 +341,9 @@ async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historica
 
     # Generate blotter for each symbol in the historical data
     # Run generate_blotter_for_symbol for all symbols in parallel using asyncio.gather
-    symbols = historical_df['symbol'].unique()
+    symbols = market_df['symbol'].unique()
     tasks = [
-        generate_blotter_for_symbol(symbol, historical_df, symbol_preferences, commissions, venue_fees)
+        generate_blotter_for_symbol(symbol, market_df, symbol_preferences, commissions, venue_fees)
         for symbol in symbols
     ]
     results = await asyncio.gather(*tasks)
@@ -360,16 +360,16 @@ async def generate_blotter(output_file: Path = constants.BLOTTER_FILE, historica
         df_blotter = pd.DataFrame({col: pd.Series(dtype=spec["dtype"]) for col, spec in SCHEMA.items()})
     
     # Write the blotter to the output file
-    df_blotter.to_parquet(output_file, index=False)
+    df_blotter.to_parquet(blotter_file, index=False)
     print(f"Generated blotter with {len(df_blotter):,} trades for {len(df_blotter['symbol'].unique()) if not df_blotter.empty else 0:,} symbols.", flush=True)
     return df_blotter
 
 
-def run_generate_blotter():
+def run_generate_blotter(blotter_file: Path = constants.BLOTTER_FILE, market_file: Path = constants.MARKET_FILE):
     """
     Wrapper function to run the async generate_blotter function.
     """
-    return asyncio.run(generate_blotter())
+    return asyncio.run(generate_blotter(blotter_file, market_file))
 
 
 if __name__ == "__main__":

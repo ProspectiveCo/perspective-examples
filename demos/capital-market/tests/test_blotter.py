@@ -42,7 +42,7 @@ async def test_generate_blotter_for_symbol():
     # Test the function
     trades_df = await generate_blotter_for_symbol(
         symbol='AAPL',
-        historical_df=historical_df,
+        market_df=historical_df,
         symbol_preferences=symbol_preferences,
         commissions=commissions,
         venue_fees=venue_fees

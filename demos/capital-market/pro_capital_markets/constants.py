@@ -11,7 +11,7 @@ if not SYMBOLS_DIR.exists():
     SYMBOLS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-HISTORICAL_FILE = DATA_DIR / "historical_stock_daily.parquet"
+MARKET_FILE = DATA_DIR / "historical_stock_daily.parquet"
 BLOTTER_FILE = DATA_DIR / "blotter_daily.parquet"
 
 
