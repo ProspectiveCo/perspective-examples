@@ -5,4 +5,4 @@ httpx
 backoff
 pytest
 pytest-asyncio
-parquet-tools
+# parquet-tools
