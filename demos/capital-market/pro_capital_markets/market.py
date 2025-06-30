@@ -90,7 +90,7 @@ async def _fetch_all_symbols_async(output_file: Path = constants.MARKET_FILE):
                 existing_data = pd.concat([existing_data, df], axis=0)
             existing_data = existing_data.sort_values(by=["date", "symbol"])
             existing_data.to_parquet(output_file, index=False)
-            existing_data.to_csv(output_file.with_suffix('.csv'), index=False)
+            # existing_data.to_csv(output_file.with_suffix('.csv'), index=False)
             # Update the set of fetched symbols
             already_fetched.add(symbol)
             print(f"Appended {symbol}")

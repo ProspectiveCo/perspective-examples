@@ -18,6 +18,9 @@ def main():
     print("\nPartitioning market data...\n")
     partitions.partition_market_data(market_df)
 
+    print("\nConverting market data to CSV...\n")
+    market_df.to_csv(constants.MARKET_FILE.with_suffix('.csv'), index=False)
+
     print("\nGenerating blotter...\n")
     blotter.run_generate_blotter()
     blotter_df = pd.read_parquet(constants.BLOTTER_FILE)
