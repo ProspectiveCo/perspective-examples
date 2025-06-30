@@ -73,16 +73,16 @@ async def _fetch_all_symbols_async(output_file: Path = constants.MARKET_FILE):
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         # Iterate over all unique symbols
-        for sym in constants.UNIQUE_SYMBOLS:
-            if sym in already_fetched:
-                print(f"Skipping {sym} (already fetched)")
+        for symbol in constants.UNIQUE_SYMBOLS:
+            if symbol in already_fetched:
+                print(f"Skipping {symbol} (already fetched)")
                 continue
-            df = await fetch_symbol(client, sym)
+            df = await fetch_symbol(client, symbol)
             # Skip if no data returned
             if df.empty:
                 continue
             # Save individual symbol data
-            df.to_parquet(constants.DATA_DIR / "symbols" / f"SMBL-{sym}.parquet", index=False)
+            df.to_parquet(constants.MARKET_BY_SYMBOLS_DIR / f"part-{symbol}.parquet", index=False)
             # Immediately append new data by merging with existing and writing out
             if existing_data.empty:
                 existing_data = df
@@ -92,8 +92,8 @@ async def _fetch_all_symbols_async(output_file: Path = constants.MARKET_FILE):
             existing_data.to_parquet(output_file, index=False)
             existing_data.to_csv(output_file.with_suffix('.csv'), index=False)
             # Update the set of fetched symbols
-            already_fetched.add(sym)
-            print(f"Appended {sym}")
+            already_fetched.add(symbol)
+            print(f"Appended {symbol}")
     # print full set of unique symbols fetched
     print(f"Total unique symbols fetched: {len(already_fetched)}")
 
@@ -106,8 +106,9 @@ def fetch_one_symbol(symbol: str = "MSFT"):
         async with httpx.AsyncClient(timeout=30.0) as client:
             return await fetch_symbol(client, symbol)
     df = asyncio.run(_fetch())
-    df.to_parquet(constants.DATA_DIR / "symbols" / f"test-{symbol}.parquet", index=False)
-    df.to_csv(constants.DATA_DIR / "symbols" / f"test-{symbol}.csv", index=False)
+    output_file = constants.MARKET_BY_SYMBOLS_DIR / f"part-{symbol}.parquet"
+    df.to_parquet(output_file, index=False)
+    df.to_csv(output_file.with_suffix('.csv'), index=False)
     print(df.head())
 
 

@@ -317,26 +317,18 @@ STOCK_STORIES = {
     }
 }
 
-
 CLIENTS = [
     "BlackRock", "Vanguard", "State Street",
     "Fidelity", "Goldman Sachs", "Morgan Stanley",
     "Citadel Securities", "Bridgewater", "Berkshire Hathaway",
 ]
 
-
-
-def get_sector_symbols():
-    sector_symbols = {}
-    for symbol, info in STOCK_STORIES.items():
-        sector = info.get("sector")
-        sector_symbols.setdefault(sector, set()).add(symbol)
-    return {sector: list(symbols) for sector, symbols in sector_symbols.items()}
-
-
-SYMBOLS_BY_SECTOR   = get_sector_symbols()
-UNIQUE_SYMBOLS = sorted(list(set(symbol for sector in SYMBOLS_BY_SECTOR.values() for symbol in sector)))
-
+UNIQUE_SYMBOLS      = sorted(list(set(STOCK_STORIES.keys())))
+SECTORS             = sorted(list(set( item["sector"] for item in STOCK_STORIES.values() )))
+SYMBOLS_BY_SECTOR   = {
+    sector: sorted(list(set(symbol for symbol, info in STOCK_STORIES.items() if info["sector"] == sector))) 
+    for sector in SECTORS
+    }
 
 EVENTS = [
     {"date": event["date"], "symbol": symbol, "description": event["description"]}
