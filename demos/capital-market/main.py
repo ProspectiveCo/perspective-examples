@@ -10,6 +10,7 @@ def main():
     
     print("Symbols: ", constants.UNIQUE_SYMBOLS)
 
+
     print("\nFetching historical data...\n")
     # market.fetch_one_symbol("AAPL")
     market.fetch_all_symbols()
@@ -17,9 +18,9 @@ def main():
     print("Historical DataFrame:\n", market_df.head(n=10))
     print("\nPartitioning market data...\n")
     partitions.partition_market_data(market_df)
-
     print("\nConverting market data to CSV...\n")
     market_df.to_csv(constants.MARKET_FILE.with_suffix('.csv'), index=False)
+
 
     print("\nGenerating blotter...\n")
     blotter.run_generate_blotter()
@@ -27,7 +28,6 @@ def main():
     print("\nBlotter DataFrame:\n", blotter_df.head(n=10))
     print("\nPartitioning blotter data...\n")
     partitions.partition_blotter_data(blotter_df)
-
     print("\nConverting blotter to CSV...\n")
     blotter_df.to_csv(constants.BLOTTER_FILE.with_suffix('.csv'), index=False)
     
