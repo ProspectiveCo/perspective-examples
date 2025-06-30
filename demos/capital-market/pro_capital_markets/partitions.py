@@ -106,7 +106,7 @@ def partition_blotter_data_by_year(blotter_df: pd.DataFrame):
     """
     Partition blotter data by year and save to output directory.
     """
-    years = sorted(blotter_df['event_ts'].dt.year.unique())
+    years = sorted(int(v) for v in blotter_df['event_ts'].dt.year.unique())
     print("\nPartitioning blotter by year...\n")
     dir = constants.BLOTTER_BY_YEAR_DIR
     if not dir.exists():
@@ -116,7 +116,7 @@ def partition_blotter_data_by_year(blotter_df: pd.DataFrame):
     for year in years:
         file_path = dir / f"part-{year}.parquet"
         print(f"Writing {file_path.name:30s}... ", end="", flush=True)
-        part_df = blotter_df[blotter_df['date'].dt.year == year].copy()
+        part_df = blotter_df[blotter_df['event_ts'].dt.year == year].copy()
         part_df.sort_values(by=['event_ts', 'symbol'], inplace=True, ignore_index=True)
         part_df.to_parquet(file_path, index=False)
         print(f"  DONE: {len(part_df)} rows", flush=True)
@@ -136,7 +136,7 @@ def partition_blotter_data_by_sector(blotter_df: pd.DataFrame):
     for sector in sectors:
         file_path = dir / f"part-{str(sector).lower().replace(' ','_')}.parquet"
         print(f"Writing {file_path.name:50s} ", end="", flush=True)
-        part_df = blotter_df[blotter_df['sector'] == sector].copy()
+        part_df = blotter_df[blotter_df['sector_gics'] == sector].copy()
         part_df.sort_values(by=['event_ts', 'symbol'], inplace=True, ignore_index=True)
         part_df.to_parquet(file_path, index=False)
         print(f"  DONE: {len(part_df)} rows", flush=True)
