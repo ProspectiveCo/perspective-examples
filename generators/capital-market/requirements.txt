@@ -1,0 +1,8 @@
+pandas
+pyarrow
+perspective-python
+httpx
+backoff
+pytest
+pytest-asyncio
+# parquet-tools
