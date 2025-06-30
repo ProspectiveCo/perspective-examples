@@ -372,6 +372,47 @@ def run_generate_blotter(blotter_file: Path = constants.BLOTTER_FILE, market_fil
     return asyncio.run(generate_blotter(blotter_file, market_file))
 
 
+def partition_files(blotter_df: pd.DataFrame) -> None:
+    """
+    Write partitions of the blotter DataFrame by symbol, year, etc.
+    """
+    if blotter_df.empty:
+        print("No trades in the blotter.")
+        return
+    
+    # partition by symbol files
+    print("\nPartitioning blotter by symbol...\n")
+    dir = constants.DATA_DIR / 'blotter' / 'by_symbol'
+    if not dir.exists():
+        dir.mkdir(parents=True, exist_ok=True)
+    for symbol in constants.UNIQUE_SYMBOLS:
+        file_name = dir / f"part-{symbol}.parquet"
+        print(f"Writing {file_name}... ", end="", flush=True)
+        part_df = blotter_df[blotter_df['symbol'] == symbol]
+        part_df.sort_values(by=['event_ts'], inplace=True, ignore_index=True)
+        part_df.to_parquet(file_name, index=False)
+        print(f"  DONE: {len(part_df)} rows", flush=True)
+
+    # partition by year files
+    print("\nPartitioning by year...\n")
+    dir = constants.DATA_DIR / 'blotter' / 'by_year'
+    
+
+    # partition by (industry) sector
+    print(f"Partitioning by sector...\n")
+    dir = constants.DATA_DIR / 'blotter' / 'by_sector'
+    if not dir.exists():
+        dir.mkdir(parents=True, exist_ok=True)
+    sectors = set(value['sector'] for symbol, value in constants.STOCK_STORIES.items())
+    for sector in sectors:
+        file_name = dir / f"part-{sector}.parquet"
+        print(f"Writing {file_name}... ", end="", flush=True)
+        part_df = blotter_df[blotter_df['sector'] == sector]
+        part_df.sort_values(by=['event_ts', 'symbol'], inplace=True, ignore_index=True)
+        part_df.to_parquet(file_name, index=False)
+        print(f"  DONE: {len(part_df)} rows", flush=True)
+
+
 if __name__ == "__main__":
     seed(42)  # Seed for reproducibility
     # Example usage
