@@ -2,7 +2,15 @@
 from pathlib import Path
 
 
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR                = Path(__file__).parent.parent / "data"
+MARKET_DIR              = DATA_DIR / "market"
+BLOTTER_DIR             = DATA_DIR / "blotter"
+MARKET_BY_SYMBOLS_DIR   = MARKET_DIR / "by_symbol"
+MARKET_BY_YEAR_DIR      = MARKET_DIR / "by_year"
+MARKET_BY_SECTOR_DIR    = MARKET_DIR / "by_sector"
+BLOTTER_BY_SYMBOL_DIR   = BLOTTER_DIR / "by_symbol"
+
+
 if not DATA_DIR.exists():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -11,9 +19,21 @@ if not SYMBOLS_DIR.exists():
     SYMBOLS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-MARKET_FILE = DATA_DIR / "historical_stock_daily.parquet"
-BLOTTER_FILE = DATA_DIR / "blotter_daily.parquet"
+MARKET_FILE = MARKET_DIR / "market_data_30yrs.parquet"
+BLOTTER_FILE = BLOTTER_DIR / "blotter_data_30yrs.parquet"
 
+
+def mkdirs() -> None:
+    """
+    Make all data dirs
+    """
+    dirs = [
+        DATA_DIR, MARKET_DIR, BLOTTER_DIR,        # data dir + market and blotter dirs
+
+        ]
+    for dir in dirs:
+        if not dir.exists():
+            dir.mkdir(parents=True, exist_ok=True)
 
 # Metadata for major stocks, sectors, and industries
 

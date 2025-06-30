@@ -360,6 +360,8 @@ async def generate_blotter(blotter_file: Path = constants.BLOTTER_FILE, market_f
         df_blotter = pd.DataFrame({col: pd.Series(dtype=spec["dtype"]) for col, spec in SCHEMA.items()})
     
     # Write the blotter to the output file
+    if not blotter_file.parent.exists():
+        blotter_file.parent.mkdir(parents=True, exist_ok=True)
     df_blotter.to_parquet(blotter_file, index=False)
     print(f"Generated blotter with {len(df_blotter):,} trades for {len(df_blotter['symbol'].unique()) if not df_blotter.empty else 0:,} symbols.", flush=True)
     return df_blotter
