@@ -2,3 +2,4 @@
 *.csv
 node/blotter_data_30yrs.parquet
 node/package-lock.json
+package-lock.json
