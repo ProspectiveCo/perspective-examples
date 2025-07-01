@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
-import parquet from 'parquetjs';
+import { asyncBufferFromFile, parquetReadObjects } from 'hyparquet';
 
 // Get current directory for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -13,9 +13,9 @@ const __dirname = path.dirname(__filename);
 const NATS_SERVER_URL = "ws://localhost:8080";
 
 // Data configuration
-const RUN_DURATION          = 30 * 60 * 1000; // 30 minutes
-const DEFAULT_CHUNK_SIZE    = 10;        // Default number of rows per chunk
-const DEFAULT_INTERVAL      = 300;         // Default interval in milliseconds
+const RUN_DURATION          = 30 * 60 * 1000;   // 30 minutes
+const DEFAULT_CHUNK_SIZE    = 10;               // Default number of rows per chunk
+const DEFAULT_INTERVAL      = 300;              // Default interval in milliseconds
 const BLOTTER_DATA_URL      = "https://perspective-demo-dataset.s3.us-east-1.amazonaws.com/pro_capital_markets/blotter_data_30yrs.parquet";
 const LOCAL_BLOTTER_FILE    = path.join(__dirname, "blotter_data_30yrs.parquet");
 
@@ -50,7 +50,7 @@ async function fetchBlotterDataFile() {
 }
 
 /**
- * Parquet data reader for blotter data
+ * Parquet data reader for blotter data using hyparquet
  */
 class BlotterDataReader {
     constructor(filePath) {
@@ -61,7 +61,7 @@ class BlotterDataReader {
     }
 
     /**
-     * Load data from parquet file
+     * Load data from parquet file using hyparquet
      */
     async loadData() {
         if (this.isLoaded) {
@@ -69,23 +69,41 @@ class BlotterDataReader {
         }
 
         try {
-            console.log("Loading parquet file...");
-            const reader = await parquet.ParquetReader.openFile(this.filePath);
-            const cursor = reader.getCursor();
+            console.log("Loading parquet file with hyparquet...");
             
-            let record = null;
-            let count = 0;
-            while (record = await cursor.next()) {
-                this.data.push(record);
-                count++;
-                if (count % 100_000 === 0) {
-                    console.log(`Loaded ${count} records...`);
+            // Create an AsyncBuffer from the file
+            const file = await asyncBufferFromFile(this.filePath);
+            
+            // Read the parquet file as objects
+            const data = await parquetReadObjects({ file });
+            
+            console.log(`Successfully loaded ${data.length} records from parquet file`);
+            
+            // Convert the data to match our expected format
+            this.data = data.map(record => {
+                const converted = {};
+                for (const [key, value] of Object.entries(record)) {
+                    // Handle different data types properly
+                    if (value instanceof Date) {
+                        converted[key] = value.toISOString();
+                    } else if (typeof value === 'bigint') {
+                        converted[key] = Number(value);
+                    } else {
+                        converted[key] = value;
+                    }
                 }
+                return converted;
+            });
+            
+            this.isLoaded = true;
+            console.log(`Successfully processed ${this.data.length} records`);
+            
+            // Log sample record for verification
+            if (this.data.length > 0) {
+                console.log("Sample record schema:", Object.keys(this.data[0]));
+                console.log("First record:", JSON.stringify(this.data[0], null, 2));
             }
             
-            await reader.close();
-            this.isLoaded = true;
-            console.log(`Successfully loaded ${this.data.length} records from parquet file`);
         } catch (error) {
             console.error("Error loading parquet file:", error);
             console.log("Falling back to mock data generation...");
@@ -247,7 +265,7 @@ Options:
 
     // Ensure parquet file is available
     await fetchBlotterDataFile();
-
+    
     // Initialize data reader and load data
     const dataReader = new BlotterDataReader(LOCAL_BLOTTER_FILE);
     await dataReader.loadData();
