@@ -35,14 +35,17 @@
             const viewer = document.getElementById("viewer");
 
             // connect to pserpective server websocket and retrieve table
-            const tableName = "stock_values";
-            const websocket = await perspective.websocket("ws://localhost:8080/websocket");
-            const table = await websocket.open_table(tableName)
-            viewer.load(table);
+            const tableName     = "stock_values";
+            const websocket     = await perspective.websocket("ws://localhost:8080/websocket");
+            const server_table  = await websocket.open_table(tableName)
+            const server_view   = await server_table.view();
+
+            const worker        = await perspective.worker();
+            const client_table  = await worker.table(server_view);
+            await viewer.load(client_table);
 
             // pre-configure the perspective viewer
             const viewer_config = {
-                version: "3.4.3",
                 plugin: "Datagrid",
                 plugin_config: {
                     columns: {},
@@ -52,16 +55,16 @@
                 columns_config: {},
                 settings: true,
                 theme: "Pro Dark",
-                title: null,
+                title: "trades",
                 group_by: ["ticker"],
-                split_by: ["client"],
+                split_by: [],
                 columns: ["client", "open", "high", "low", "close", "lastUpdate"],
                 filter: [],
-                sort: [],
+                sort: [["lastUpdate", "desc"]],
                 expressions: {},
                 aggregates: { high: "max", lastUpdate: "last", low: "min", open: "mean", ticker: "dominant", close: "mean" }
             };
-            viewer.restore(viewer_config);
+            await viewer.restore(viewer_config);
         </script>
         
     </body>
